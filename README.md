@@ -84,6 +84,23 @@ pull requests:
 - **Backend** — `prisma generate` (against a Postgres service container) and the
   TypeScript build.
 
+## Claude Code tooling
+
+This repo ships project-scoped Claude Code tooling:
+
+- **Skills** (`.claude/skills/`) — the [UI/UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+  design-intelligence skills (`ui-ux-pro-max`, `design`, `design-system`,
+  `ui-styling`, `brand`, `slides`, `banner-design`). Refresh them with
+  `npx ui-ux-pro-max-cli init --ai claude`.
+- **MCP server** (`.mcp.json`) — the [Magic](https://github.com/21st-dev/magic-mcp)
+  (`@21st-dev/magic`) MCP server for UI component generation. It reads its key
+  from the `MAGIC_API_KEY` environment variable, so set it before starting
+  Claude Code (the key is intentionally **not** committed):
+
+  ```bash
+  export MAGIC_API_KEY="<your 21st.dev API key>"
+  ```
+
 ## Design tokens
 
 Pulled from the reference design (`design/TableSite.reference.html`) and exposed in
