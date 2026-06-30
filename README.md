@@ -63,10 +63,22 @@ docker compose down -v      # stop it and wipe the database
 ### Backend
 
 ```bash
-cp backend/.env.example backend/.env   # then set DATABASE_URL
+cp backend/.env.example backend/.env   # then set DATABASE_URL (and CORS_ORIGIN)
 npm run prisma:generate                # generate the Prisma client
+npm run prisma:migrate                 # create/apply the database tables
 npm run dev:backend                    # http://localhost:4000
 ```
+
+The API validates its environment on startup and **fails fast** if `DATABASE_URL`
+is missing. Two health endpoints are exposed:
+
+- `GET /health` — liveness (process is up).
+- `GET /health/ready` — readiness; returns `503` if Postgres is unreachable.
+
+The server is hardened with `helmet` security headers, an explicit CORS origin
+allowlist (`CORS_ORIGIN`), per-IP rate limiting, a JSON body-size cap, and a
+centralized error handler that never leaks stack traces. Run the backend tests
+with `npm run test --workspace backend`.
 
 ## Styling
 
