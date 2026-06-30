@@ -1,0 +1,384 @@
+// TableSite — Cambodian restaurant booking platform
+// Schema modeled on design/TableSite.reference.html and the original restaurant data.
+// Scaffold only: this defines the data model; no seed/migrations are committed yet.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================ Enums ============================
+
+enum Role {
+  DINER
+  OWNER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum PriceRange {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RestaurantStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum TableStatus {
+  AVAILABLE
+  SEATED
+  RESERVED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  SEATED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum SeatingPreference {
+  INDOOR
+  GARDEN
+  PRIVATE
+}
+
+enum PaymentChannel {
+  KHQR
+  ABA
+  WING
+  BAKONG
+  ACLEDA
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+// ============================ Users ============================
+
+model User {
+  id              String     @id @default(cuid())
+  role            Role       @default(DINER)
+  name            String
+  email           String?    @unique
+  phone           String?    @unique // +855 country code
+  passwordHash    String? // owners/admins; diners use phone OTP
+  avatarUrl       String?
+  status          UserStatus @default(ACTIVE)
+  preferredLocale String     @default("km") // "km" | "en"
+
+  // Owner-specific: how many restaurants this owner may create.
+  restaurantLimit Int        @default(3)
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  restaurants        Restaurant[]        @relation("OwnerRestaurants")
+  reservations       Reservation[]
+  reviews            Review[]
+  savedRestaurants   SavedRestaurant[]
+  paymentMethods     PaymentMethod[]
+  restaurantRequests RestaurantRequest[]
+}
+
+// ========================= Restaurants =========================
+
+model Restaurant {
+  id            String           @id @default(cuid())
+  slug          String           @unique
+  name          String
+  description   String?
+  cuisineType   String
+  address       String
+  city          String
+  state         String?
+  country       String           @default("Cambodia")
+  postalCode    String?
+  phone         String?
+  email         String?
+  website       String?
+  coverImageUrl String?
+  latitude      Decimal?         @db.Decimal(10, 7)
+  longitude     Decimal?         @db.Decimal(10, 7)
+  priceRange    PriceRange       @default(MEDIUM)
+  isPopular     Boolean          @default(false)
+  status        RestaurantStatus @default(ACTIVE)
+
+  // Booking policy
+  minBookingNotice  Int     @default(60) // minutes before a slot
+  maxBookingDays    Int     @default(30)
+  cancellationHours Int     @default(24)
+  depositRequired   Boolean @default(false)
+  depositAmount     Decimal @default(0) @db.Decimal(10, 2) // USD per booking
+  maxCapacity       Int     @default(0)
+  minCapacity       Int     @default(1)
+  parkingAvailable  Boolean @default(false)
+  dressCode         String?
+
+  ownerId String
+  owner   User   @relation("OwnerRestaurants", fields: [ownerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  operatingHours  OperatingHours[]
+  tables          RestaurantTable[]
+  specialClosures SpecialClosure[]
+  galleryImages   GalleryImage[]
+  menus           Menu[]
+  timeSlots       TimeSlot[]
+  reservations    Reservation[]
+  reviews         Review[]
+  savedBy         SavedRestaurant[]
+  payoutMethods   PayoutMethod[]
+  tags            Tag[]             @relation("RestaurantTags")
+
+  @@index([city])
+  @@index([cuisineType])
+}
+
+model Tag {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  restaurants Restaurant[] @relation("RestaurantTags")
+}
+
+model OperatingHours {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  dayOfWeek    DayOfWeek
+  openTime     String // "11:00"
+  closeTime    String // "22:00"
+  isClosed     Boolean    @default(false)
+
+  @@unique([restaurantId, dayOfWeek])
+}
+
+model RestaurantTable {
+  id           String      @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tableNumber  String // "T1"
+  capacity     Int
+  floor        String?
+  zone         String? // Garden, Upper, VIP, Bar...
+  description  String?
+  status       TableStatus @default(AVAILABLE)
+
+  reservations Reservation[]
+
+  @@unique([restaurantId, tableNumber])
+  @@map("restaurant_tables")
+}
+
+model SpecialClosure {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  date         DateTime   @db.Date
+  reason       String?
+
+  @@unique([restaurantId, date])
+}
+
+model GalleryImage {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  url          String
+  caption      String?
+  sortOrder    Int        @default(0)
+}
+
+// ============================ Menus ============================
+
+model Menu {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name         String // "Lunch Menu", "Dinner Menu"
+  description  String?
+  isActive     Boolean    @default(true)
+  sortOrder    Int        @default(0)
+
+  items MenuItem[]
+}
+
+model MenuItem {
+  id           String  @id @default(cuid())
+  menuId       String
+  menu         Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  price        Decimal @db.Decimal(10, 2) // USD; KHR derived for display
+  category     String? // Main, Starter, Dessert, Soup, Drink
+  imageUrl     String?
+  isAvailable  Boolean @default(true)
+  isVegan      Boolean @default(false)
+  isVegetarian Boolean @default(false)
+  isGlutenFree Boolean @default(false)
+  sortOrder    Int     @default(0)
+}
+
+// ===================== Schedule & slots =======================
+
+model TimeSlot {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  time         String // "18:00"
+  capacity     Int        @default(0) // seats bookable for this slot
+
+  @@unique([restaurantId, time])
+}
+
+// ========================= Reservations =======================
+
+model Reservation {
+  id               String            @id @default(cuid())
+  confirmationCode String            @unique // "TS-4827"
+  restaurantId     String
+  restaurant       Restaurant        @relation(fields: [restaurantId], references: [id])
+  userId           String
+  user             User              @relation(fields: [userId], references: [id])
+  tableId          String?
+  table            RestaurantTable?  @relation(fields: [tableId], references: [id])
+
+  date              DateTime          @db.Date
+  time              String // "19:30"
+  partySize         Int
+  seatingPreference SeatingPreference @default(INDOOR)
+  specialRequests   String?
+  status            ReservationStatus @default(PENDING)
+
+  depositAmount Decimal @default(0) @db.Decimal(10, 2)
+  depositPaid   Boolean @default(false)
+
+  payment Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([restaurantId, date])
+  @@index([userId])
+}
+
+model Payment {
+  id            String         @id @default(cuid())
+  reservationId String         @unique
+  reservation   Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  channel       PaymentChannel @default(KHQR)
+  amount        Decimal        @db.Decimal(10, 2)
+  currency      String         @default("USD")
+  status        PaymentStatus  @default(PENDING)
+  khqrPayload   String? // KHQR string encoded into the QR
+  paidAt        DateTime?
+  createdAt     DateTime       @default(now())
+}
+
+// =========================== Reviews ==========================
+
+model Review {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  rating       Int // 1..5
+  text         String?
+  ownerReply   String?
+  repliedAt    DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([restaurantId])
+}
+
+// ===================== Diner saved data =======================
+
+model SavedRestaurant {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, restaurantId])
+}
+
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brand     String // ABA, Wing, Bakong
+  label     String
+  detail    String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ==================== Owner payouts & limits ==================
+
+model PayoutMethod {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  brand        String // ABA, Bakong, ACLEDA
+  label        String
+  detail       String?
+  isPrimary    Boolean    @default(false)
+}
+
+model RestaurantRequest {
+  id             String        @id @default(cuid())
+  ownerId        String
+  owner          User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  currentCount   Int
+  requestedCount Int
+  reason         String?
+  status         RequestStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  reviewedAt     DateTime?
+}
+
+// ====================== Platform settings =====================
+
+model PlatformSetting {
+  id    String @id @default(cuid())
+  key   String @unique // e.g. "default_restaurant_limit", "require_khqr_deposits"
+  value String
+}

@@ -1,0 +1,47 @@
+/* Design tokens — pulled from design/TableSite.reference.html */
+:root {
+  --accent: #c2410c;
+  --secondary: #1f6f54;
+  --bg: #fbf7f2;
+  --surface: #ffffff;
+  --border: #ece1d5;
+  --ink: #241d19;
+  --muted: #9a8e82;
+  --usd-to-khr: 4100;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans), var(--font-khmer), sans-serif;
+  background: var(--bg);
+  color: #2a2320;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #f2c8b6;
+}
+
+/* Use .km for Khmer script, .disp for display/numbers */
+.km {
+  font-family: var(--font-khmer), var(--font-sans), sans-serif;
+}
+
+.disp {
+  font-family: var(--font-display), var(--font-khmer), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
