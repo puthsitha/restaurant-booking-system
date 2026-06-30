@@ -1,0 +1,87 @@
+#!/usr/bin/env node
+// TableSite commit-message hook.
+// Enforces:  <emoji> <type>(scope): short description
+// Install is automatic via the root package.json "prepare" script
+// (git config core.hooksPath .githooks). See docs/COMMIT_CONVENTION.md.
+
+"use strict";
+
+const fs = require("fs");
+
+const path = process.argv[2];
+if (!path) {
+  console.error("❌ Missing commit message file path.");
+  process.exit(1);
+}
+
+// Strip comment lines (e.g. the git template) and trailing whitespace, then read
+// the first non-empty line — that is the commit subject we validate.
+const raw = fs.readFileSync(path, "utf8");
+const subject =
+  raw
+    .split("\n")
+    .filter((line) => !line.startsWith("#"))
+    .join("\n")
+    .trim()
+    .split("\n")[0] ?? "";
+
+// Let git's own automated messages through untouched.
+if (/^(Merge|Revert|fixup!|squash!|amend!)\b/.test(subject)) {
+  process.exit(0);
+}
+
+// type -> { emoji, description }
+const TYPES = {
+  feat: { emoji: "✨", description: "Introducing a new feature" },
+  fix: { emoji: "🐛", description: "Fixing a bug" },
+  refactor: { emoji: "♻️", description: "Refactoring code (no feature or fix)" },
+  build: { emoji: "📦", description: "Build system or dependency changes" },
+  perf: { emoji: "🚀", description: "Improving performance" },
+  docs: { emoji: "📝", description: "Documentation changes" },
+  test: { emoji: "✏️", description: "Adding or updating tests" },
+  style: { emoji: "🎨", description: "Non-functional code changes (formatting)" },
+  chore: { emoji: "🔧", description: "Miscellaneous tasks (config, cleanup)" },
+  upgrade: { emoji: "🔼", description: "Upgrading dependencies" },
+  security: { emoji: "🔒", description: "Security fixes" },
+  remove: { emoji: "🔥", description: "Removing code or files" },
+  revert: { emoji: "◀️", description: "Reverting changes" },
+  wip: { emoji: "〰️", description: "Work in progress" }
+};
+
+const emojis = Object.values(TYPES).map((t) => t.emoji);
+const types = Object.keys(TYPES);
+
+// ^<emoji> <type>(scope)?: <description>
+const pattern = new RegExp(
+  "^(" +
+    emojis.map((e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") +
+    ") (" +
+    types.join("|") +
+    ")(\\([\\w-]+\\))?: .+"
+);
+
+if (pattern.test(subject)) {
+  console.log("✅ Commit message valid!");
+  process.exit(0);
+}
+
+const line = "----   ---------   ----------------------------------------";
+const out = [
+  "❌ Invalid commit message!",
+  "Your message:\n  " + subject + "\n",
+  "✅ Format: <emoji> <type>(scope): short description",
+  "Examples:",
+  "  ✨ feat(auth): add biometric login",
+  "  🐛 fix(cart): crash on empty cart\n",
+  line,
+  "Emoji  Type       Description",
+  line
+];
+for (const type of types) {
+  const { emoji, description } = TYPES[type];
+  out.push(`${emoji}     ${type.padEnd(9)} ${description}`);
+}
+out.push(line);
+
+console.error(out.join("\n"));
+process.exit(1);

@@ -8,10 +8,16 @@
     "backend"
   ],
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
+    "hooks:install": "git config core.hooksPath .githooks",
     "dev:frontend": "npm run dev --workspace frontend",
     "dev:backend": "npm run dev --workspace backend",
     "build:frontend": "npm run build --workspace frontend",
     "build:backend": "npm run build --workspace backend",
-    "prisma:generate": "npm run prisma:generate --workspace backend"
+    "prisma:generate": "npm run prisma:generate --workspace backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace backend",
+    "prisma:studio": "npm run prisma:studio --workspace backend",
+    "lint": "npm run lint --workspace frontend",
+    "test": "npm run test --workspaces --if-present"
   }
 }
