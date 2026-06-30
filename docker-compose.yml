@@ -1,0 +1,30 @@
+# Local PostgreSQL for TableSite development.
+# Matches the default DATABASE_URL in backend/.env.example:
+#   postgresql://postgres:postgres@localhost:5432/tablesite?schema=public
+#
+# Usage:
+#   docker compose up -d        # start Postgres in the background
+#   docker compose down         # stop it (data is preserved in the volume)
+#   docker compose down -v      # stop it and wipe the database
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tablesite-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tablesite
+    ports:
+      - "5432:5432"
+    volumes:
+      - tablesite-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tablesite"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  tablesite-pgdata:
