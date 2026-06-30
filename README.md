@@ -49,6 +49,17 @@ npm install
 npm run dev:frontend      # http://localhost:3000
 ```
 
+### Database (Docker)
+
+A `docker-compose.yml` at the repo root runs PostgreSQL with credentials that
+match the default `DATABASE_URL` in `backend/.env.example`:
+
+```bash
+docker compose up -d        # start Postgres on localhost:5432
+docker compose down         # stop it (data is kept in a named volume)
+docker compose down -v      # stop it and wipe the database
+```
+
 ### Backend
 
 ```bash
@@ -56,6 +67,22 @@ cp backend/.env.example backend/.env   # then set DATABASE_URL
 npm run prisma:generate                # generate the Prisma client
 npm run dev:backend                    # http://localhost:4000
 ```
+
+## Styling
+
+The frontend uses [Tailwind CSS](https://tailwindcss.com). Design tokens (colors
+and fonts) are exposed as Tailwind theme extensions in
+`frontend/tailwind.config.ts`, mirroring `frontend/lib/theme.ts` and the CSS
+custom properties in `frontend/app/globals.css`.
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and on
+pull requests:
+
+- **Frontend** — `next lint` and `next build`.
+- **Backend** — `prisma generate` (against a Postgres service container) and the
+  TypeScript build.
 
 ## Design tokens
 

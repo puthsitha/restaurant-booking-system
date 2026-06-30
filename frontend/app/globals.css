@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Design tokens — pulled from design/TableSite.reference.html */
 :root {
   --accent: #c2410c;
