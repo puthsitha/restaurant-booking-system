@@ -69,3 +69,6 @@ jobs:
 
       - name: Build
         run: npm run build:backend
+
+      - name: Test
+        run: npm run test --workspace backend
