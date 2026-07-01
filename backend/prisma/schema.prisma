@@ -96,6 +96,7 @@ model User {
   email           String?    @unique
   phone           String?    @unique // +855 country code
   passwordHash    String? // owners/admins; diners use phone OTP
+  googleId        String?    @unique // set when the account signed up/linked via Google OAuth
   avatarUrl       String?
   status          UserStatus @default(ACTIVE)
   preferredLocale String     @default("km") // "km" | "en"

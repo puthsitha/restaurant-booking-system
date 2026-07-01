@@ -2,9 +2,12 @@ import cors from "cors";
 import express, { type Express } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
 
+import { openapiSpec } from "./docs/openapi";
 import { env } from "./env";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
+import { authRouter } from "./routes/auth";
 import { healthRouter } from "./routes/health";
 
 // Build the Express application. Kept separate from server startup so tests can
@@ -43,6 +46,10 @@ export function createApp(): Express {
   );
 
   app.use(healthRouter);
+  app.use(authRouter);
+
+  // Interactive API docs, generated from @openapi JSDoc comments on the routes.
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
   // 404 + centralized error handling must be registered last.
   app.use(notFoundHandler);

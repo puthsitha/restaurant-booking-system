@@ -9,6 +9,8 @@ export default defineConfig({
     env: {
       NODE_ENV: "test",
       DATABASE_URL: "postgresql://test:test@localhost:5432/test?schema=public",
+      JWT_SECRET: "test-secret",
+      GOOGLE_CLIENT_ID: "test-google-client-id",
     },
   },
 });

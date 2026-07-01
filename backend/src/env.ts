@@ -36,6 +36,9 @@ export const env = {
   isProduction: nodeEnv === "production",
   port: intEnv("PORT", 4000),
   databaseUrl: requireEnv("DATABASE_URL"),
+  jwtSecret: requireEnv("JWT_SECRET"),
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
+  googleClientId: requireEnv("GOOGLE_CLIENT_ID"),
   // Comma-separated allowlist of browser origins permitted to call the API.
   corsOrigins: (process.env.CORS_ORIGIN ?? "http://localhost:3000")
     .split(",")
