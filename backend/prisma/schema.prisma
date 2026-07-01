@@ -115,6 +115,20 @@ model User {
   restaurantRequests RestaurantRequest[]
 }
 
+// One-time codes for diner phone login. Codes are stored hashed; a new
+// request supersedes any prior unconsumed code for the same phone.
+model OtpCode {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone])
+}
+
 // ========================= Restaurants =========================
 
 model Restaurant {

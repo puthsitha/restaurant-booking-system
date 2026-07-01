@@ -6,6 +6,8 @@ import type {
   SignupInput,
   LoginInput,
   GoogleAuthInput,
+  OtpRequestInput,
+  OtpVerifyInput,
 } from "../schemas/auth.schemas";
 
 export async function signup(
@@ -41,6 +43,32 @@ export async function googleLogin(
 ): Promise<void> {
   try {
     const result = await authService.loginWithGoogle(req.body);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function otpRequest(
+  req: Request<unknown, unknown, OtpRequestInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const result = await authService.requestOtp(req.body);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function otpVerify(
+  req: Request<unknown, unknown, OtpVerifyInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const result = await authService.verifyOtp(req.body);
     res.json(result);
   } catch (err) {
     next(err);
