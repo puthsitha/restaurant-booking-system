@@ -1,0 +1,39 @@
+"use client";
+
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuthModal } from "@/lib/auth/authModal";
+
+export function CustomerHeader() {
+  const { user, status, logout } = useAuth();
+  const { open } = useAuthModal();
+
+  return (
+    <header className="border-b border-border bg-surface">
+      <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8 py-4">
+        <span className="disp text-lg font-extrabold text-ink">
+          Table<span className="text-accent">Site</span>
+        </span>
+
+        {status === "authenticated" && user ? (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-ink">{user.name}</span>
+            <button
+              onClick={logout}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink"
+            >
+              Log out
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={open}
+            disabled={status === "loading"}
+            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+          >
+            Log in
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}

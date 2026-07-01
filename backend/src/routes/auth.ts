@@ -7,6 +7,8 @@ import {
   signupSchema,
   loginSchema,
   googleAuthSchema,
+  otpRequestSchema,
+  otpVerifySchema,
 } from "../schemas/auth.schemas";
 
 export const authRouter: Router = Router();
@@ -138,6 +140,106 @@ authRouter.post(
   "/api/auth/google",
   validateBody(googleAuthSchema),
   authController.googleLogin,
+);
+
+/**
+ * @openapi
+ * /api/auth/otp/request:
+ *   post:
+ *     summary: Request a one-time login code for a Cambodian phone number
+ *     description: >
+ *       Sends a 6-digit code that expires in 5 minutes. No SMS provider is
+ *       wired up yet, so outside production the response also includes
+ *       `devCode` so the flow can be tested end-to-end without reading
+ *       server logs.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [phone]
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 example: "+85512345678"
+ *     responses:
+ *       200:
+ *         description: Code sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 devCode:
+ *                   type: string
+ *                   description: Only present outside production.
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/Error"
+ */
+authRouter.post(
+  "/api/auth/otp/request",
+  validateBody(otpRequestSchema),
+  authController.otpRequest,
+);
+
+/**
+ * @openapi
+ * /api/auth/otp/verify:
+ *   post:
+ *     summary: Verify a phone OTP code and log in (or sign up on first use)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [phone, code]
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 example: "+85512345678"
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/AuthResponse"
+ *       400:
+ *         description: No code was requested for this number
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/Error"
+ *       401:
+ *         description: Invalid or expired code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/Error"
+ *       429:
+ *         description: Too many attempts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/Error"
+ */
+authRouter.post(
+  "/api/auth/otp/verify",
+  validateBody(otpVerifySchema),
+  authController.otpVerify,
 );
 
 /**

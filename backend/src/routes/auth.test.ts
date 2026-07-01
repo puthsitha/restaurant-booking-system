@@ -12,6 +12,12 @@ vi.mock("../lib/prisma", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    otpCode: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }));
 
@@ -190,6 +196,164 @@ describe("POST /api/auth/google", () => {
       .send({ idToken: "garbage" });
 
     expect(res.status).toBe(401);
+  });
+});
+
+describe("POST /api/auth/otp/request", () => {
+  it("rejects a non-Cambodian phone number", async () => {
+    const res = await request(app)
+      .post("/api/auth/otp/request")
+      .send({ phone: "12345" });
+
+    expect(res.status).toBe(400);
+    expect(prisma.otpCode.create).not.toHaveBeenCalled();
+  });
+
+  it("supersedes any prior code and issues a new one", async () => {
+    vi.mocked(prisma.otpCode.updateMany).mockResolvedValueOnce({ count: 1 });
+    vi.mocked(prisma.otpCode.create).mockResolvedValueOnce(
+      {} as Awaited<ReturnType<typeof prisma.otpCode.create>>,
+    );
+
+    const res = await request(app)
+      .post("/api/auth/otp/request")
+      .send({ phone: "+85512345678" });
+
+    expect(res.status).toBe(200);
+    expect(prisma.otpCode.updateMany).toHaveBeenCalledWith({
+      where: { phone: "+85512345678", consumedAt: null },
+      data: { consumedAt: expect.any(Date) },
+    });
+    expect(res.body.devCode).toMatch(/^\d{6}$/);
+  });
+});
+
+describe("POST /api/auth/otp/verify", () => {
+  const phone = "+85512345678";
+
+  it("rejects verification when no code was requested", async () => {
+    vi.mocked(prisma.otpCode.findFirst).mockResolvedValueOnce(null);
+
+    const res = await request(app)
+      .post("/api/auth/otp/verify")
+      .send({ phone, code: "123456" });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an expired code", async () => {
+    vi.mocked(prisma.otpCode.findFirst).mockResolvedValueOnce({
+      id: "otp_1",
+      phone,
+      codeHash: "irrelevant",
+      attempts: 0,
+      expiresAt: new Date(Date.now() - 1000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+
+    const res = await request(app)
+      .post("/api/auth/otp/verify")
+      .send({ phone, code: "123456" });
+
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects after too many attempts", async () => {
+    vi.mocked(prisma.otpCode.findFirst).mockResolvedValueOnce({
+      id: "otp_1",
+      phone,
+      codeHash: "irrelevant",
+      attempts: 5,
+      expiresAt: new Date(Date.now() + 60_000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+
+    const res = await request(app)
+      .post("/api/auth/otp/verify")
+      .send({ phone, code: "123456" });
+
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects an incorrect code and records the attempt", async () => {
+    const bcrypt = await import("bcryptjs");
+    vi.mocked(prisma.otpCode.findFirst).mockResolvedValueOnce({
+      id: "otp_1",
+      phone,
+      codeHash: await bcrypt.hash("111111", 4),
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 60_000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+
+    const res = await request(app)
+      .post("/api/auth/otp/verify")
+      .send({ phone, code: "222222" });
+
+    expect(res.status).toBe(401);
+    expect(prisma.otpCode.update).toHaveBeenCalledWith({
+      where: { id: "otp_1" },
+      data: { attempts: { increment: 1 } },
+    });
+  });
+
+  it("logs in an existing user with the correct code", async () => {
+    const bcrypt = await import("bcryptjs");
+    vi.mocked(prisma.otpCode.findFirst).mockResolvedValueOnce({
+      id: "otp_1",
+      phone,
+      codeHash: await bcrypt.hash("123456", 4),
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 60_000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+      ...baseUser,
+      phone,
+      email: null,
+      passwordHash: null,
+    });
+
+    const res = await request(app)
+      .post("/api/auth/otp/verify")
+      .send({ phone, code: "123456" });
+
+    expect(res.status).toBe(200);
+    expect(prisma.user.create).not.toHaveBeenCalled();
+    expect(typeof res.body.token).toBe("string");
+  });
+
+  it("creates a new diner on first-time verification", async () => {
+    const bcrypt = await import("bcryptjs");
+    vi.mocked(prisma.otpCode.findFirst).mockResolvedValueOnce({
+      id: "otp_1",
+      phone,
+      codeHash: await bcrypt.hash("123456", 4),
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 60_000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.user.create).mockResolvedValueOnce({
+      ...baseUser,
+      phone,
+      email: null,
+      passwordHash: null,
+    });
+
+    const res = await request(app)
+      .post("/api/auth/otp/verify")
+      .send({ phone, code: "123456" });
+
+    expect(res.status).toBe(200);
+    expect(prisma.user.create).toHaveBeenCalledWith({
+      data: { name: phone, phone },
+    });
   });
 });
 

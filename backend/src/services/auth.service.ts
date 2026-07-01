@@ -5,10 +5,18 @@ import { HttpError } from "../lib/httpError";
 import { hashPassword, comparePassword } from "../lib/password";
 import { signAuthToken } from "../lib/jwt";
 import { verifyGoogleIdToken } from "../lib/googleAuth";
+import {
+  generateOtpCode,
+  OTP_TTL_MINUTES,
+  OTP_MAX_ATTEMPTS,
+} from "../lib/otp";
+import { env } from "../env";
 import type {
   SignupInput,
   LoginInput,
   GoogleAuthInput,
+  OtpRequestInput,
+  OtpVerifyInput,
 } from "../schemas/auth.schemas";
 
 // Never send the password hash back to a client.
@@ -89,6 +97,80 @@ export async function loginWithGoogle(input: GoogleAuthInput): Promise<AuthResul
         });
   }
 
+  assertActive(user);
+
+  return { user: toPublicUser(user), token: signAuthToken({ sub: user.id, role: user.role }) };
+}
+
+export interface OtpRequestResult {
+  message: string;
+  // Only populated outside production, since no SMS provider is wired up yet;
+  // lets the dev/test flow proceed without reading server logs.
+  devCode?: string;
+}
+
+export async function requestOtp(
+  input: OtpRequestInput,
+): Promise<OtpRequestResult> {
+  const code = generateOtpCode();
+  const codeHash = await hashPassword(code);
+  const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
+
+  // Superseding any prior unconsumed code keeps a phone number from
+  // accumulating multiple valid codes to brute-force in parallel.
+  await prisma.otpCode.updateMany({
+    where: { phone: input.phone, consumedAt: null },
+    data: { consumedAt: new Date() },
+  });
+  await prisma.otpCode.create({
+    data: { phone: input.phone, codeHash, expiresAt },
+  });
+
+  // eslint-disable-next-line no-console
+  console.log(`[otp] code for ${input.phone}: ${code}`);
+
+  return {
+    message: "A verification code has been sent",
+    devCode: env.isProduction ? undefined : code,
+  };
+}
+
+export async function verifyOtp(input: OtpVerifyInput): Promise<AuthResult> {
+  const otp = await prisma.otpCode.findFirst({
+    where: { phone: input.phone, consumedAt: null },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!otp) {
+    throw new HttpError(400, "No verification code was requested for this number");
+  }
+  if (otp.expiresAt < new Date()) {
+    throw new HttpError(401, "This code has expired, request a new one");
+  }
+  if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+    throw new HttpError(429, "Too many attempts, request a new code");
+  }
+
+  const isValid = await comparePassword(input.code, otp.codeHash);
+  if (!isValid) {
+    await prisma.otpCode.update({
+      where: { id: otp.id },
+      data: { attempts: { increment: 1 } },
+    });
+    throw new HttpError(401, "Invalid code");
+  }
+
+  await prisma.otpCode.update({
+    where: { id: otp.id },
+    data: { consumedAt: new Date() },
+  });
+
+  let user = await prisma.user.findUnique({ where: { phone: input.phone } });
+  if (!user) {
+    user = await prisma.user.create({
+      data: { name: input.phone, phone: input.phone },
+    });
+  }
   assertActive(user);
 
   return { user: toPublicUser(user), token: signAuthToken({ sub: user.id, role: user.role }) };
