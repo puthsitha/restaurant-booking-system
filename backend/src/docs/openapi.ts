@@ -4,9 +4,9 @@ import swaggerJsdoc from "swagger-jsdoc";
 
 import { env } from "../env";
 
-// Glob matches both .ts (dev, via ts-node-dev) and compiled .js (production
-// build) route/docs files, since swagger-jsdoc reads JSDoc comments as plain
-// text rather than executing the code.
+// Glob matches both .ts (dev, via nodemon/ts-node) and compiled .js
+// (production build) route/docs files, since swagger-jsdoc reads JSDoc
+// comments as plain text rather than executing the code.
 export const openapiSpec = swaggerJsdoc({
   definition: {
     openapi: "3.0.3",
