@@ -1,21 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
+import { SavedToast } from "@/components/ui/SavedToast";
+import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
 import { listTags, setRestaurantTags } from "@/lib/restaurants/api";
 import type { Tag } from "@/lib/restaurants/types";
 
-import type { ManageTabProps } from "./types";
+import type { DirtyTabHandle, ManageTabProps } from "./types";
 
-export function TagsTab({ restaurant, token, onSaved }: ManageTabProps) {
+function sortedIds(ids: Iterable<string>): string[] {
+  return Array.from(ids).sort();
+}
+
+export const TagsTab = forwardRef<DirtyTabHandle, ManageTabProps>(function TagsTab(
+  { restaurant, token, onSaved, onDirtyChange },
+  ref,
+) {
   const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(
-    new Set(restaurant.tags.map((t) => t.id)),
-  );
+  const baseline = useRef(new Set(restaurant.tags.map((t) => t.id)));
+  const [selected, setSelected] = useState<Set<string>>(baseline.current);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+
+  const isDirty = JSON.stringify(sortedIds(selected)) !== JSON.stringify(sortedIds(baseline.current));
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     listTags()
@@ -32,22 +46,33 @@ export function TagsTab({ restaurant, token, onSaved }: ManageTabProps) {
     });
   }
 
-  async function handleSave(): Promise<void> {
+  const save = useCallback(async (): Promise<boolean> => {
     setError(null);
     setIsSaving(true);
     try {
       await setRestaurantTags(restaurant.id, Array.from(selected), token);
       await onSaved();
-      setSavedAt(Date.now());
+      baseline.current = new Set(selected);
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+      return true;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't save tags");
+      return false;
     } finally {
       setIsSaving(false);
     }
+  }, [restaurant.id, token, selected, onSaved]);
+
+  useImperativeHandle(ref, () => ({ save }), [save]);
+
+  function discard(): void {
+    setSelected(new Set(baseline.current));
+    setError(null);
   }
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl pb-2">
       {allTags.length === 0 ? (
         <p className="text-sm text-muted">No tags exist yet — an admin needs to create some.</p>
       ) : (
@@ -60,9 +85,7 @@ export function TagsTab({ restaurant, token, onSaved }: ManageTabProps) {
                 type="button"
                 onClick={() => toggle(tag.id)}
                 className={`rounded-full border px-3.5 py-1.5 text-sm font-medium ${
-                  isSelected
-                    ? "border-accent bg-accent text-white"
-                    : "border-border text-ink"
+                  isSelected ? "border-accent bg-accent text-white" : "border-border text-ink"
                 }`}
               >
                 {tag.name}
@@ -72,16 +95,15 @@ export function TagsTab({ restaurant, token, onSaved }: ManageTabProps) {
         </div>
       )}
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-      {savedAt && !error && <p className="mt-3 text-sm text-secondary">Saved.</p>}
-
-      <button
-        onClick={handleSave}
-        disabled={isSaving}
-        className="mt-5 rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-      >
-        {isSaving ? "Saving…" : "Save tags"}
-      </button>
+      <UnsavedChangesBar
+        visible={isDirty || isSaving}
+        isSaving={isSaving}
+        error={error}
+        onSave={save}
+        onDiscard={discard}
+        saveLabel="Save tags"
+      />
+      <SavedToast visible={justSaved && !isDirty} />
     </div>
   );
-}
+});
