@@ -108,9 +108,12 @@ export default function AdminRequestsPage() {
         request={reviewing}
         onClose={() => setReviewing(null)}
         token={token}
-        onReviewed={() => {
+        onReviewed={(updated) => {
           setReviewing(null);
-          load();
+          // Update in place rather than re-fetching with the same filter —
+          // if the admin is viewing "Pending", a re-fetch would make the
+          // request they just reviewed vanish with no visible confirmation.
+          setRequests((prev) => prev?.map((r) => (r.id === updated.id ? updated : r)) ?? prev);
         }}
       />
     </main>
@@ -121,7 +124,7 @@ interface ReviewModalProps {
   request: RestaurantRequest | null;
   onClose: () => void;
   token: string | null;
-  onReviewed: () => void;
+  onReviewed: (updated: RestaurantRequest) => void;
 }
 
 function ReviewModal({ request, onClose, token, onReviewed }: ReviewModalProps) {
@@ -144,8 +147,12 @@ function ReviewModal({ request, onClose, token, onReviewed }: ReviewModalProps) 
     setError(null);
     setSubmitting(true);
     try {
-      await reviewRestaurantRequest(request.id, { status: decision, reviewNote }, token);
-      onReviewed();
+      const { request: updated } = await reviewRestaurantRequest(
+        request.id,
+        { status: decision, reviewNote },
+        token,
+      );
+      onReviewed(updated);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
