@@ -8,7 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SearchOffIcon } from "@/components/ui/icons";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
 import type { RestaurantStatus, RestaurantSummary } from "@/lib/restaurants/types";
 
@@ -18,7 +18,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default function AdminRestaurantsPage() {
-  const { token } = useAuth();
+  const { token } = useAdminAuth();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<RestaurantStatus | "">("");
   const [restaurants, setRestaurants] = useState<RestaurantSummary[] | null>(null);
