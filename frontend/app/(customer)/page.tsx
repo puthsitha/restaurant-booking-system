@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
+import { ChefHatIcon } from "@/components/ui/icons";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { listRestaurants } from "@/lib/restaurants/api";
 
 export default async function HomePage() {
@@ -57,13 +59,14 @@ export default async function HomePage() {
       </div>
 
       {items.length === 0 ? (
-        <p className="mt-6 text-sm text-muted">
-          No restaurants yet — check back soon, or{" "}
-          <Link href="/signup" className="font-semibold text-accent">
-            list your restaurant
-          </Link>
-          .
-        </p>
+        <EmptyState
+          className="mt-6"
+          icon={ChefHatIcon}
+          title="The dining room is warming up"
+          message="No restaurants have opened their doors yet — be the first, or check back soon for new spots."
+          actionLabel="List your restaurant"
+          actionHref="/signup"
+        />
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((restaurant) => (

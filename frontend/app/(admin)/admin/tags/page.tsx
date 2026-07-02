@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyPlateIcon } from "@/components/ui/icons";
+import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { createTag, deleteTag, listTags } from "@/lib/restaurants/api";
@@ -12,13 +16,15 @@ export default function AdminTagsPage() {
   const { token } = useAuth();
   const [tags, setTags] = useState<Tag[] | null>(null);
   const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   function reload(): void {
+    setLoadError(null);
     listTags()
       .then((res) => setTags(res.tags))
-      .catch(() => setError("Couldn't load tags."));
+      .catch(() => setLoadError("Couldn't load tags."));
   }
 
   useEffect(reload, []);
@@ -26,14 +32,14 @@ export default function AdminTagsPage() {
   async function handleAdd(e: FormEvent): Promise<void> {
     e.preventDefault();
     if (!token) return;
-    setError(null);
+    setFormError(null);
     setIsSaving(true);
     try {
       await createTag(name, token);
       setName("");
       reload();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't create tag");
+      setFormError(err instanceof ApiError ? err.message : "Couldn't create tag");
     } finally {
       setIsSaving(false);
     }
@@ -41,12 +47,12 @@ export default function AdminTagsPage() {
 
   async function handleDelete(id: string): Promise<void> {
     if (!token) return;
-    setError(null);
+    setFormError(null);
     try {
       await deleteTag(id, token);
       reload();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't delete tag");
+      setFormError(err instanceof ApiError ? err.message : "Couldn't delete tag");
     }
   }
 
@@ -77,12 +83,22 @@ export default function AdminTagsPage() {
         </button>
       </form>
 
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+      {formError && <p className="mt-4 text-sm text-red-600">{formError}</p>}
 
-      {tags === null ? (
-        <p className="mt-8 text-sm text-muted">Loading…</p>
+      {loadError ? (
+        <ErrorState className="mt-8" message={loadError} onRetry={reload} />
+      ) : tags === null ? (
+        <div className="mt-8">
+          <ListSkeleton rows={3} />
+        </div>
       ) : tags.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">No tags yet.</p>
+        <EmptyState
+          className="mt-8"
+          icon={EmptyPlateIcon}
+          title="No tags yet"
+          message="Tags help diners filter by vibe or diet — add a few to get owners tagging their restaurants."
+          compact
+        />
       ) : (
         <div className="mt-6 flex flex-wrap gap-2">
           {tags.map((tag) => (

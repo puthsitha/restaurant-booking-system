@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { createGalleryImage, deleteGalleryImage } from "@/lib/restaurants/api";
 
@@ -71,24 +73,34 @@ export function GalleryTab({ restaurant, token, onSaved }: ManageTabProps) {
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {restaurant.galleryImages.map((image) => (
-          <div key={image.id} className="group relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image.url}
-              alt={image.caption ?? ""}
-              className="h-28 w-full rounded-xl object-cover"
-            />
-            <button
-              onClick={() => handleDelete(image.id)}
-              className="absolute right-1.5 top-1.5 rounded-full bg-ink/70 px-2 py-0.5 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
-            >
-              Delete
-            </button>
-          </div>
-        ))}
-      </div>
+      {restaurant.galleryImages.length === 0 ? (
+        <EmptyState
+          className="mt-6"
+          icon={EmptyPlateIcon}
+          title="No photos yet"
+          message="A great photo is often the reason a diner picks your restaurant — add your first one above."
+          compact
+        />
+      ) : (
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {restaurant.galleryImages.map((image) => (
+            <div key={image.id} className="group relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.url}
+                alt={image.caption ?? ""}
+                className="h-28 w-full rounded-xl object-cover"
+              />
+              <button
+                onClick={() => handleDelete(image.id)}
+                className="absolute right-1.5 top-1.5 rounded-full bg-ink/70 px-2 py-0.5 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

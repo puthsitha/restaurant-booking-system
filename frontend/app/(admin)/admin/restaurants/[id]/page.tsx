@@ -9,6 +9,8 @@ import { MenuTab } from "@/components/restaurants/manage/MenuTab";
 import { ProfileTab } from "@/components/restaurants/manage/ProfileTab";
 import { TablesTab } from "@/components/restaurants/manage/TablesTab";
 import { TagsTab } from "@/components/restaurants/manage/TagsTab";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getRestaurant, updateRestaurantStatus } from "@/lib/restaurants/api";
@@ -62,7 +64,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
   if (error) {
     return (
       <main style={{ padding: 32 }}>
-        <p className="text-sm text-red-600">{error}</p>
+        <ErrorState message={error} onRetry={reload} />
       </main>
     );
   }
@@ -70,7 +72,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
   if (!restaurant) {
     return (
       <main style={{ padding: 32 }}>
-        <p className="text-sm text-muted">Loading…</p>
+        <LoadingSpinner label="Setting up the kitchen…" size="lg" />
       </main>
     );
   }
