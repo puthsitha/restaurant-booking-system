@@ -3,11 +3,20 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { CalendarIcon, ChefHatIcon, DashboardIcon, InboxIcon } from "@/components/ui/icons";
 import { OwnerAuthProvider, useOwnerAuth } from "@/lib/auth/ownerAuth";
 
 // Login/signup live inside this tree for shared styling but must not be
 // gated by the auth check below.
 const PUBLIC_PATHS = ["/owner/login", "/owner/signup"];
+
+const NAV_ITEMS = [
+  { href: "/owner", label: "Dashboard", icon: DashboardIcon },
+  { href: "/owner/restaurants", label: "Restaurants", icon: ChefHatIcon },
+  { href: "/owner/bookings", label: "Bookings", icon: CalendarIcon },
+  { href: "/owner/requests", label: "Requests", icon: InboxIcon },
+];
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -43,25 +52,18 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="owner-shell min-h-screen">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-8 py-4">
-        <span className="disp text-lg font-extrabold text-ink">
-          Table<span className="text-accent">Site</span> Owner
-        </span>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-ink">{user.name}</span>
-          <button
-            onClick={() => {
-              logout();
-              router.replace("/owner/login");
-            }}
-            className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink"
-          >
-            Log out
-          </button>
-        </div>
-      </header>
-      <main>{children}</main>
+    <div className="owner-shell">
+      <DashboardShell
+        brand="Owner"
+        navItems={NAV_ITEMS}
+        userName={user.name}
+        onLogout={() => {
+          logout();
+          router.replace("/owner/login");
+        }}
+      >
+        {children}
+      </DashboardShell>
     </div>
   );
 }

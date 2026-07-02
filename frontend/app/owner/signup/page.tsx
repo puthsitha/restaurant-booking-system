@@ -5,8 +5,31 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { FormField, TextField } from "@/components/ui/FormField";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+
+interface PasswordStrength {
+  label: string;
+  barColor: string;
+  textColor: string;
+  segments: number;
+}
+
+function passwordStrength(pw: string): PasswordStrength {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  if (score <= 1) return { label: "Weak", barColor: "bg-red-400", textColor: "text-red-600", segments: 1 };
+  if (score <= 3)
+    return { label: "Fair", barColor: "bg-amber-400", textColor: "text-amber-600", segments: 2 };
+  return { label: "Strong", barColor: "bg-secondary", textColor: "text-secondary", segments: 3 };
+}
 
 export default function OwnerSignupPage() {
   const { signup } = useOwnerAuth();
@@ -16,6 +39,8 @@ export default function OwnerSignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const strength = password.length > 0 ? passwordStrength(password) : null;
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -39,40 +64,49 @@ export default function OwnerSignupPage() {
       <p className="mt-2 text-sm text-muted">Create an owner account to list your restaurant.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Full name</label>
-          <input
+        <TextField
+          label="Full name"
+          required
+          autoComplete="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <TextField
+          label="Email"
+          required
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <FormField label="Password" htmlFor="owner-signup-password">
+          <PasswordInput
+            id="owner-signup-password"
             required
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Email</label>
-          <input
-            required
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Password</label>
-          <input
-            required
-            type="password"
             minLength={8}
             autoComplete="new-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
+            onChange={setPassword}
           />
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+          {strength && (
+            <div className="mt-2">
+              <div className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 flex-1 rounded-full transition-colors ${
+                      i < strength.segments ? strength.barColor : "bg-border"
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className={`mt-1 text-xs font-semibold ${strength.textColor}`}>
+                {strength.label} password
+              </p>
+            </div>
+          )}
+        </FormField>
+        {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={isSubmitting}

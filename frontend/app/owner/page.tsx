@@ -1,92 +1,116 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { EmptyState } from "@/components/ui/EmptyState";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { ChefHatIcon } from "@/components/ui/icons";
+import { StatCard } from "@/components/dashboard/StatCard";
 import { ListSkeleton } from "@/components/ui/skeletons";
-import { listMyRestaurants } from "@/lib/restaurants/api";
-import type { RestaurantOwned } from "@/lib/restaurants/types";
+import { CalendarIcon, ChefHatIcon, InboxIcon } from "@/components/ui/icons";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { listOwnerReservations } from "@/lib/reservations/api";
+import { listMyRestaurantRequests } from "@/lib/requests/api";
+import { listMyRestaurants } from "@/lib/restaurants/api";
 
-const STATUS_STYLE: Record<string, string> = {
-  ACTIVE: "bg-secondary/10 text-secondary",
-  DISABLED: "bg-red-100 text-red-700",
-};
+interface DashboardStats {
+  restaurantCount: number;
+  restaurantLimit: number;
+  pendingBookings: number;
+  totalBookings: number;
+  hasPendingRequest: boolean;
+}
 
 export default function OwnerDashboardPage() {
   const { user, token } = useOwnerAuth();
-  const [restaurants, setRestaurants] = useState<RestaurantOwned[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
-  const load = useCallback(() => {
+  useEffect(() => {
     if (!token) return;
-    setError(null);
-    listMyRestaurants(token)
-      .then((res) => setRestaurants(res.restaurants))
-      .catch(() => setError("Couldn't load your restaurants."));
-  }, [token]);
+    let cancelled = false;
 
-  useEffect(load, [load]);
+    Promise.all([
+      listMyRestaurants(token),
+      listOwnerReservations({ status: "PENDING", pageSize: 1 }, token),
+      listOwnerReservations({ pageSize: 1 }, token),
+      listMyRestaurantRequests(token),
+    ])
+      .then(([restaurants, pending, total, requests]) => {
+        if (cancelled) return;
+        setStats({
+          restaurantCount: restaurants.restaurants.length,
+          restaurantLimit: user?.restaurantLimit ?? 0,
+          pendingBookings: pending.total,
+          totalBookings: total.total,
+          hasPendingRequest: requests.requests.some((r) => r.status === "PENDING"),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setStats(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, user?.restaurantLimit]);
 
   return (
     <main style={{ padding: 32 }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="disp text-2xl font-extrabold text-ink">My restaurants</h1>
-          <p className="mt-1 text-sm text-muted">
-            {user?.restaurantLimit ?? 0} restaurant{(user?.restaurantLimit ?? 0) === 1 ? "" : "s"}{" "}
-            allowed on your account.
-          </p>
-        </div>
-        <Link
-          href="/owner/restaurants/new"
-          className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white"
-        >
-          + New restaurant
-        </Link>
-      </div>
+      <h1 className="disp text-2xl font-extrabold text-ink">
+        Welcome back, {user?.name.split(" ")[0]}
+      </h1>
+      <p className="mt-1 text-sm text-muted">Here&apos;s how your restaurants are doing.</p>
 
-      {error ? (
-        <ErrorState className="mt-8" message={error} onRetry={load} />
-      ) : restaurants === null ? (
+      {stats === null ? (
         <div className="mt-8">
           <ListSkeleton rows={2} />
         </div>
-      ) : restaurants.length === 0 ? (
-        <EmptyState
-          className="mt-8"
-          icon={ChefHatIcon}
-          title="Your first restaurant awaits"
-          message="Add your restaurant's profile, hours, and menu — diners are searching for a table right now."
-          actionLabel="+ New restaurant"
-          actionHref="/owner/restaurants/new"
-        />
       ) : (
-        <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
-          {restaurants.map((restaurant) => (
-            <Link
-              key={restaurant.id}
-              href={`/owner/restaurants/${restaurant.id}`}
-              className="flex items-center justify-between px-5 py-4 hover:bg-bg"
-            >
-              <div>
-                <p className="font-bold text-ink">{restaurant.name}</p>
-                <p className="text-sm text-muted">
-                  {restaurant.cuisineType} · {restaurant.city}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS_STYLE[restaurant.status]}`}
-              >
-                {restaurant.status}
-              </span>
-            </Link>
-          ))}
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            icon={ChefHatIcon}
+            label="Restaurants"
+            value={`${stats.restaurantCount} / ${stats.restaurantLimit}`}
+            hint={stats.restaurantCount >= stats.restaurantLimit ? "At your limit" : "Slots available"}
+          />
+          <StatCard
+            icon={CalendarIcon}
+            label="Pending bookings"
+            value={stats.pendingBookings}
+            hint="Awaiting confirmation"
+            tone="secondary"
+          />
+          <StatCard icon={CalendarIcon} label="Total bookings" value={stats.totalBookings} />
+          <StatCard
+            icon={InboxIcon}
+            label="Limit requests"
+            value={stats.hasPendingRequest ? "Pending" : "None"}
+            hint={stats.hasPendingRequest ? "Awaiting admin review" : "All caught up"}
+            tone="secondary"
+          />
         </div>
       )}
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link
+          href="/owner/restaurants"
+          className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white"
+        >
+          Manage restaurants
+        </Link>
+        <Link
+          href="/owner/bookings"
+          className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-ink"
+        >
+          View bookings
+        </Link>
+        {stats && stats.restaurantCount >= stats.restaurantLimit && !stats.hasPendingRequest && (
+          <Link
+            href="/owner/requests"
+            className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-ink"
+          >
+            Request more restaurants
+          </Link>
+        )}
+      </div>
     </main>
   );
 }
