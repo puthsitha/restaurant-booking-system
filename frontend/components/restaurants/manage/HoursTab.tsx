@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
+import { SavedToast } from "@/components/ui/SavedToast";
+import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
 import { setOperatingHours } from "@/lib/restaurants/api";
 import type { DayOfWeek } from "@/lib/restaurants/types";
 
-import type { ManageTabProps } from "./types";
+import type { DirtyTabHandle, ManageTabProps } from "./types";
 
 const DAYS: { key: DayOfWeek; label: string }[] = [
   { key: "MONDAY", label: "Monday" },
@@ -25,29 +26,41 @@ interface DayState {
   isClosed: boolean;
 }
 
-export function HoursTab({ restaurant, token, onSaved }: ManageTabProps) {
-  const existing = new Map(restaurant.operatingHours.map((h) => [h.dayOfWeek, h]));
+type HoursDraft = Record<DayOfWeek, DayState>;
 
-  const [hours, setHours] = useState<Record<DayOfWeek, DayState>>(() => {
-    const initial = {} as Record<DayOfWeek, DayState>;
-    for (const { key } of DAYS) {
-      const found = existing.get(key);
-      initial[key] = found
-        ? { openTime: found.openTime, closeTime: found.closeTime, isClosed: found.isClosed }
-        : { openTime: "09:00", closeTime: "21:00", isClosed: false };
-    }
-    return initial;
-  });
+function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): HoursDraft {
+  const existing = new Map(restaurant.operatingHours.map((h) => [h.dayOfWeek, h]));
+  const draft = {} as HoursDraft;
+  for (const { key } of DAYS) {
+    const found = existing.get(key);
+    draft[key] = found
+      ? { openTime: found.openTime, closeTime: found.closeTime, isClosed: found.isClosed }
+      : { openTime: "09:00", closeTime: "21:00", isClosed: false };
+  }
+  return draft;
+}
+
+export const HoursTab = forwardRef<DirtyTabHandle, ManageTabProps>(function HoursTab(
+  { restaurant, token, onSaved, onDirtyChange },
+  ref,
+) {
+  const baseline = useRef(draftFromRestaurant(restaurant));
+  const [hours, setHours] = useState(baseline.current);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+
+  const isDirty = JSON.stringify(hours) !== JSON.stringify(baseline.current);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   function updateDay(day: DayOfWeek, patch: Partial<DayState>): void {
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], ...patch } }));
   }
 
-  async function handleSubmit(e: FormEvent): Promise<void> {
-    e.preventDefault();
+  const save = useCallback(async (): Promise<boolean> => {
     setError(null);
     setIsSaving(true);
     try {
@@ -57,16 +70,27 @@ export function HoursTab({ restaurant, token, onSaved }: ManageTabProps) {
         token,
       );
       await onSaved();
-      setSavedAt(Date.now());
+      baseline.current = hours;
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+      return true;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't save hours");
+      return false;
     } finally {
       setIsSaving(false);
     }
+  }, [restaurant.id, token, hours, onSaved]);
+
+  useImperativeHandle(ref, () => ({ save }), [save]);
+
+  function discard(): void {
+    setHours(baseline.current);
+    setError(null);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl space-y-3">
+    <div className="max-w-xl space-y-3 pb-2">
       {DAYS.map(({ key, label }) => {
         const day = hours[key];
         return (
@@ -100,15 +124,16 @@ export function HoursTab({ restaurant, token, onSaved }: ManageTabProps) {
           </div>
         );
       })}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {savedAt && !error && <p className="text-sm text-secondary">Saved.</p>}
-      <button
-        type="submit"
-        disabled={isSaving}
-        className="rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-      >
-        {isSaving ? "Saving…" : "Save hours"}
-      </button>
-    </form>
+
+      <UnsavedChangesBar
+        visible={isDirty || isSaving}
+        isSaving={isSaving}
+        error={error}
+        onSave={save}
+        onDiscard={discard}
+        saveLabel="Save hours"
+      />
+      <SavedToast visible={justSaved && !isDirty} />
+    </div>
   );
-}
+});

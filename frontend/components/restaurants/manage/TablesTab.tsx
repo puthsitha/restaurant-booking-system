@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { EmptyState } from "@/components/ui/EmptyState";
+import { TextField } from "@/components/ui/FormField";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { createTable, deleteTable, updateTable } from "@/lib/restaurants/api";
@@ -14,7 +15,9 @@ import type { ManageTabProps } from "./types";
 export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
   const [tableNumber, setTableNumber] = useState("");
   const [capacity, setCapacity] = useState(2);
+  const [floor, setFloor] = useState("");
   const [zone, setZone] = useState("");
+  const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -23,9 +26,21 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
     setError(null);
     setIsSaving(true);
     try {
-      await createTable(restaurant.id, { tableNumber, capacity, zone: zone || undefined }, token);
+      await createTable(
+        restaurant.id,
+        {
+          tableNumber,
+          capacity,
+          floor: floor || undefined,
+          zone: zone || undefined,
+          description: description || undefined,
+        },
+        token,
+      );
       setTableNumber("");
+      setFloor("");
       setZone("");
+      setDescription("");
       await onSaved();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't add table");
@@ -54,44 +69,56 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
 
   return (
     <div className="max-w-2xl">
-      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3">
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Table number</label>
-          <input
+      <form onSubmit={handleAdd} className="space-y-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <TextField
+            label="Table number"
             required
             value={tableNumber}
             onChange={(e) => setTableNumber(e.target.value)}
             placeholder="T1"
-            className="w-28 rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none"
+            className="w-28"
           />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Capacity</label>
-          <input
+          <TextField
+            label="Capacity"
             required
             type="number"
             min={1}
             value={capacity}
             onChange={(e) => setCapacity(Number(e.target.value))}
-            className="w-24 rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none"
+            className="w-24"
           />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Zone</label>
-          <input
+          <TextField
+            label="Floor"
+            value={floor}
+            onChange={(e) => setFloor(e.target.value)}
+            placeholder="Ground"
+            className="w-32"
+          />
+          <TextField
+            label="Zone"
             value={zone}
             onChange={(e) => setZone(e.target.value)}
             placeholder="Garden, VIP…"
-            className="w-36 rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none"
+            className="w-36"
           />
         </div>
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-        >
-          Add table
-        </button>
+        <div className="flex flex-wrap items-end gap-3">
+          <TextField
+            label="Description (optional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Intimate table in garden area"
+            className="min-w-[240px] flex-1"
+          />
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-60"
+          >
+            Add table
+          </button>
+        </div>
       </form>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -112,7 +139,12 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
                 <p className="font-semibold text-ink">
                   {table.tableNumber} · {table.capacity} seats
                 </p>
-                {table.zone && <p className="text-sm text-muted">{table.zone}</p>}
+                <p className="text-sm text-muted">
+                  {[table.floor, table.zone].filter(Boolean).join(" · ")}
+                </p>
+                {table.description && (
+                  <p className="mt-0.5 text-sm text-muted">{table.description}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <select

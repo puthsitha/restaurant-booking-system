@@ -1,77 +1,133 @@
 "use client";
 
-import { useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
+import { SavedToast } from "@/components/ui/SavedToast";
+import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
 import { updateRestaurant } from "@/lib/restaurants/api";
 import type { PriceRange } from "@/lib/restaurants/types";
 
-import type { ManageTabProps } from "./types";
+import type { DirtyTabHandle, ManageTabProps } from "./types";
 
 const FIELD_CLASS =
-  "w-full rounded-xl border border-border px-4 py-2.5 text-sm text-ink outline-none";
+  "w-full rounded-xl border border-border px-4 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15";
 const LABEL_CLASS = "mb-1.5 block text-xs font-bold text-[#5C5048]";
 
-export function ProfileTab({ restaurant, token, onSaved }: ManageTabProps) {
-  const [name, setName] = useState(restaurant.name);
-  const [description, setDescription] = useState(restaurant.description ?? "");
-  const [cuisineType, setCuisineType] = useState(restaurant.cuisineType);
-  const [address, setAddress] = useState(restaurant.address);
-  const [city, setCity] = useState(restaurant.city);
-  const [phone, setPhone] = useState(restaurant.phone ?? "");
-  const [website, setWebsite] = useState(restaurant.website ?? "");
-  const [coverImageUrl, setCoverImageUrl] = useState(restaurant.coverImageUrl ?? "");
-  const [priceRange, setPriceRange] = useState<PriceRange>(restaurant.priceRange);
-  const [depositRequired, setDepositRequired] = useState(restaurant.depositRequired);
-  const [depositAmount, setDepositAmount] = useState(restaurant.depositAmount);
+interface ProfileDraft {
+  name: string;
+  description: string;
+  cuisineType: string;
+  address: string;
+  city: string;
+  phone: string;
+  website: string;
+  coverImageUrl: string;
+  priceRange: PriceRange;
+  depositRequired: boolean;
+  depositAmount: string;
+}
+
+function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileDraft {
+  return {
+    name: restaurant.name,
+    description: restaurant.description ?? "",
+    cuisineType: restaurant.cuisineType,
+    address: restaurant.address,
+    city: restaurant.city,
+    phone: restaurant.phone ?? "",
+    website: restaurant.website ?? "",
+    coverImageUrl: restaurant.coverImageUrl ?? "",
+    priceRange: restaurant.priceRange,
+    depositRequired: restaurant.depositRequired,
+    depositAmount: String(restaurant.depositAmount),
+  };
+}
+
+export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function ProfileTab(
+  { restaurant, token, onSaved, onDirtyChange },
+  ref,
+) {
+  const baseline = useRef(draftFromRestaurant(restaurant));
+  const [draft, setDraft] = useState(baseline.current);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
 
-  async function handleSubmit(e: FormEvent): Promise<void> {
-    e.preventDefault();
+  const isDirty = JSON.stringify(draft) !== JSON.stringify(baseline.current);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  function set<K extends keyof ProfileDraft>(key: K, value: ProfileDraft[K]): void {
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const save = useCallback(async (): Promise<boolean> => {
     setError(null);
     setIsSaving(true);
     try {
       await updateRestaurant(
         restaurant.id,
         {
-          name,
+          name: draft.name,
           slug: restaurant.slug,
-          description: description || undefined,
-          cuisineType,
-          address,
-          city,
-          phone: phone || undefined,
-          website: website || undefined,
-          coverImageUrl: coverImageUrl || undefined,
-          priceRange,
-          depositRequired,
-          depositAmount: Number(depositAmount) || 0,
+          description: draft.description || undefined,
+          cuisineType: draft.cuisineType,
+          address: draft.address,
+          city: draft.city,
+          phone: draft.phone || undefined,
+          website: draft.website || undefined,
+          coverImageUrl: draft.coverImageUrl || undefined,
+          priceRange: draft.priceRange,
+          depositRequired: draft.depositRequired,
+          depositAmount: Number(draft.depositAmount) || 0,
         },
         token,
       );
       await onSaved();
-      setSavedAt(Date.now());
+      baseline.current = draft;
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+      return true;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't save changes");
+      return false;
     } finally {
       setIsSaving(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant.id, restaurant.slug, token, draft, onSaved]);
+
+  useImperativeHandle(ref, () => ({ save }), [save]);
+
+  function discard(): void {
+    setDraft(baseline.current);
+    setError(null);
+  }
+
+  async function handleSubmit(e: FormEvent): Promise<void> {
+    e.preventDefault();
+    await save();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
+    <form onSubmit={handleSubmit} className="max-w-xl space-y-4 pb-2">
       <div>
         <label className={LABEL_CLASS}>Name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} className={FIELD_CLASS} />
+        <input
+          value={draft.name}
+          onChange={(e) => set("name", e.target.value)}
+          className={FIELD_CLASS}
+        />
       </div>
       <div>
         <label className={LABEL_CLASS}>Description</label>
         <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={draft.description}
+          onChange={(e) => set("description", e.target.value)}
           rows={3}
           className={FIELD_CLASS}
         />
@@ -80,34 +136,42 @@ export function ProfileTab({ restaurant, token, onSaved }: ManageTabProps) {
         <div>
           <label className={LABEL_CLASS}>Cuisine type</label>
           <input
-            value={cuisineType}
-            onChange={(e) => setCuisineType(e.target.value)}
+            value={draft.cuisineType}
+            onChange={(e) => set("cuisineType", e.target.value)}
             className={FIELD_CLASS}
           />
         </div>
         <div>
           <label className={LABEL_CLASS}>City</label>
-          <input value={city} onChange={(e) => setCity(e.target.value)} className={FIELD_CLASS} />
+          <input
+            value={draft.city}
+            onChange={(e) => set("city", e.target.value)}
+            className={FIELD_CLASS}
+          />
         </div>
       </div>
       <div>
         <label className={LABEL_CLASS}>Address</label>
         <input
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
+          value={draft.address}
+          onChange={(e) => set("address", e.target.value)}
           className={FIELD_CLASS}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={LABEL_CLASS}>Phone</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} className={FIELD_CLASS} />
+          <input
+            value={draft.phone}
+            onChange={(e) => set("phone", e.target.value)}
+            className={FIELD_CLASS}
+          />
         </div>
         <div>
           <label className={LABEL_CLASS}>Website</label>
           <input
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
+            value={draft.website}
+            onChange={(e) => set("website", e.target.value)}
             className={FIELD_CLASS}
           />
         </div>
@@ -115,16 +179,16 @@ export function ProfileTab({ restaurant, token, onSaved }: ManageTabProps) {
       <div>
         <label className={LABEL_CLASS}>Cover image URL</label>
         <input
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
+          value={draft.coverImageUrl}
+          onChange={(e) => set("coverImageUrl", e.target.value)}
           className={FIELD_CLASS}
         />
       </div>
       <div>
         <label className={LABEL_CLASS}>Price range</label>
         <select
-          value={priceRange}
-          onChange={(e) => setPriceRange(e.target.value as PriceRange)}
+          value={draft.priceRange}
+          onChange={(e) => set("priceRange", e.target.value as PriceRange)}
           className={FIELD_CLASS}
         >
           <option value="LOW">$ — Low</option>
@@ -136,35 +200,35 @@ export function ProfileTab({ restaurant, token, onSaved }: ManageTabProps) {
         <input
           id="depositRequired"
           type="checkbox"
-          checked={depositRequired}
-          onChange={(e) => setDepositRequired(e.target.checked)}
+          checked={draft.depositRequired}
+          onChange={(e) => set("depositRequired", e.target.checked)}
         />
         <label htmlFor="depositRequired" className="text-sm text-ink">
           Require a deposit to book
         </label>
       </div>
-      {depositRequired && (
+      {draft.depositRequired && (
         <div>
           <label className={LABEL_CLASS}>Deposit amount (USD)</label>
           <input
             type="number"
             min={0}
             step="0.01"
-            value={depositAmount}
-            onChange={(e) => setDepositAmount(e.target.value)}
+            value={draft.depositAmount}
+            onChange={(e) => set("depositAmount", e.target.value)}
             className={FIELD_CLASS}
           />
         </div>
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {savedAt && !error && <p className="text-sm text-secondary">Saved.</p>}
-      <button
-        type="submit"
-        disabled={isSaving}
-        className="rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-      >
-        {isSaving ? "Saving…" : "Save changes"}
-      </button>
+
+      <UnsavedChangesBar
+        visible={isDirty || isSaving}
+        isSaving={isSaving}
+        error={error}
+        onSave={save}
+        onDiscard={discard}
+      />
+      <SavedToast visible={justSaved && !isDirty} />
     </form>
   );
-}
+});
