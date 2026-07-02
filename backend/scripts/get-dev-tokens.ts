@@ -7,7 +7,7 @@
 //   eval "$(npm run tokens --workspace backend --silent)"
 //   curl -H "Authorization: Bearer $customer_token" http://localhost:4000/api/auth/me
 //
-// The admin account must exist first: npm run prisma:seed --workspace backend
+// The admin and owner accounts must exist first: npm run prisma:seed --workspace backend
 
 import { DEV_FIXTURES } from "../src/lib/devFixtures";
 
@@ -24,7 +24,6 @@ interface OtpRequestResponse {
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
 const CUSTOMER_PHONE = DEV_FIXTURES.customerPhone;
-const OWNER_NAME = DEV_FIXTURES.owner.name;
 const OWNER_EMAIL = DEV_FIXTURES.owner.email;
 const OWNER_PASSWORD = DEV_FIXTURES.owner.password;
 const ADMIN_EMAIL = DEV_FIXTURES.admin.email;
@@ -77,23 +76,14 @@ async function getOwnerToken(): Promise<string> {
     email: OWNER_EMAIL,
     password: OWNER_PASSWORD,
   });
-  if (login.status === 200) {
-    log(`[owner] logged in as ${OWNER_EMAIL}`);
-    return login.data.token;
+  if (login.status !== 200) {
+    throw new Error(
+      `Owner login failed (${login.status}) — seed the dev owner first: ` +
+        "npm run prisma:seed --workspace backend",
+    );
   }
-
-  log(`[owner] no existing account, signing up ${OWNER_EMAIL}...`);
-  const signup = await postJson<AuthResponse>("/api/auth/signup", {
-    name: OWNER_NAME,
-    email: OWNER_EMAIL,
-    password: OWNER_PASSWORD,
-    role: "OWNER",
-  });
-  if (signup.status !== 201) {
-    throw new Error(`Owner signup failed (${signup.status})`);
-  }
-  log(`[owner] created and logged in as ${OWNER_EMAIL}`);
-  return signup.data.token;
+  log(`[owner] logged in as ${OWNER_EMAIL}`);
+  return login.data.token;
 }
 
 async function getAdminToken(): Promise<string> {

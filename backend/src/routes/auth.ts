@@ -17,7 +17,7 @@ export const authRouter: Router = Router();
  * @openapi
  * /api/auth/signup:
  *   post:
- *     summary: Create a diner or restaurant-owner account
+ *     summary: Create a diner account
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -34,10 +34,6 @@ export const authRouter: Router = Router();
  *               password:
  *                 type: string
  *                 minLength: 8
- *               role:
- *                 type: string
- *                 enum: [DINER, OWNER]
- *                 default: DINER
  *     responses:
  *       201:
  *         description: Account created

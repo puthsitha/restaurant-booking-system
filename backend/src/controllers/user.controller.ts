@@ -1,13 +1,26 @@
 import type { NextFunction, Request, Response } from "express";
 
 import * as userService from "../services/user.service";
-import type { ListUsersQuery, UpdateUserStatusInput } from "../schemas/user.schemas";
+import type { CreateOwnerInput, ListUsersQuery, UpdateUserStatusInput } from "../schemas/user.schemas";
 
 export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = res.locals.query as ListUsersQuery;
     const result = await userService.listUsers(query);
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createOwner(
+  req: Request<unknown, unknown, CreateOwnerInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const user = await userService.createOwner(req.body);
+    res.status(201).json({ user });
   } catch (err) {
     next(err);
   }

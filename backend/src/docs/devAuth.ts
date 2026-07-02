@@ -41,15 +41,10 @@ export function buildSwaggerDevAuthScript(): string {
     var email = ${JSON.stringify(DEV_FIXTURES.owner.email)};
     var password = ${JSON.stringify(DEV_FIXTURES.owner.password)};
     var login = await postJson("/api/auth/login", { email: email, password: password });
-    if (login.status === 200) return login.data.token;
-    var signup = await postJson("/api/auth/signup", {
-      name: ${JSON.stringify(DEV_FIXTURES.owner.name)},
-      email: email,
-      password: password,
-      role: "OWNER",
-    });
-    if (signup.status !== 201) throw new Error("Owner signup failed");
-    return signup.data.token;
+    if (login.status !== 200) {
+      throw new Error("Owner login failed — run: npm run prisma:seed --workspace backend");
+    }
+    return login.data.token;
   }
 
   async function loginAdmin() {

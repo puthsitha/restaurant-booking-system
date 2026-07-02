@@ -15,3 +15,13 @@ export const updateUserStatusSchema = z.object({
   status: userStatusEnum,
 });
 export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;
+
+// Owners can no longer self-register; an admin provisions the account here
+// instead (see user.service.ts createOwner).
+export const createOwnerSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(8).max(72),
+  restaurantLimit: z.number().int().min(1).max(100).default(3),
+});
+export type CreateOwnerInput = z.infer<typeof createOwnerSchema>;

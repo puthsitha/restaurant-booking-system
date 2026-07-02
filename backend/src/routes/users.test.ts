@@ -9,6 +9,7 @@ vi.mock("../lib/prisma", () => {
   const user = {
     findUnique: vi.fn(),
     findMany: vi.fn(),
+    create: vi.fn(),
     update: vi.fn(),
     count: vi.fn(),
   };
@@ -70,6 +71,60 @@ describe("GET /api/users", () => {
       .get("/api/users?role=ADMIN")
       .set("Authorization", `Bearer ${adminToken}`);
     expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/users", () => {
+  it("rejects non-admins", async () => {
+    const res = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ name: "New Owner", email: "new-owner@example.com", password: "password123" });
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects a weak/incomplete payload", async () => {
+    const res = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ email: "not-an-email", password: "short" });
+    expect(res.status).toBe(400);
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a duplicate email", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({ id: "user_owner_9" });
+
+    const res = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "New Owner", email: "owner@example.com", password: "password123" });
+
+    expect(res.status).toBe(409);
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
+
+  it("creates an owner account with the default restaurant limit", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.user.create).mockResolvedValueOnce({
+      id: "user_owner_9",
+      role: "OWNER",
+      name: "New Owner",
+      email: "owner@example.com",
+      restaurantLimit: 3,
+    });
+
+    const res = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "New Owner", email: "owner@example.com", password: "password123" });
+
+    expect(res.status).toBe(201);
+    expect(res.body.user.role).toBe("OWNER");
+    const createArgs = vi.mocked(prisma.user.create).mock.calls[0]?.[0];
+    expect(createArgs?.data.role).toBe("OWNER");
+    expect(createArgs?.data.restaurantLimit).toBe(3);
+    expect(createArgs?.data.passwordHash).not.toBe("password123");
   });
 });
 

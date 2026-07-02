@@ -51,7 +51,6 @@ export async function signup(input: SignupInput): Promise<AuthResult> {
       name: input.name,
       email: input.email,
       passwordHash,
-      role: input.role,
     },
   });
 
