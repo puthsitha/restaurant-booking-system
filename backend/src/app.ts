@@ -1,14 +1,34 @@
 import cors from "cors";
-import express, { type Express } from "express";
+import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import swaggerUi from "swagger-ui-express";
+import swaggerUi, { type SwaggerUiOptions } from "swagger-ui-express";
 
+import { buildSwaggerDevAuthScript } from "./docs/devAuth";
 import { openapiSpec } from "./docs/openapi";
 import { env } from "./env";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { authRouter } from "./routes/auth";
 import { healthRouter } from "./routes/health";
+
+// helmet's default script-src ('self') blocks the inline dev-login script
+// below, which swagger-ui-express injects as a plain <script> tag with no
+// nonce support. Relax it for /docs only, and only outside production,
+// rather than weakening CSP for the whole API.
+function relaxDocsCspForDevAuth(_req: Request, res: Response, next: NextFunction): void {
+  if (!env.isProduction) {
+    res.setHeader(
+      "Content-Security-Policy",
+      "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:",
+    );
+  }
+  next();
+}
+
+// @types/swagger-ui-express@4.1.8 hasn't caught up with swagger-ui-express@5's
+// `customJsStr` option, which the runtime does support (renders as a plain
+// inline <script> tag). Extend the type rather than casting to `any`.
+type SwaggerUiOptionsWithCustomJsStr = SwaggerUiOptions & { customJsStr?: string };
 
 // Build the Express application. Kept separate from server startup so tests can
 // exercise the app without binding a port.
@@ -48,8 +68,19 @@ export function createApp(): Express {
   app.use(healthRouter);
   app.use(authRouter);
 
-  // Interactive API docs, generated from @openapi JSDoc comments on the routes.
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiSpec));
+  // Interactive API docs, generated from @openapi JSDoc comments on the
+  // routes. Outside production, adds "log in as ..." buttons that call
+  // preauthorizeApiKey so testing protected endpoints needs no manual
+  // token copy-paste (see docs/devAuth.ts).
+  const swaggerSetupOptions: SwaggerUiOptionsWithCustomJsStr = {
+    customJsStr: env.isProduction ? undefined : buildSwaggerDevAuthScript(),
+  };
+  app.use(
+    "/docs",
+    relaxDocsCspForDevAuth,
+    swaggerUi.serve,
+    swaggerUi.setup(openapiSpec, swaggerSetupOptions),
+  );
 
   // 404 + centralized error handling must be registered last.
   app.use(notFoundHandler);
