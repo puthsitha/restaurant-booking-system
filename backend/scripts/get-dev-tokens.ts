@@ -9,6 +9,8 @@
 //
 // The admin account must exist first: npm run prisma:seed --workspace backend
 
+import { DEV_FIXTURES } from "../src/lib/devFixtures";
+
 interface AuthResponse {
   user: { id: string; role: string };
   token: string;
@@ -21,12 +23,12 @@ interface OtpRequestResponse {
 
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
-const CUSTOMER_PHONE = process.env.SEED_CUSTOMER_PHONE ?? "+85512340000";
-const OWNER_NAME = process.env.SEED_OWNER_NAME ?? "Dev Owner";
-const OWNER_EMAIL = process.env.SEED_OWNER_EMAIL ?? "owner.dev@tablesite.local";
-const OWNER_PASSWORD = process.env.SEED_OWNER_PASSWORD ?? "password123";
-const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin.dev@tablesite.local";
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "password123";
+const CUSTOMER_PHONE = DEV_FIXTURES.customerPhone;
+const OWNER_NAME = DEV_FIXTURES.owner.name;
+const OWNER_EMAIL = DEV_FIXTURES.owner.email;
+const OWNER_PASSWORD = DEV_FIXTURES.owner.password;
+const ADMIN_EMAIL = DEV_FIXTURES.admin.email;
+const ADMIN_PASSWORD = DEV_FIXTURES.admin.password;
 
 // Status output goes to stderr so stdout only ever contains `export ...`
 // lines, which is what makes wrapping this in `eval "$(...)"` safe.
