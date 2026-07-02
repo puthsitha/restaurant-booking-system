@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { createSpecialClosure, deleteSpecialClosure } from "@/lib/restaurants/api";
 
@@ -72,11 +74,17 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-      <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface">
-        {restaurant.specialClosures.length === 0 ? (
-          <p className="p-4 text-sm text-muted">No upcoming closures.</p>
-        ) : (
-          restaurant.specialClosures.map((closure) => (
+      {restaurant.specialClosures.length === 0 ? (
+        <EmptyState
+          className="mt-6"
+          icon={EmptyPlateIcon}
+          title="No closures on the books"
+          message="You're open as usual. Add a date above for holidays or private events."
+          compact
+        />
+      ) : (
+        <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface">
+          {restaurant.specialClosures.map((closure) => (
             <div key={closure.id} className="flex items-center justify-between p-4">
               <div>
                 <p className="font-semibold text-ink">
@@ -91,9 +99,9 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
                 Delete
               </button>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { ChefHatIcon } from "@/components/ui/icons";
+import { ListSkeleton } from "@/components/ui/skeletons";
 import { listMyRestaurants } from "@/lib/restaurants/api";
 import type { RestaurantOwned } from "@/lib/restaurants/types";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -48,12 +52,15 @@ function OwnerDashboard() {
   const [restaurants, setRestaurants] = useState<RestaurantOwned[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!token) return;
+    setError(null);
     listMyRestaurants(token)
       .then((res) => setRestaurants(res.restaurants))
       .catch(() => setError("Couldn't load your restaurants."));
   }, [token]);
+
+  useEffect(load, [load]);
 
   return (
     <main style={{ padding: 32 }}>
@@ -73,14 +80,21 @@ function OwnerDashboard() {
         </Link>
       </div>
 
-      {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-
-      {restaurants === null ? (
-        <p className="mt-8 text-sm text-muted">Loading…</p>
+      {error ? (
+        <ErrorState className="mt-8" message={error} onRetry={load} />
+      ) : restaurants === null ? (
+        <div className="mt-8">
+          <ListSkeleton rows={2} />
+        </div>
       ) : restaurants.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">
-          You haven&apos;t added a restaurant yet.
-        </p>
+        <EmptyState
+          className="mt-8"
+          icon={ChefHatIcon}
+          title="Your first restaurant awaits"
+          message="Add your restaurant's profile, hours, and menu — diners are searching for a table right now."
+          actionLabel="+ New restaurant"
+          actionHref="/admin/restaurants/new"
+        />
       ) : (
         <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
           {restaurants.map((restaurant) => (

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { createTable, deleteTable, updateTable } from "@/lib/restaurants/api";
 import type { TableStatus } from "@/lib/restaurants/types";
@@ -94,11 +96,17 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-      <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface">
-        {restaurant.tables.length === 0 ? (
-          <p className="p-4 text-sm text-muted">No tables yet.</p>
-        ) : (
-          restaurant.tables.map((table) => (
+      {restaurant.tables.length === 0 ? (
+        <EmptyState
+          className="mt-6"
+          icon={EmptyPlateIcon}
+          title="No tables yet"
+          message="Add your first table above so diners have somewhere to sit."
+          compact
+        />
+      ) : (
+        <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface">
+          {restaurant.tables.map((table) => (
             <div key={table.id} className="flex items-center justify-between gap-4 p-4">
               <div>
                 <p className="font-semibold text-ink">
@@ -124,9 +132,9 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
                 </button>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

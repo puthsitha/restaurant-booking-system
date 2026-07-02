@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SearchOffIcon } from "@/components/ui/icons";
+import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
@@ -20,8 +24,9 @@ export default function AdminRestaurantsPage() {
   const [restaurants, setRestaurants] = useState<RestaurantSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!token) return;
+    setError(null);
     listAllRestaurantsAdmin(
       { search: search || undefined, status: status || undefined, pageSize: 50 },
       token,
@@ -31,6 +36,8 @@ export default function AdminRestaurantsPage() {
         setError(err instanceof ApiError ? err.message : "Couldn't load restaurants.");
       });
   }, [token, search, status]);
+
+  useEffect(load, [load]);
 
   return (
     <main style={{ padding: 32 }}>
@@ -54,12 +61,24 @@ export default function AdminRestaurantsPage() {
         </select>
       </div>
 
-      {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-
-      {restaurants === null ? (
-        <p className="mt-8 text-sm text-muted">Loading…</p>
+      {error ? (
+        <ErrorState className="mt-8" message={error} onRetry={load} />
+      ) : restaurants === null ? (
+        <div className="mt-8">
+          <ListSkeleton rows={4} />
+        </div>
       ) : restaurants.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">No restaurants match.</p>
+        <EmptyState
+          className="mt-8"
+          icon={SearchOffIcon}
+          title="No restaurants match those filters"
+          message="Try clearing the search or status filter to see the full list."
+          actionLabel="Clear filters"
+          onAction={() => {
+            setSearch("");
+            setStatus("");
+          }}
+        />
       ) : (
         <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface">
           {restaurants.map((restaurant) => (

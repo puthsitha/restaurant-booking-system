@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ChefHatIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import {
   createMenu,
@@ -69,7 +71,12 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
 
       <div className="mt-6 space-y-6">
         {restaurant.menus.length === 0 ? (
-          <p className="text-sm text-muted">No menus yet.</p>
+          <EmptyState
+            icon={ChefHatIcon}
+            title="No menus yet"
+            message="Add a menu above, then start listing dishes diners will love."
+            compact
+          />
         ) : (
           restaurant.menus.map((menu) => (
             <div key={menu.id} className="rounded-2xl border border-border bg-surface p-4">

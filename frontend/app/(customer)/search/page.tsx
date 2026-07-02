@@ -1,10 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SearchOffIcon } from "@/components/ui/icons";
+import { RestaurantGridSkeleton } from "@/components/ui/skeletons";
 import { listRestaurants, listTags } from "@/lib/restaurants/api";
 import type { ListRestaurantsResponse, PriceRange, Tag } from "@/lib/restaurants/types";
 
@@ -45,7 +49,7 @@ function SearchPageContent() {
       .catch(() => setTags([]));
   }, []);
 
-  useEffect(() => {
+  const runSearch = useCallback(() => {
     setIsLoading(true);
     setError(null);
     listRestaurants({
@@ -59,8 +63,11 @@ function SearchPageContent() {
       .then(setResult)
       .catch(() => setError("Couldn't load restaurants. Try again."))
       .finally(() => setIsLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, city, tag, priceRange, page]);
+
+  useEffect(() => {
+    runSearch();
+  }, [runSearch]);
 
   function handleSubmit(e: FormEvent): void {
     e.preventDefault();
@@ -123,10 +130,12 @@ function SearchPageContent() {
         </button>
       </form>
 
-      {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-
       {isLoading ? (
-        <p className="mt-10 text-sm text-muted">Loading…</p>
+        <div className="mt-8">
+          <RestaurantGridSkeleton count={6} />
+        </div>
+      ) : error ? (
+        <ErrorState className="mt-8" message={error} onRetry={runSearch} />
       ) : result && result.items.length > 0 ? (
         <>
           <p className="mt-8 text-sm text-muted">{result.total} restaurants found</p>
@@ -160,7 +169,20 @@ function SearchPageContent() {
           )}
         </>
       ) : (
-        <p className="mt-10 text-sm text-muted">No restaurants match your search.</p>
+        <EmptyState
+          className="mt-8"
+          icon={SearchOffIcon}
+          title="No tables match that search"
+          message="Try a different city, cuisine, or clear a filter — your next favorite spot is still out there."
+          actionLabel="Clear filters"
+          onAction={() => {
+            setSearch("");
+            setCity("");
+            setTag("");
+            setPriceRange("");
+            setPage(1);
+          }}
+        />
       )}
     </main>
   );
