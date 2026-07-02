@@ -11,7 +11,7 @@ export class ApiError extends Error {
 }
 
 interface ApiFetchOptions {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   token?: string | null;
 }
@@ -39,6 +39,10 @@ export async function apiFetch<T>(
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    // Restaurant data changes via owner/admin actions with no revalidation
+    // wired up, so opt every request out of Next.js's fetch cache — both
+    // its Server Component data cache and the browser's HTTP cache.
+    cache: "no-store",
   });
 
   const data: unknown = await res.json().catch(() => null);
