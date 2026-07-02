@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 
 interface FormFieldProps {
@@ -44,11 +45,15 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 
 // Convenience wrapper combining FormField + a styled <input>, for the common
 // case where a field doesn't need a custom control (like PasswordInput).
+// Falls back to a generated id so the label is always programmatically
+// associated with the input, even when the caller doesn't pass one.
 export function TextField({ label, error, hint, id, className, ...rest }: TextFieldProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
-    <FormField label={label} htmlFor={id} error={error} hint={hint}>
+    <FormField label={label} htmlFor={inputId} error={error} hint={hint}>
       <input
-        id={id}
+        id={inputId}
         {...rest}
         className={`${baseInputClass} ${borderClass(Boolean(error))} ${className ?? ""}`}
       />
@@ -63,10 +68,12 @@ interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement>
 }
 
 export function TextAreaField({ label, error, hint, id, className, ...rest }: TextAreaFieldProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
-    <FormField label={label} htmlFor={id} error={error} hint={hint}>
+    <FormField label={label} htmlFor={inputId} error={error} hint={hint}>
       <textarea
-        id={id}
+        id={inputId}
         {...rest}
         className={`${baseInputClass} resize-none ${borderClass(Boolean(error))} ${className ?? ""}`}
       />
