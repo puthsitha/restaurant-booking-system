@@ -2,7 +2,12 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "../lib/prisma";
 import { HttpError } from "../lib/httpError";
-import type { ListUsersQuery, UpdateUserStatusInput } from "../schemas/user.schemas";
+import { hashPassword } from "../lib/password";
+import type {
+  CreateOwnerInput,
+  ListUsersQuery,
+  UpdateUserStatusInput,
+} from "../schemas/user.schemas";
 
 // Admins manage diners and owners only; other admin accounts never appear
 // here or become editable through this endpoint.
@@ -43,6 +48,25 @@ export async function listUsers(query: ListUsersQuery) {
   ]);
 
   return { items, total, page: query.page, pageSize: query.pageSize };
+}
+
+export async function createOwner(input: CreateOwnerInput) {
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) {
+    throw new HttpError(409, "An account with this email already exists");
+  }
+
+  const passwordHash = await hashPassword(input.password);
+  return prisma.user.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      passwordHash,
+      role: "OWNER",
+      restaurantLimit: input.restaurantLimit,
+    },
+    select: userListSelect,
+  });
 }
 
 export async function updateUserStatus(userId: string, input: UpdateUserStatusInput) {

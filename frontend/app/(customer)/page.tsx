@@ -63,9 +63,7 @@ export default async function HomePage() {
           className="mt-6"
           icon={ChefHatIcon}
           title="The dining room is warming up"
-          message="No restaurants have opened their doors yet — be the first, or check back soon for new spots."
-          actionLabel="List your restaurant"
-          actionHref="/owner/signup"
+          message="No restaurants have opened their doors yet — check back soon for new spots."
         />
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

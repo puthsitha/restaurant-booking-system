@@ -6,13 +6,13 @@ const cambodianPhone = z
   .trim()
   .regex(/^\+855[1-9]\d{7,8}$/, "Enter a valid Cambodian phone number");
 
-// Public signup can only create DINER or OWNER accounts; ADMIN is granted
-// out-of-band, never through a self-service endpoint.
+// Public signup can only ever create DINER accounts. OWNER accounts are
+// provisioned by an admin (see user.schemas.ts createOwnerSchema); ADMIN is
+// granted out-of-band. Neither is reachable through this endpoint.
 export const signupSchema = z.object({
   name: z.string().trim().min(1).max(120),
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(72),
-  role: z.enum(["DINER", "OWNER"]).default("DINER"),
 });
 export type SignupInput = z.infer<typeof signupSchema>;
 

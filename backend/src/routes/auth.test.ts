@@ -89,6 +89,21 @@ describe("POST /api/auth/signup", () => {
     const createArgs = vi.mocked(prisma.user.create).mock.calls[0]?.[0];
     expect(createArgs?.data.passwordHash).not.toBe("password123");
   });
+
+  it("ignores a client-supplied role — owners no longer self-register", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.user.create).mockResolvedValueOnce(baseUser);
+
+    await request(app).post("/api/auth/signup").send({
+      name: "Sokha",
+      email: "sokha@example.com",
+      password: "password123",
+      role: "OWNER",
+    });
+
+    const createArgs = vi.mocked(prisma.user.create).mock.calls[0]?.[0];
+    expect(createArgs?.data.role).toBeUndefined();
+  });
 });
 
 describe("POST /api/auth/login", () => {

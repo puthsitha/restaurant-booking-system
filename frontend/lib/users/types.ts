@@ -26,3 +26,10 @@ export interface ListUsersParams {
   page?: number;
   pageSize?: number;
 }
+
+export interface CreateOwnerInput {
+  name: string;
+  email: string;
+  password: string;
+  restaurantLimit?: number;
+}

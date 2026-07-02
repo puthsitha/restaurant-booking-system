@@ -3,7 +3,11 @@ import { Router } from "express";
 import * as userController from "../controllers/user.controller";
 import { authenticate, requireRole } from "../middleware/auth";
 import { validateBody, validateQuery } from "../middleware/validate";
-import { listUsersQuerySchema, updateUserStatusSchema } from "../schemas/user.schemas";
+import {
+  createOwnerSchema,
+  listUsersQuerySchema,
+  updateUserStatusSchema,
+} from "../schemas/user.schemas";
 
 export const usersRouter: Router = Router();
 
@@ -37,6 +41,36 @@ usersRouter.get(
   adminOnly,
   validateQuery(listUsersQuerySchema),
   userController.list,
+);
+
+/**
+ * @openapi
+ * /api/users:
+ *   post:
+ *     summary: Provision a restaurant-owner account (admin only) — owners no longer self-register
+ *     tags: [Users]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, email, password]
+ *             properties:
+ *               name: { type: string }
+ *               email: { type: string }
+ *               password: { type: string, minLength: 8 }
+ *               restaurantLimit: { type: integer, default: 3 }
+ *     responses:
+ *       201: { description: Created }
+ *       409: { description: Email already in use }
+ */
+usersRouter.post(
+  "/api/users",
+  adminOnly,
+  validateBody(createOwnerSchema),
+  userController.createOwner,
 );
 
 /**

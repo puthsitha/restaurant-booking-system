@@ -7,9 +7,10 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { CalendarIcon, ChefHatIcon, DashboardIcon, InboxIcon } from "@/components/ui/icons";
 import { OwnerAuthProvider, useOwnerAuth } from "@/lib/auth/ownerAuth";
 
-// Login/signup live inside this tree for shared styling but must not be
-// gated by the auth check below.
-const PUBLIC_PATHS = ["/owner/login", "/owner/signup"];
+// Login lives inside this tree for shared styling but must not be gated by
+// the auth check below. There's no owner signup — an admin provisions owner
+// accounts from User Management instead.
+const PUBLIC_PATHS = ["/owner/login"];
 
 const NAV_ITEMS = [
   { href: "/owner", label: "Dashboard", icon: DashboardIcon },

@@ -1,5 +1,11 @@
 import { apiFetch } from "@/lib/api";
-import type { ListUsersParams, ListUsersResponse, ManagedUser, UserAccountStatus } from "@/lib/users/types";
+import type {
+  CreateOwnerInput,
+  ListUsersParams,
+  ListUsersResponse,
+  ManagedUser,
+  UserAccountStatus,
+} from "@/lib/users/types";
 
 function toQueryString(params: Record<string, string | number | undefined>): string {
   const search = new URLSearchParams();
@@ -15,6 +21,13 @@ export function listUsers(params: ListUsersParams, token: string): Promise<ListU
     `/api/users${toQueryString(params as Record<string, string | number | undefined>)}`,
     { token },
   );
+}
+
+export function createOwner(
+  input: CreateOwnerInput,
+  token: string,
+): Promise<{ user: ManagedUser }> {
+  return apiFetch("/api/users", { method: "POST", body: input, token });
 }
 
 export function updateUserStatus(
