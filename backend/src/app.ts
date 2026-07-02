@@ -10,6 +10,8 @@ import { env } from "./env";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { authRouter } from "./routes/auth";
 import { healthRouter } from "./routes/health";
+import { restaurantsRouter } from "./routes/restaurants";
+import { tagsRouter } from "./routes/tags";
 
 // helmet's default script-src ('self') blocks the inline dev-login script
 // below, which swagger-ui-express injects as a plain <script> tag with no
@@ -67,6 +69,8 @@ export function createApp(): Express {
 
   app.use(healthRouter);
   app.use(authRouter);
+  app.use(restaurantsRouter);
+  app.use(tagsRouter);
 
   // Interactive API docs, generated from @openapi JSDoc comments on the
   // routes. Outside production, adds "log in as ..." buttons that call
