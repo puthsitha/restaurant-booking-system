@@ -113,6 +113,7 @@ model User {
   savedRestaurants   SavedRestaurant[]
   paymentMethods     PaymentMethod[]
   restaurantRequests RestaurantRequest[]
+  reviewedRequests   RestaurantRequest[] @relation("RequestReviewedBy")
 }
 
 // One-time codes for diner phone login. Codes are stored hashed; a new
@@ -384,10 +385,14 @@ model RestaurantRequest {
   owner          User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   currentCount   Int
   requestedCount Int
-  reason         String?
+  reason         String
   status         RequestStatus @default(PENDING)
   createdAt      DateTime      @default(now())
-  reviewedAt     DateTime?
+
+  reviewedAt   DateTime?
+  reviewNote   String?
+  reviewedById String?
+  reviewedBy   User?     @relation("RequestReviewedBy", fields: [reviewedById], references: [id])
 }
 
 // ====================== Platform settings =====================

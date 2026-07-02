@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { FormField, TextField } from "@/components/ui/FormField";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 
@@ -36,29 +38,24 @@ export default function AdminLoginPage() {
       <p className="mt-2 text-sm text-muted">Sign in to moderate the platform.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Email</label>
-          <input
+        <TextField
+          label="Email"
+          required
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <FormField label="Password" htmlFor="admin-password">
+          <PasswordInput
+            id="admin-password"
             required
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Password</label>
-          <input
-            required
-            type="password"
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
+            onChange={setPassword}
           />
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        </FormField>
+        {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={isSubmitting}

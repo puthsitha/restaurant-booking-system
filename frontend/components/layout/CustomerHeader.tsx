@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useAuthModal } from "@/lib/auth/authModal";
 
@@ -10,12 +12,15 @@ export function CustomerHeader() {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8 py-4">
-        <span className="disp text-lg font-extrabold text-ink">
+        <Link href="/" className="disp text-lg font-extrabold text-ink">
           Table<span className="text-accent">Site</span>
-        </span>
+        </Link>
 
         {status === "authenticated" && user ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <Link href="/bookings" className="text-sm font-semibold text-ink hover:text-accent">
+              My bookings
+            </Link>
             <span className="text-sm text-ink">{user.name}</span>
             <button
               onClick={logout}
