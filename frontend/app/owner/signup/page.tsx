@@ -6,11 +6,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useOwnerAuth } from "@/lib/auth/ownerAuth";
 
-export default function AdminLoginPage() {
-  const { login } = useAuth();
+export default function OwnerSignupPage() {
+  const { signup } = useOwnerAuth();
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +22,10 @@ export default function AdminLoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const user = await login(email, password);
-      router.replace(user.role === "DINER" ? "/" : "/admin");
+      // Public signup only ever creates OWNER accounts; platform ADMINs are
+      // provisioned out-of-band (see backend/src/schemas/auth.schemas.ts).
+      await signup({ name, email, password, role: "OWNER" });
+      router.replace("/owner");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -32,10 +35,20 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[420px] flex-col justify-center px-6 py-12">
-      <h1 className="disp text-2xl font-extrabold text-ink">Restaurant owner login</h1>
-      <p className="mt-2 text-sm text-muted">Sign in to manage your restaurant.</p>
+      <h1 className="disp text-2xl font-extrabold text-ink">Register your restaurant</h1>
+      <p className="mt-2 text-sm text-muted">Create an owner account to list your restaurant.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <div>
+          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Full name</label>
+          <input
+            required
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
+          />
+        </div>
         <div>
           <label className="mb-2 block text-xs font-bold text-[#5C5048]">Email</label>
           <input
@@ -52,7 +65,8 @@ export default function AdminLoginPage() {
           <input
             required
             type="password"
-            autoComplete="current-password"
+            minLength={8}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
@@ -64,14 +78,14 @@ export default function AdminLoginPage() {
           disabled={isSubmitting}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {isSubmitting ? "Signing in…" : "Sign in"}
+          {isSubmitting ? "Creating account…" : "Create account"}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted">
-        Don&apos;t have a restaurant account?{" "}
-        <Link href="/signup" className="font-semibold text-accent">
-          Register your restaurant
+        Already have an account?{" "}
+        <Link href="/owner/login" className="font-semibold text-accent">
+          Sign in
         </Link>
       </p>
     </main>

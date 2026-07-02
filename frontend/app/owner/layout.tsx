@@ -3,34 +3,38 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { useAuth } from "@/lib/auth/AuthContext";
+import { OwnerAuthProvider, useOwnerAuth } from "@/lib/auth/ownerAuth";
 
-// Login/signup pages live inside this same route group (for shared styling)
-// but must not be gated by the auth check below.
-const PUBLIC_PATHS = ["/login", "/signup"];
+// Login/signup live inside this tree for shared styling but must not be
+// gated by the auth check below.
+const PUBLIC_PATHS = ["/owner/login", "/owner/signup"];
 
-export default function AdminLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  const { user, status, logout } = useAuth();
+export default function OwnerLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <OwnerAuthProvider>
+      <OwnerShell>{children}</OwnerShell>
+    </OwnerAuthProvider>
+  );
+}
+
+function OwnerShell({ children }: { children: React.ReactNode }) {
+  const { user, status, logout } = useOwnerAuth();
   const pathname = usePathname();
   const router = useRouter();
   const isPublicPath = PUBLIC_PATHS.includes(pathname);
 
   useEffect(() => {
     if (isPublicPath || status === "loading") return;
-    if (status === "unauthenticated" || user?.role === "DINER") {
-      router.replace("/login");
+    if (status === "unauthenticated") {
+      router.replace("/owner/login");
     }
-  }, [isPublicPath, status, user, router]);
+  }, [isPublicPath, status, router]);
 
   if (isPublicPath) {
-    return <div className="admin-shell">{children}</div>;
+    return <div className="owner-shell">{children}</div>;
   }
 
-  if (status !== "authenticated" || !user || user.role === "DINER") {
+  if (status !== "authenticated" || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
         Checking your session…
@@ -39,19 +43,17 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="admin-shell min-h-screen">
+    <div className="owner-shell min-h-screen">
       <header className="flex items-center justify-between border-b border-border bg-surface px-8 py-4">
         <span className="disp text-lg font-extrabold text-ink">
-          Table<span className="text-accent">Site</span> Admin
+          Table<span className="text-accent">Site</span> Owner
         </span>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-ink">
-            {user.name} <span className="text-muted">· {user.role}</span>
-          </span>
+          <span className="text-sm text-ink">{user.name}</span>
           <button
             onClick={() => {
               logout();
-              router.replace("/login");
+              router.replace("/owner/login");
             }}
             className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink"
           >

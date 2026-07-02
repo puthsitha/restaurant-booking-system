@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useAuthModal } from "@/lib/auth/authModal";
 
 export function CustomerHeader() {
-  const { user, status, logout } = useAuth();
+  const { user, status, logout } = useCustomerAuth();
   const { open } = useAuthModal();
 
   return (

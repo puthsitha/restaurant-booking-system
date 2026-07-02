@@ -12,8 +12,8 @@ import { TagsTab } from "@/components/restaurants/manage/TagsTab";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth/AuthContext";
-import { getRestaurant, updateRestaurantStatus } from "@/lib/restaurants/api";
+import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { getRestaurant } from "@/lib/restaurants/api";
 import type { RestaurantManagementDetail } from "@/lib/restaurants/types";
 
 const OWNER_TABS = [
@@ -29,12 +29,10 @@ const OWNER_TABS = [
 type TabKey = (typeof OWNER_TABS)[number]["key"];
 
 export default function ManageRestaurantPage({ params }: { params: { id: string } }) {
-  const { user, token } = useAuth();
+  const { token } = useOwnerAuth();
   const [restaurant, setRestaurant] = useState<RestaurantManagementDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("profile");
-
-  const isAdmin = user?.role === "ADMIN";
 
   const reload = useCallback(async (): Promise<void> => {
     if (!token) return;
@@ -50,17 +48,6 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
     void reload();
   }, [reload]);
 
-  async function handleToggleStatus(): Promise<void> {
-    if (!token || !restaurant) return;
-    const nextStatus = restaurant.status === "ACTIVE" ? "DISABLED" : "ACTIVE";
-    try {
-      await updateRestaurantStatus(restaurant.id, nextStatus, token);
-      setRestaurant({ ...restaurant, status: nextStatus });
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update status");
-    }
-  }
-
   if (error) {
     return (
       <main style={{ padding: 32 }}>
@@ -73,45 +60,6 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
     return (
       <main style={{ padding: 32 }}>
         <LoadingSpinner label="Setting up the kitchen…" size="lg" />
-      </main>
-    );
-  }
-
-  if (isAdmin) {
-    return (
-      <main style={{ maxWidth: 720, padding: 32 }}>
-        <h1 className="disp text-2xl font-extrabold text-ink">{restaurant.name}</h1>
-        <p className="mt-1 text-sm text-muted">
-          {restaurant.cuisineType} · {restaurant.address}, {restaurant.city}
-        </p>
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-          <p className="text-sm text-muted">Current status</p>
-          <p className="mt-1 text-lg font-bold text-ink">{restaurant.status}</p>
-          <button
-            onClick={handleToggleStatus}
-            className="mt-4 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white"
-          >
-            {restaurant.status === "ACTIVE" ? "Disable restaurant" : "Enable restaurant"}
-          </button>
-        </div>
-        <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <dt className="text-muted">Owner</dt>
-            <dd className="text-ink">{restaurant.ownerId}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Menus</dt>
-            <dd className="text-ink">{restaurant.menus.length}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Tables</dt>
-            <dd className="text-ink">{restaurant.tables.length}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Tags</dt>
-            <dd className="text-ink">{restaurant.tags.map((t) => t.name).join(", ") || "—"}</dd>
-          </div>
-        </dl>
       </main>
     );
   }

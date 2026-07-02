@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useAuthModal } from "@/lib/auth/authModal";
 
 type Step = "phone" | "otp";
@@ -16,7 +16,7 @@ function errorMessage(err: unknown): string {
 
 export function LoginModal() {
   const { isOpen, close } = useAuthModal();
-  const { requestOtp, verifyOtp, loginWithGoogle } = useAuth();
+  const { requestOtp, verifyOtp, loginWithGoogle } = useCustomerAuth();
 
   const [step, setStep] = useState<Step>("phone");
   const [phoneDigits, setPhoneDigits] = useState("");

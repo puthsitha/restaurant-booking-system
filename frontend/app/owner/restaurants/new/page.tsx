@@ -5,12 +5,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useOwnerAuth } from "@/lib/auth/ownerAuth";
 import { createRestaurant } from "@/lib/restaurants/api";
 import { slugify } from "@/lib/restaurants/slugify";
 
 export default function NewRestaurantPage() {
-  const { token } = useAuth();
+  const { token } = useOwnerAuth();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -37,7 +37,7 @@ export default function NewRestaurantPage() {
         { name, slug, cuisineType, address, city },
         token,
       );
-      router.replace(`/admin/restaurants/${restaurant.id}`);
+      router.replace(`/owner/restaurants/${restaurant.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {

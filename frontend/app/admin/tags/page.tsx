@@ -8,12 +8,12 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { createTag, deleteTag, listTags } from "@/lib/restaurants/api";
 import type { Tag } from "@/lib/restaurants/types";
 
 export default function AdminTagsPage() {
-  const { token } = useAuth();
+  const { token } = useAdminAuth();
   const [tags, setTags] = useState<Tag[] | null>(null);
   const [name, setName] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);

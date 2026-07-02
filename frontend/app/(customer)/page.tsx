@@ -65,7 +65,7 @@ export default async function HomePage() {
           title="The dining room is warming up"
           message="No restaurants have opened their doors yet — be the first, or check back soon for new spots."
           actionLabel="List your restaurant"
-          actionHref="/signup"
+          actionHref="/owner/signup"
         />
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
