@@ -7,7 +7,6 @@ import { SessionEndedModal } from "@/components/auth/SessionEndedModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmLogoutModal } from "@/components/ui/ConfirmLogoutModal";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useAuthModal } from "@/lib/auth/authModal";
 import { useLanguage } from "@/lib/i18n/context";
@@ -36,7 +35,6 @@ export function CustomerHeader() {
 
         <div className="flex items-center gap-2">
           <LanguageToggle />
-          <ThemeToggle />
 
           {status === "authenticated" && user ? (
             <div className="ml-3 flex items-center gap-5">

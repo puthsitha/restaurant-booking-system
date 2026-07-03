@@ -24,12 +24,6 @@ export const theme = {
     sidebarBorder: "#2D2520",
     // Admin panel's brand accent (distinct from the owner/customer orange).
     adminAccent: "#6D28D9",
-    // Fixed dark tint for modal/lightbox scrims — stays the same across the
-    // light/dark theme toggle. Dark-theme overrides for bg/surface/border/
-    // ink/muted/label/dashboardBg/dashboardBorder live in globals.css only
-    // (under `:root[data-theme="dark"]`), since this object always reflects
-    // the light values.
-    scrim: "#241D19",
     // Reservation status colors: [text, bg-tint].
     status: {
       pending: { text: "#B45309", bg: "#FEF3C7" },

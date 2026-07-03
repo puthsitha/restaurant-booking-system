@@ -84,7 +84,7 @@ export function QrCodeViewer({ value, size = 180, className, label, downloadName
         aria-label={`View ${label} full screen`}
       >
         <QrCode value={value} size={size} className={className} />
-        <span className="absolute inset-0 flex items-center justify-center bg-scrim/0 opacity-0 transition group-hover:bg-scrim/10 group-hover:opacity-100">
+        <span className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition group-hover:bg-ink/10 group-hover:opacity-100">
           <ZoomInIcon className="h-6 w-6 text-ink drop-shadow" />
         </span>
       </button>

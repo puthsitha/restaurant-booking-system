@@ -35,7 +35,7 @@ export function CustomerFooter() {
   ];
 
   return (
-    <footer className="mt-16 bg-scrim text-[#C9BCB0]">
+    <footer className="mt-16 bg-ink text-[#C9BCB0]">
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-10 px-8 py-14 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]">
         <div>
           <Link href="/" className="disp flex items-center gap-2.5 text-lg font-extrabold text-white">

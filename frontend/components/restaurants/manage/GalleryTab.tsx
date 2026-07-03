@@ -93,7 +93,7 @@ export function GalleryTab({ restaurant, token, onSaved }: ManageTabProps) {
               />
               <button
                 onClick={() => handleDelete(image.id)}
-                className="absolute right-1.5 top-1.5 rounded-full bg-scrim/70 px-2 py-0.5 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
+                className="absolute right-1.5 top-1.5 rounded-full bg-ink/70 px-2 py-0.5 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
               >
                 Delete
               </button>
