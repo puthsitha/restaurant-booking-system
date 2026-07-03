@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import type { DashboardNotifications } from "@/components/dashboard/DashboardShell";
+import type { NotificationItem } from "@/components/dashboard/NotificationBell";
 import {
   CalendarIcon,
   ChefHatIcon,
@@ -15,15 +16,24 @@ import {
   UsersIcon,
 } from "@/components/ui/icons";
 import { AdminAuthProvider, useAdminAuth } from "@/lib/auth/adminAuth";
+import { listAllRestaurantRequests } from "@/lib/requests/api";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
 
 // The login page lives inside this tree for shared styling but must not be
 // gated by the auth check below.
 const PUBLIC_PATHS = ["/admin/login"];
 
-// How often to re-check for newly-submitted restaurants while the admin has
-// a page open — no push/websocket channel exists yet, so this is a simple poll.
+// How often to re-check for newly-submitted restaurants/requests while the
+// admin has a page open — no push/websocket channel exists yet, so this is a
+// simple poll.
 const POLL_MS = 45_000;
+
+interface PendingCounts {
+  restaurantCount: number;
+  restaurantItems: NotificationItem[];
+  requestCount: number;
+  requestItems: NotificationItem[];
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,7 +48,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isPublicPath = PUBLIC_PATHS.includes(pathname);
-  const [pending, setPending] = useState<DashboardNotifications | null>(null);
+  const [pending, setPending] = useState<PendingCounts | null>(null);
 
   useEffect(() => {
     if (isPublicPath || status === "loading") return;
@@ -53,20 +63,27 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
     function load(): void {
       if (!token) return;
-      listAllRestaurantsAdmin({ status: "PENDING", page: 1, pageSize: 5 }, token)
-        .then((res) => {
+      Promise.all([
+        listAllRestaurantsAdmin({ status: "PENDING", page: 1, pageSize: 5 }, token),
+        listAllRestaurantRequests({ status: "PENDING", page: 1, pageSize: 5 }, token),
+      ])
+        .then(([restaurants, requests]) => {
           if (cancelled) return;
           setPending({
-            count: res.total,
-            items: res.items.map((r) => ({
+            restaurantCount: restaurants.total,
+            restaurantItems: restaurants.items.map((r) => ({
               id: r.id,
               title: r.name,
               subtitle: `${r.cuisineType} · ${r.city}`,
               href: `/admin/restaurants/${r.id}`,
             })),
-            emptyLabel: "No restaurants awaiting review.",
-            viewAllHref: "/admin/restaurants",
-            viewAllLabel: "View all restaurants",
+            requestCount: requests.total,
+            requestItems: requests.items.map((r) => ({
+              id: r.id,
+              title: `${r.owner.name} · wants ${r.requestedCount} restaurants`,
+              subtitle: `Currently ${r.currentCount}/${r.owner.restaurantLimit}`,
+              href: "/admin/requests",
+            })),
           });
         })
         .catch(() => undefined);
@@ -80,17 +97,32 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     };
   }, [token]);
 
+  const notifications: DashboardNotifications | undefined = pending
+    ? {
+        count: pending.restaurantCount + pending.requestCount,
+        items: [...pending.restaurantItems, ...pending.requestItems].slice(0, 5),
+        emptyLabel: "Nothing awaiting review.",
+        viewAllHref: "/admin/restaurants",
+        viewAllLabel: "View all restaurants",
+      }
+    : undefined;
+
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: DashboardIcon },
     {
       href: "/admin/restaurants",
       label: "Restaurants",
       icon: ChefHatIcon,
-      badge: pending?.count,
+      badge: pending?.restaurantCount,
     },
     { href: "/admin/bookings", label: "Bookings", icon: CalendarIcon },
     { href: "/admin/users", label: "Users", icon: UsersIcon },
-    { href: "/admin/requests", label: "Requests", icon: InboxIcon },
+    {
+      href: "/admin/requests",
+      label: "Requests",
+      icon: InboxIcon,
+      badge: pending?.requestCount,
+    },
     { href: "/admin/tags", label: "Tags", icon: TagIcon },
     { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
   ];
@@ -114,7 +146,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         variant="admin"
         navItems={navItems}
         userName={user.name}
-        notifications={pending ?? undefined}
+        notifications={notifications}
         onLogout={() => {
           logout();
           router.replace("/admin/login");
