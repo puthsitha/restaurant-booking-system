@@ -9,6 +9,7 @@ export interface ManagedUser {
   phone: string | null;
   avatarUrl: string | null;
   status: UserAccountStatus;
+  statusReason: string | null;
   restaurantLimit: number;
   createdAt: string;
 }

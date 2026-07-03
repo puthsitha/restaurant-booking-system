@@ -13,6 +13,7 @@ export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>;
 
 export const updateUserStatusSchema = z.object({
   status: userStatusEnum,
+  reason: z.string().trim().min(1).max(500),
 });
 export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;
 

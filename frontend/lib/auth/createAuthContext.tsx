@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, ApiError, SESSION_ENDED_EVENT } from "@/lib/api";
 import type { AuthResponse, AuthUser, OtpRequestResponse, Role } from "@/lib/auth/types";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
@@ -19,6 +19,11 @@ export interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
   status: AuthStatus;
+  // Set when this session was ended by the server (e.g. the account was
+  // suspended) rather than by the user clicking "Log out" — surfaces the
+  // server's reason so the affected person knows why they were signed out.
+  sessionMessage: string | null;
+  clearSessionMessage: () => void;
   login: (email: string, password: string) => Promise<AuthUser>;
   signup: (input: SignupInput) => Promise<AuthUser>;
   loginWithGoogle: (idToken: string) => Promise<AuthUser>;
@@ -64,6 +69,7 @@ export function createAuthContext(options: CreateAuthContextOptions): AuthContex
     const [user, setUser] = useState<AuthUser | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [status, setStatus] = useState<AuthStatus>("loading");
+    const [sessionMessage, setSessionMessage] = useState<string | null>(null);
 
     // Hydrate from this surface's own stored token on first load, so
     // refreshing the page doesn't sign the user out.
@@ -94,7 +100,23 @@ export function createAuthContext(options: CreateAuthContextOptions): AuthContex
       setUser(res.user);
       setToken(res.token);
       setStatus("authenticated");
+      setSessionMessage(null);
       return res.user;
+    }, []);
+
+    // A request made with this surface's token came back 401 — most likely
+    // an admin suspended the account mid-session. Force a logout and keep
+    // the server's reason around so the login screen can show it.
+    useEffect(() => {
+      function handleSessionEnded(e: Event): void {
+        window.localStorage.removeItem(storageKey);
+        setUser(null);
+        setToken(null);
+        setStatus("unauthenticated");
+        setSessionMessage((e as CustomEvent<string>).detail ?? null);
+      }
+      window.addEventListener(SESSION_ENDED_EVENT, handleSessionEnded);
+      return () => window.removeEventListener(SESSION_ENDED_EVENT, handleSessionEnded);
     }, []);
 
     const login = useCallback(
@@ -149,11 +171,15 @@ export function createAuthContext(options: CreateAuthContextOptions): AuthContex
       setStatus("unauthenticated");
     }, []);
 
+    const clearSessionMessage = useCallback(() => setSessionMessage(null), []);
+
     const value = useMemo<AuthContextValue>(
       () => ({
         user,
         token,
         status,
+        sessionMessage,
+        clearSessionMessage,
         login,
         signup,
         loginWithGoogle,
@@ -161,7 +187,19 @@ export function createAuthContext(options: CreateAuthContextOptions): AuthContex
         verifyOtp,
         logout,
       }),
-      [user, token, status, login, signup, loginWithGoogle, requestOtp, verifyOtp, logout],
+      [
+        user,
+        token,
+        status,
+        sessionMessage,
+        clearSessionMessage,
+        login,
+        signup,
+        loginWithGoogle,
+        requestOtp,
+        verifyOtp,
+        logout,
+      ],
     );
 
     return <Context.Provider value={value}>{children}</Context.Provider>;

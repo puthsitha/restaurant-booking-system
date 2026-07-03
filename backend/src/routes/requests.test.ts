@@ -6,7 +6,14 @@ import { createApp } from "../app";
 import { prisma } from "../lib/prisma";
 
 vi.mock("../lib/prisma", () => {
-  const user = { findUnique: vi.fn(), update: vi.fn() };
+  const user = {
+    findUnique: vi.fn(),
+    // Used by the `authenticate` middleware to check the token subject is
+    // still active; defaults to "found and active" so existing tests don't
+    // need to stub it, and is overridden per-test to simulate suspension.
+    findFirst: vi.fn().mockResolvedValue({ status: "ACTIVE", statusReason: null }),
+    update: vi.fn(),
+  };
   const restaurant = { count: vi.fn() };
   const restaurantRequest = {
     findFirst: vi.fn(),

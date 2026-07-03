@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { FormField, TextField } from "@/components/ui/FormField";
+import { FormField, TextAreaField, TextField } from "@/components/ui/FormField";
 import { SearchOffIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -14,7 +14,7 @@ import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { createOwner, updateUserStatus, listUsers } from "@/lib/users/api";
-import type { ManageableRole, ManagedUser } from "@/lib/users/types";
+import type { ManageableRole, ManagedUser, UserAccountStatus } from "@/lib/users/types";
 
 const STATUS_STYLE: Record<string, string> = {
   ACTIVE: "bg-secondary/10 text-secondary",
@@ -28,8 +28,8 @@ export default function AdminUsersPage() {
   const [role, setRole] = useState<ManageableRole | "">("");
   const [users, setUsers] = useState<ManagedUser[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [statusTarget, setStatusTarget] = useState<ManagedUser | null>(null);
 
   const load = useCallback(() => {
     if (!token) return;
@@ -42,20 +42,6 @@ export default function AdminUsersPage() {
   }, [token, debouncedSearch, role]);
 
   useEffect(load, [load]);
-
-  async function toggleStatus(user: ManagedUser): Promise<void> {
-    if (!token) return;
-    const nextStatus = user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
-    setUpdatingId(user.id);
-    try {
-      await updateUserStatus(user.id, nextStatus, token);
-      load();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update this account.");
-    } finally {
-      setUpdatingId(null);
-    }
-  }
 
   return (
     <main style={{ padding: 32 }}>
@@ -117,6 +103,12 @@ export default function AdminUsersPage() {
                 <p className="mt-0.5 text-sm text-muted">
                   {u.role === "OWNER" ? "Owner" : "Customer"} · {u.phone ?? u.email ?? "—"}
                 </p>
+                {u.statusReason && (
+                  <p className="mt-1 text-xs text-muted">
+                    <span className="font-semibold">Reason: </span>
+                    {u.statusReason}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <span
@@ -126,8 +118,7 @@ export default function AdminUsersPage() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => toggleStatus(u)}
-                  disabled={updatingId === u.id}
+                  onClick={() => setStatusTarget(u)}
                   className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg disabled:opacity-50"
                 >
                   {u.status === "ACTIVE" ? "Suspend" : "Reactivate"}
@@ -147,7 +138,89 @@ export default function AdminUsersPage() {
           load();
         }}
       />
+
+      <StatusModal
+        user={statusTarget}
+        onClose={() => setStatusTarget(null)}
+        token={token}
+        onUpdated={(updated) => {
+          setStatusTarget(null);
+          setUsers((prev) => prev?.map((u) => (u.id === updated.id ? updated : u)) ?? prev);
+        }}
+      />
     </main>
+  );
+}
+
+interface StatusModalProps {
+  user: ManagedUser | null;
+  onClose: () => void;
+  token: string | null;
+  onUpdated: (updated: ManagedUser) => void;
+}
+
+function StatusModal({ user, onClose, token, onUpdated }: StatusModalProps) {
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setReason("");
+      setError(null);
+    }
+  }, [user]);
+
+  const nextStatus: UserAccountStatus = user?.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+  const isSuspending = nextStatus === "SUSPENDED";
+
+  async function handleSubmit(e: FormEvent): Promise<void> {
+    e.preventDefault();
+    if (!token || !user) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const { user: updated } = await updateUserStatus(user.id, nextStatus, reason, token);
+      onUpdated(updated);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't update this account.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal open={user !== null} onClose={onClose} title={isSuspending ? "Suspend account" : "Reactivate account"}>
+      {user && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-sm text-ink">
+            {isSuspending
+              ? `${user.name} will be signed out immediately and won't be able to sign back in until reactivated.`
+              : `${user.name} will be able to sign in again.`}
+          </p>
+          <TextAreaField
+            label="Reason"
+            required
+            rows={3}
+            placeholder={
+              isSuspending
+                ? "Explain why this account is being suspended…"
+                : "Explain why this account is being reactivated…"
+            }
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {submitting ? "Saving…" : isSuspending ? "Confirm suspension" : "Confirm reactivation"}
+          </button>
+        </form>
+      )}
+    </Modal>
   );
 }
 
