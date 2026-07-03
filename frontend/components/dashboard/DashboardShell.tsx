@@ -45,6 +45,7 @@ interface DashboardShellProps {
   variant: DashboardVariant;
   navItems: DashboardNavItem[];
   userName: string;
+  userAvatarUrl?: string | null;
   onLogout: () => void;
   children: ReactNode;
   notifications?: DashboardNotifications;
@@ -58,6 +59,7 @@ export function DashboardShell({
   variant,
   navItems,
   userName,
+  userAvatarUrl,
   onLogout,
   children,
   notifications
@@ -80,6 +82,7 @@ export function DashboardShell({
           navItems={navItems}
           isActive={isActive}
           userName={userName}
+          userAvatarUrl={userAvatarUrl}
           onLogout={onLogout}
           notifications={notifications}
         />
@@ -111,6 +114,7 @@ export function DashboardShell({
                 navItems={navItems}
                 isActive={isActive}
                 userName={userName}
+                userAvatarUrl={userAvatarUrl}
                 onLogout={onLogout}
                 notifications={notifications}
                 onNavigate={() => setMobileOpen(false)}
@@ -147,6 +151,7 @@ interface SidebarContentProps {
   navItems: DashboardNavItem[];
   isActive: (href: string) => boolean;
   userName: string;
+  userAvatarUrl?: string | null;
   onLogout: () => void;
   notifications?: DashboardNotifications;
   onNavigate?: () => void;
@@ -158,6 +163,7 @@ function SidebarContent({
   navItems,
   isActive,
   userName,
+  userAvatarUrl,
   onLogout,
   notifications,
   onNavigate
@@ -217,7 +223,7 @@ function SidebarContent({
       </nav>
       <div className="border-t border-sidebarBorder px-4 py-4">
         <div className="flex items-center gap-2.5 px-1">
-          <Avatar name={userName} size="sm" />
+          <Avatar name={userName} imageUrl={userAvatarUrl} size="sm" />
           <p className="truncate text-sm font-semibold text-white">{userName}</p>
         </div>
         <button

@@ -39,7 +39,7 @@ export function CustomerHeader() {
               href="/profile"
               className="flex items-center gap-2 text-sm font-semibold text-ink hover:text-accent"
             >
-              <Avatar name={user.name} size="sm" />
+              <Avatar name={user.name} imageUrl={user.avatarUrl} size="sm" />
               <span className="hidden sm:inline">{user.name}</span>
             </Link>
             <button

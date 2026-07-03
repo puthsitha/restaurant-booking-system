@@ -207,6 +207,36 @@ describe("POST /api/auth/google", () => {
     });
   });
 
+  it("copies the Google avatar when linking an existing password account", async () => {
+    verifyIdToken.mockResolvedValueOnce({
+      getPayload: () => ({
+        sub: "google-sub-3",
+        email: "sokha@example.com",
+        name: "Sokha",
+        picture: "https://lh3.googleusercontent.com/a/pic.jpg",
+      }),
+    });
+    vi.mocked(prisma.user.findUnique)
+      .mockResolvedValueOnce(null) // by googleId
+      .mockResolvedValueOnce(baseUser); // by email
+    vi.mocked(prisma.user.update).mockResolvedValueOnce({
+      ...baseUser,
+      googleId: "google-sub-3",
+      avatarUrl: "https://lh3.googleusercontent.com/a/pic.jpg",
+    });
+
+    const res = await request(app)
+      .post("/api/auth/google")
+      .send({ idToken: "valid-token" });
+
+    expect(res.status).toBe(200);
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: baseUser.id },
+      data: { googleId: "google-sub-3", avatarUrl: "https://lh3.googleusercontent.com/a/pic.jpg" },
+    });
+    expect(res.body.user.avatarUrl).toBe("https://lh3.googleusercontent.com/a/pic.jpg");
+  });
+
   it("rejects an invalid Google token", async () => {
     verifyIdToken.mockRejectedValueOnce(new Error("bad token"));
 
