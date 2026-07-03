@@ -46,7 +46,12 @@ export const env = {
     .filter(Boolean),
   rateLimit: {
     windowMs: intEnv("RATE_LIMIT_WINDOW_MS", 15 * 60 * 1000),
-    max: intEnv("RATE_LIMIT_MAX", 100),
+    // A single dashboard page load fires several parallel requests (stats,
+    // per-restaurant table lists, recent reservations, ...), so a low cap
+    // here trips "Too many requests" for perfectly normal browsing rather
+    // than actual abuse. 600/15min still blocks a hammering script while
+    // giving real usage plenty of headroom.
+    max: intEnv("RATE_LIMIT_MAX", 600),
   },
   // Maximum accepted JSON request body size.
   jsonBodyLimit: process.env.JSON_BODY_LIMIT ?? "100kb",
