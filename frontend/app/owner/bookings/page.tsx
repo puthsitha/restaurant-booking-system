@@ -3,12 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { BookingDetailModal } from "@/components/reservations/BookingDetailModal";
+import { DateField } from "@/components/ui/DateField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { TextAreaField, TextField } from "@/components/ui/FormField";
-import { CalendarIcon } from "@/components/ui/icons";
+import { CalendarIcon, SearchOffIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
+import { SearchField } from "@/components/ui/SearchField";
+import { Select } from "@/components/ui/Select";
 import { ListSkeleton } from "@/components/ui/skeletons";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
 import {
@@ -16,27 +21,16 @@ import {
   listOwnerReservations,
   updateReservationStatus,
 } from "@/lib/reservations/api";
-import type { Reservation, ReservationStatus, SeatingPreference } from "@/lib/reservations/types";
+import { RESERVATION_STATUS_OPTIONS, RESERVATION_STATUS_TONE } from "@/lib/reservations/statusTone";
+import type {
+  ListReservationsResponse,
+  Reservation,
+  ReservationStatus,
+  SeatingPreference,
+} from "@/lib/reservations/types";
 import { listMyRestaurants } from "@/lib/restaurants/api";
 import type { RestaurantSummary } from "@/lib/restaurants/types";
-
-const STATUS_OPTIONS: ReservationStatus[] = [
-  "PENDING",
-  "CONFIRMED",
-  "SEATED",
-  "COMPLETED",
-  "CANCELLED",
-  "NO_SHOW",
-];
-
-const STATUS_STYLE: Record<ReservationStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  CONFIRMED: "bg-secondary/10 text-secondary",
-  SEATED: "bg-secondary/10 text-secondary",
-  COMPLETED: "bg-bg text-muted",
-  CANCELLED: "bg-red-100 text-red-700",
-  NO_SHOW: "bg-red-100 text-red-700",
-};
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 const SEATING_OPTIONS: SeatingPreference[] = ["INDOOR", "GARDEN", "PRIVATE"];
 
@@ -47,12 +41,20 @@ function todayIso(): string {
 export default function OwnerBookingsPage() {
   const { token } = useOwnerAuth();
   const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([]);
-  const [reservations, setReservations] = useState<Reservation[] | null>(null);
+  const [result, setResult] = useState<ListReservationsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 350);
   const [restaurantFilter, setRestaurantFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "">("");
   const [dateFilter, setDateFilter] = useState("");
+  const [page, setPage] = useState(1);
   const [showManualModal, setShowManualModal] = useState(false);
+  const [detailTarget, setDetailTarget] = useState<Reservation | null>(null);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, restaurantFilter, statusFilter, dateFilter]);
 
   const load = useCallback(() => {
     if (!token) return;
@@ -62,13 +64,17 @@ export default function OwnerBookingsPage() {
         restaurantId: restaurantFilter || undefined,
         status: statusFilter || undefined,
         date: dateFilter || undefined,
-        pageSize: 50,
+        search: debouncedSearch || undefined,
+        page,
+        pageSize: 12,
       },
       token,
     )
-      .then((res) => setReservations(res.items))
-      .catch(() => setError("Couldn't load bookings."));
-  }, [token, restaurantFilter, statusFilter, dateFilter]);
+      .then((res) => setResult(res))
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : "Couldn't load bookings.");
+      });
+  }, [token, restaurantFilter, statusFilter, dateFilter, debouncedSearch, page]);
 
   useEffect(load, [load]);
 
@@ -89,6 +95,8 @@ export default function OwnerBookingsPage() {
     }
   }
 
+  const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
+
   return (
     <main className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -105,11 +113,15 @@ export default function OwnerBookingsPage() {
         </button>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <select
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <SearchField
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by guest name or phone"
+        />
+        <Select
           value={restaurantFilter}
           onChange={(e) => setRestaurantFilter(e.target.value)}
-          className="rounded-xl border border-border px-3 py-2 text-sm text-ink outline-none"
         >
           <option value="">All restaurants</option>
           {restaurants.map((r) => (
@@ -117,76 +129,96 @@ export default function OwnerBookingsPage() {
               {r.name}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as ReservationStatus | "")}
-          className="rounded-xl border border-border px-3 py-2 text-sm text-ink outline-none"
         >
           <option value="">All statuses</option>
-          {STATUS_OPTIONS.map((s) => (
+          {RESERVATION_STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
-        </select>
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          className="rounded-xl border border-border px-3 py-2 text-sm text-ink outline-none"
-        />
+        </Select>
+        <DateField value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
       </div>
 
       {error ? (
         <ErrorState className="mt-8" message={error} onRetry={load} />
-      ) : reservations === null ? (
+      ) : result === null ? (
         <div className="mt-8">
           <ListSkeleton rows={4} />
         </div>
-      ) : reservations.length === 0 ? (
+      ) : result.items.length === 0 ? (
         <EmptyState
           className="mt-8"
           icon={CalendarIcon}
-          title="No bookings yet"
+          title="No bookings match those filters"
           message="Reservations from diners — and any walk-ins you add — will show up here."
         />
       ) : (
-        <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
-          {reservations.map((r) => (
-            <div key={r.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-              <div>
-                <p className="font-bold text-ink">
-                  {r.user.name} · {r.partySize} guests
-                </p>
-                <p className="mt-0.5 text-sm text-muted">
-                  {r.restaurant.name} · {r.date.slice(0, 10)} at {r.time}
-                </p>
-                <p className="mt-0.5 text-xs text-muted">
-                  {r.user.phone ?? r.user.email ?? ""} · {r.confirmationCode}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS_STYLE[r.status]}`}
+        <>
+          <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
+            {result.items.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+                <button
+                  type="button"
+                  onClick={() => setDetailTarget(r)}
+                  className="min-w-0 flex-1 text-left"
                 >
-                  {r.status}
-                </span>
-                <select
-                  value={r.status}
-                  onChange={(e) => handleStatusChange(r.id, e.target.value as ReservationStatus)}
-                  className="rounded-lg border border-border px-2 py-1.5 text-xs font-semibold text-ink outline-none"
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  <p className="font-bold text-ink hover:text-accent">
+                    {r.user.name} · {r.partySize} guests
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted">
+                    {r.restaurant.name} · {r.date.slice(0, 10)} at {r.time}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {r.user.phone ?? r.user.email ?? ""} · {r.confirmationCode}
+                  </p>
+                </button>
+                <div className="flex items-center gap-2">
+                  <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
+                  <Select
+                    value={r.status}
+                    onChange={(e) => handleStatusChange(r.id, e.target.value as ReservationStatus)}
+                    className="min-w-[130px] py-1.5 text-xs"
+                  >
+                    {RESERVATION_STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
               </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-muted">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
+              >
+                Next
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       <ManualBookingModal
@@ -199,6 +231,8 @@ export default function OwnerBookingsPage() {
           load();
         }}
       />
+
+      <BookingDetailModal reservation={detailTarget} onClose={() => setDetailTarget(null)} />
     </main>
   );
 }
@@ -262,21 +296,18 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
   return (
     <Modal open={open} onClose={onClose} title="Add a walk-in / phone booking">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-2 block text-xs font-bold text-label">Restaurant</label>
-          <select
-            required
-            value={restaurantId}
-            onChange={(e) => setRestaurantId(e.target.value)}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
-          >
-            {restaurants.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Restaurant"
+          required
+          value={restaurantId}
+          onChange={(e) => setRestaurantId(e.target.value)}
+        >
+          {restaurants.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </Select>
         <TextField
           label="Guest name"
           required
@@ -291,13 +322,7 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
           onChange={(e) => setGuestPhone(e.target.value)}
         />
         <div className="grid grid-cols-2 gap-3">
-          <TextField
-            label="Date"
-            type="date"
-            required
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <DateField label="Date" required value={date} onChange={(e) => setDate(e.target.value)} />
           <TextField
             label="Time"
             type="time"
@@ -315,20 +340,17 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
             value={partySize}
             onChange={(e) => setPartySize(Number(e.target.value))}
           />
-          <div>
-            <label className="mb-2 block text-xs font-bold text-label">Seating</label>
-            <select
-              value={seatingPreference}
-              onChange={(e) => setSeatingPreference(e.target.value as SeatingPreference)}
-              className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
-            >
-              {SEATING_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Seating"
+            value={seatingPreference}
+            onChange={(e) => setSeatingPreference(e.target.value as SeatingPreference)}
+          >
+            {SEATING_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </Select>
         </div>
         <TextAreaField
           label="Special requests (optional)"

@@ -66,6 +66,14 @@ export interface ListReservationsParams {
   restaurantId?: string;
   status?: ReservationStatus;
   date?: string;
+  // Matches the customer's name/phone or the restaurant's name.
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+// GET /api/reservations/mine (diner) — no filters, just pagination.
+export interface ListMyReservationsParams {
   page?: number;
   pageSize?: number;
 }

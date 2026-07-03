@@ -9,6 +9,7 @@ import {
   createManualReservationSchema,
   updateReservationStatusSchema,
   listReservationsQuerySchema,
+  listMyReservationsQuerySchema,
   checkAvailabilityQuerySchema,
   bookingStatsQuerySchema,
 } from "../schemas/reservation.schemas";
@@ -76,10 +77,22 @@ reservationsRouter.post(
  *     summary: List the signed-in diner's reservations
  *     tags: [Reservations]
  *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: pageSize
+ *         schema: { type: integer, default: 20 }
  *     responses:
  *       200: { description: OK }
  */
-reservationsRouter.get("/api/reservations/mine", dinerOnly, reservationController.listMine);
+reservationsRouter.get(
+  "/api/reservations/mine",
+  dinerOnly,
+  validateQuery(listMyReservationsQuerySchema),
+  reservationController.listMine,
+);
 
 /**
  * @openapi
@@ -133,6 +146,10 @@ reservationsRouter.post(
  *       - in: query
  *         name: date
  *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: search
+ *         description: Matches the customer's name/phone or the restaurant's name.
+ *         schema: { type: string }
  *       - in: query
  *         name: page
  *         schema: { type: integer, default: 1 }
@@ -194,6 +211,10 @@ reservationsRouter.patch(
  *       - in: query
  *         name: date
  *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: search
+ *         description: Matches the customer's name/phone or the restaurant's name.
+ *         schema: { type: string }
  *       - in: query
  *         name: page
  *         schema: { type: integer, default: 1 }
