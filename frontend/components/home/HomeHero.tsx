@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 
+import { HeroReveal } from "@/components/home/HeroReveal";
 import { SearchIcon } from "@/components/ui/icons";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 
@@ -20,17 +21,13 @@ const STATS = [
 
 // Hero section for the customer homepage — a client component so it can
 // carry framer-motion (staggered entrance, drifting gradient blobs, floating
-// cuisine cards) while the page itself stays a server component for data
-// fetching. No image asset pipeline exists yet, so the visual interest comes
-// entirely from animated gradients/shapes rather than a photo.
+// cuisine cards, cursor-follow scene reveal) while the page itself stays a
+// server component for data fetching. No image asset pipeline exists yet, so
+// the visual interest comes entirely from animated gradients/shapes/SVG
+// scenes rather than a photo.
 export function HomeHero() {
   return (
-    <section className="relative overflow-hidden px-8 py-24 text-white sm:py-32">
-      <div
-        className="absolute inset-0 -z-20"
-        style={{ background: "linear-gradient(110deg, #241D19 0%, #2E2018 46%, #C2410C 140%)" }}
-      />
-
+    <HeroReveal className="relative overflow-hidden px-8 py-24 text-white sm:py-32">
       {/* Slow-drifting glow blobs give the hero a sense of life without a
           photo — kept subtle (blurred, low opacity) so text stays legible. */}
       <motion.div
@@ -126,6 +123,6 @@ export function HomeHero() {
           ))}
         </motion.div>
       </motion.div>
-    </section>
+    </HeroReveal>
   );
 }
