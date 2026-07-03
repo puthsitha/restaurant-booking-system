@@ -42,3 +42,15 @@ export function updateUserStatus(
     token,
   });
 }
+
+export function updateRestaurantLimit(
+  id: string,
+  restaurantLimit: number,
+  token: string,
+): Promise<{ user: ManagedUser }> {
+  return apiFetch(`/api/users/${id}/restaurant-limit`, {
+    method: "PATCH",
+    body: { restaurantLimit },
+    token,
+  });
+}

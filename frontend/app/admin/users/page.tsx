@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { FormField, TextAreaField, TextField } from "@/components/ui/FormField";
@@ -10,16 +11,12 @@ import { SearchOffIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { ListSkeleton } from "@/components/ui/skeletons";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
-import { createOwner, updateUserStatus, listUsers } from "@/lib/users/api";
+import { createOwner, updateRestaurantLimit, updateUserStatus, listUsers } from "@/lib/users/api";
 import type { ManageableRole, ManagedUser, UserAccountStatus } from "@/lib/users/types";
-
-const STATUS_STYLE: Record<string, string> = {
-  ACTIVE: "bg-secondary/10 text-secondary",
-  SUSPENDED: "bg-red-100 text-red-700",
-};
 
 export default function AdminUsersPage() {
   const { token } = useAdminAuth();
@@ -30,6 +27,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [statusTarget, setStatusTarget] = useState<ManagedUser | null>(null);
+  const [limitTarget, setLimitTarget] = useState<ManagedUser | null>(null);
 
   const load = useCallback(() => {
     if (!token) return;
@@ -98,24 +96,35 @@ export default function AdminUsersPage() {
         <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
           {users.map((u) => (
             <div key={u.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-              <div>
-                <p className="font-bold text-ink">{u.name}</p>
-                <p className="mt-0.5 text-sm text-muted">
-                  {u.role === "OWNER" ? "Owner" : "Customer"} · {u.phone ?? u.email ?? "—"}
-                </p>
-                {u.statusReason && (
-                  <p className="mt-1 text-xs text-muted">
-                    <span className="font-semibold">Reason: </span>
-                    {u.statusReason}
+              <div className="flex items-center gap-3">
+                <Avatar name={u.name} imageUrl={u.avatarUrl} />
+                <div>
+                  <p className="font-bold text-ink">{u.name}</p>
+                  <p className="mt-0.5 text-sm text-muted">
+                    {u.role === "OWNER" ? "Owner" : "Customer"} · {u.phone ?? u.email ?? "—"}
+                    {u.role === "OWNER" && ` · ${u.restaurantLimit} restaurant limit`}
                   </p>
-                )}
+                  {u.statusReason && (
+                    <p className="mt-1 text-xs text-muted">
+                      <span className="font-semibold">Reason: </span>
+                      {u.statusReason}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS_STYLE[u.status]}`}
-                >
+                <StatusBadge tone={u.status === "ACTIVE" ? "success" : "danger"}>
                   {u.status}
-                </span>
+                </StatusBadge>
+                {u.role === "OWNER" && (
+                  <button
+                    type="button"
+                    onClick={() => setLimitTarget(u)}
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg"
+                  >
+                    Edit limit
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setStatusTarget(u)}
@@ -148,7 +157,81 @@ export default function AdminUsersPage() {
           setUsers((prev) => prev?.map((u) => (u.id === updated.id ? updated : u)) ?? prev);
         }}
       />
+
+      <LimitModal
+        user={limitTarget}
+        onClose={() => setLimitTarget(null)}
+        token={token}
+        onUpdated={(updated) => {
+          setLimitTarget(null);
+          setUsers((prev) => prev?.map((u) => (u.id === updated.id ? updated : u)) ?? prev);
+        }}
+      />
     </main>
+  );
+}
+
+interface LimitModalProps {
+  user: ManagedUser | null;
+  onClose: () => void;
+  token: string | null;
+  onUpdated: (updated: ManagedUser) => void;
+}
+
+function LimitModal({ user, onClose, token, onUpdated }: LimitModalProps) {
+  const [limit, setLimit] = useState(3);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setLimit(user.restaurantLimit);
+      setError(null);
+    }
+  }, [user]);
+
+  async function handleSubmit(e: FormEvent): Promise<void> {
+    e.preventDefault();
+    if (!token || !user) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const { user: updated } = await updateRestaurantLimit(user.id, limit, token);
+      onUpdated(updated);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't update the restaurant limit.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal open={user !== null} onClose={onClose} title="Edit restaurant limit">
+      {user && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-sm text-ink">
+            How many restaurants can {user.name} create and manage?
+          </p>
+          <TextField
+            label="Restaurant limit"
+            type="number"
+            min={1}
+            max={100}
+            required
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value))}
+          />
+          {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {submitting ? "Saving…" : "Save limit"}
+          </button>
+        </form>
+      )}
+    </Modal>
   );
 }
 

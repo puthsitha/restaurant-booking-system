@@ -6,6 +6,7 @@ import { hashPassword } from "../lib/password";
 import type {
   CreateOwnerInput,
   ListUsersQuery,
+  UpdateRestaurantLimitInput,
   UpdateUserStatusInput,
 } from "../schemas/user.schemas";
 
@@ -79,6 +80,19 @@ export async function updateUserStatus(userId: string, input: UpdateUserStatusIn
   return prisma.user.update({
     where: { id: userId },
     data: { status: input.status, statusReason: input.reason },
+    select: userListSelect,
+  });
+}
+
+export async function updateRestaurantLimit(userId: string, input: UpdateRestaurantLimitInput) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== "OWNER") {
+    throw new HttpError(404, "Owner not found");
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data: { restaurantLimit: input.restaurantLimit },
     select: userListSelect,
   });
 }

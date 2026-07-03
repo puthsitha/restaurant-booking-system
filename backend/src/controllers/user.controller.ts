@@ -1,7 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
 
 import * as userService from "../services/user.service";
-import type { CreateOwnerInput, ListUsersQuery, UpdateUserStatusInput } from "../schemas/user.schemas";
+import type {
+  CreateOwnerInput,
+  ListUsersQuery,
+  UpdateRestaurantLimitInput,
+  UpdateUserStatusInput,
+} from "../schemas/user.schemas";
 
 export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -33,6 +38,19 @@ export async function updateStatus(
 ): Promise<void> {
   try {
     const user = await userService.updateUserStatus(req.params.id, req.body);
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateRestaurantLimit(
+  req: Request<{ id: string }, unknown, UpdateRestaurantLimitInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const user = await userService.updateRestaurantLimit(req.params.id, req.body);
     res.json({ user });
   } catch (err) {
     next(err);

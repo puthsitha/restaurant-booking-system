@@ -6,6 +6,7 @@ import { validateBody, validateQuery } from "../middleware/validate";
 import {
   createOwnerSchema,
   listUsersQuerySchema,
+  updateRestaurantLimitSchema,
   updateUserStatusSchema,
 } from "../schemas/user.schemas";
 
@@ -99,4 +100,31 @@ usersRouter.patch(
   adminOnly,
   validateBody(updateUserStatusSchema),
   userController.updateStatus,
+);
+
+/**
+ * @openapi
+ * /api/users/{id}/restaurant-limit:
+ *   patch:
+ *     summary: Change how many restaurants an owner may create (admin only)
+ *     tags: [Users]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [restaurantLimit]
+ *             properties:
+ *               restaurantLimit: { type: integer, minimum: 1, maximum: 100 }
+ *     responses:
+ *       200: { description: Updated }
+ *       404: { description: Not found }
+ */
+usersRouter.patch(
+  "/api/users/:id/restaurant-limit",
+  adminOnly,
+  validateBody(updateRestaurantLimitSchema),
+  userController.updateRestaurantLimit,
 );

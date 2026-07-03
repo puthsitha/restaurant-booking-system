@@ -9,6 +9,7 @@ import {
   ChefHatIcon,
   DashboardIcon,
   InboxIcon,
+  SettingsIcon,
   TagIcon,
   UsersIcon,
 } from "@/components/ui/icons";
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: "/admin/users", label: "Users", icon: UsersIcon },
   { href: "/admin/requests", label: "Requests", icon: InboxIcon },
   { href: "/admin/tags", label: "Tags", icon: TagIcon },
+  { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

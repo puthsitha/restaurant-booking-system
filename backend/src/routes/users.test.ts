@@ -215,3 +215,40 @@ describe("PATCH /api/users/:id/status", () => {
     expect(res.body.user.statusReason).toBe("Dispute resolved");
   });
 });
+
+describe("PATCH /api/users/:id/restaurant-limit", () => {
+  it("returns 404 for a diner (not an owner)", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+      id: "user_diner_1",
+      role: "DINER",
+    });
+
+    const res = await request(app)
+      .patch("/api/users/user_diner_1/restaurant-limit")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ restaurantLimit: 5 });
+
+    expect(res.status).toBe(404);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it("updates an owner's restaurant limit", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+      id: "user_owner_9",
+      role: "OWNER",
+    });
+    vi.mocked(prisma.user.update).mockResolvedValueOnce({
+      id: "user_owner_9",
+      role: "OWNER",
+      restaurantLimit: 5,
+    });
+
+    const res = await request(app)
+      .patch("/api/users/user_owner_9/restaurant-limit")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ restaurantLimit: 5 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.restaurantLimit).toBe(5);
+  });
+});
