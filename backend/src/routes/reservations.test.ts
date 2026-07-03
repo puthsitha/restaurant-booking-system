@@ -17,6 +17,11 @@ vi.mock("../lib/prisma", () => {
     update: vi.fn(),
     count: vi.fn(),
   };
+  const payment = {
+    findUnique: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  };
   const user = {
     findUnique: vi.fn(),
     // Used by the `authenticate` middleware to check the token subject is
@@ -32,6 +37,7 @@ vi.mock("../lib/prisma", () => {
     specialClosure,
     restaurantTable,
     reservation,
+    payment,
     user,
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(client)),
   };
@@ -418,5 +424,190 @@ describe("GET /api/reservations/all", () => {
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
+  });
+});
+
+describe("POST /api/reservations/:id/payment", () => {
+  it("rejects a reservation with no deposit due", async () => {
+    vi.mocked(prisma.reservation.findUnique).mockResolvedValueOnce({
+      id: "res_1",
+      userId: DINER_ID,
+      depositAmount: 0,
+    });
+
+    const res = await request(app)
+      .post("/api/reservations/res_1/payment")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(400);
+    expect(prisma.payment.create).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 for a reservation that isn't the caller's", async () => {
+    vi.mocked(prisma.reservation.findUnique).mockResolvedValueOnce({
+      id: "res_1",
+      userId: "someone_else",
+      depositAmount: 10,
+    });
+
+    const res = await request(app)
+      .post("/api/reservations/res_1/payment")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("creates a KHQR payment seeded from the reservation's deposit", async () => {
+    vi.mocked(prisma.reservation.findUnique).mockResolvedValueOnce({
+      id: "res_1",
+      userId: DINER_ID,
+      depositAmount: 10,
+    });
+    vi.mocked(prisma.payment.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.payment.create).mockResolvedValueOnce({
+      id: "pay_1",
+      reservationId: "res_1",
+      amount: 10,
+      status: "PENDING",
+      khqrPayload: "KHQR|...",
+    });
+
+    const res = await request(app)
+      .post("/api/reservations/res_1/payment")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(201);
+    expect(res.body.payment.khqrPayload).toContain("KHQR|");
+  });
+
+  it("returns the existing payment instead of creating a duplicate", async () => {
+    vi.mocked(prisma.reservation.findUnique).mockResolvedValueOnce({
+      id: "res_1",
+      userId: DINER_ID,
+      depositAmount: 10,
+    });
+    vi.mocked(prisma.payment.findUnique).mockResolvedValueOnce({
+      id: "pay_1",
+      reservationId: "res_1",
+      status: "PENDING",
+    });
+
+    const res = await request(app)
+      .post("/api/reservations/res_1/payment")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(201);
+    expect(prisma.payment.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/reservations/:id/payment/confirm", () => {
+  it("returns 404 when there's no payment yet", async () => {
+    vi.mocked(prisma.reservation.findUnique).mockResolvedValueOnce({
+      id: "res_1",
+      userId: DINER_ID,
+    });
+    vi.mocked(prisma.payment.findUnique).mockResolvedValueOnce(null);
+
+    const res = await request(app)
+      .post("/api/reservations/res_1/payment/confirm")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("marks the payment paid and confirms a pending reservation", async () => {
+    vi.mocked(prisma.reservation.findUnique).mockResolvedValueOnce({
+      id: "res_1",
+      userId: DINER_ID,
+      status: "PENDING",
+    });
+    vi.mocked(prisma.payment.findUnique).mockResolvedValueOnce({
+      id: "pay_1",
+      reservationId: "res_1",
+      status: "PENDING",
+    });
+    vi.mocked(prisma.payment.update).mockResolvedValueOnce({
+      id: "pay_1",
+      reservationId: "res_1",
+      status: "PAID",
+    });
+
+    const res = await request(app)
+      .post("/api/reservations/res_1/payment/confirm")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.payment.status).toBe("PAID");
+    expect(prisma.reservation.update).toHaveBeenCalledWith({
+      where: { id: "res_1" },
+      data: { depositPaid: true, status: "CONFIRMED" },
+    });
+  });
+
+  it("is idempotent when the payment is already paid", async () => {
+    vi.mocked(prisma.reservation.findUnique).mockResolvedValueOnce({
+      id: "res_1",
+      userId: DINER_ID,
+      status: "CONFIRMED",
+    });
+    vi.mocked(prisma.payment.findUnique).mockResolvedValueOnce({
+      id: "pay_1",
+      reservationId: "res_1",
+      status: "PAID",
+    });
+
+    const res = await request(app)
+      .post("/api/reservations/res_1/payment/confirm")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(prisma.payment.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/reservations/stats", () => {
+  it("rejects non-owners", async () => {
+    const res = await request(app)
+      .get("/api/reservations/stats")
+      .set("Authorization", `Bearer ${dinerToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns a zero-filled bucket per day, scoped to the owner's restaurants", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([{ id: "rest_1" }]);
+    vi.mocked(prisma.reservation.findMany).mockResolvedValueOnce([
+      { date: new Date() },
+      { date: new Date() },
+    ]);
+
+    const res = await request(app)
+      .get("/api/reservations/stats?days=7")
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.days).toHaveLength(7);
+    const total = res.body.days.reduce((sum: number, d: { count: number }) => sum + d.count, 0);
+    expect(total).toBe(2);
+  });
+});
+
+describe("GET /api/reservations/stats/all", () => {
+  it("rejects non-admins", async () => {
+    const res = await request(app)
+      .get("/api/reservations/stats/all")
+      .set("Authorization", `Bearer ${ownerToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns platform-wide daily counts", async () => {
+    vi.mocked(prisma.reservation.findMany).mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .get("/api/reservations/stats/all?days=14")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.days).toHaveLength(14);
   });
 });

@@ -58,3 +58,10 @@ export const listReservationsQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });
 export type ListReservationsQuery = z.infer<typeof listReservationsQuerySchema>;
+
+// ============================ Stats =================================
+
+export const bookingStatsQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(90).default(14),
+});
+export type BookingStatsQuery = z.infer<typeof bookingStatsQuerySchema>;

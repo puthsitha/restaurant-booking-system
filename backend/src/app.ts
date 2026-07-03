@@ -10,9 +10,13 @@ import { env } from "./env";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { authRouter } from "./routes/auth";
 import { healthRouter } from "./routes/health";
+import { paymentMethodsRouter } from "./routes/paymentMethods";
+import { platformSettingsRouter } from "./routes/platformSettings";
 import { requestsRouter } from "./routes/requests";
 import { reservationsRouter } from "./routes/reservations";
 import { restaurantsRouter } from "./routes/restaurants";
+import { reviewsRouter } from "./routes/reviews";
+import { savedRestaurantsRouter } from "./routes/savedRestaurants";
 import { tagsRouter } from "./routes/tags";
 import { usersRouter } from "./routes/users";
 
@@ -77,6 +81,10 @@ export function createApp(): Express {
   app.use(requestsRouter);
   app.use(usersRouter);
   app.use(tagsRouter);
+  app.use(savedRestaurantsRouter);
+  app.use(paymentMethodsRouter);
+  app.use(reviewsRouter);
+  app.use(platformSettingsRouter);
 
   // Interactive API docs, generated from @openapi JSDoc comments on the
   // routes. Outside production, adds "log in as ..." buttons that call

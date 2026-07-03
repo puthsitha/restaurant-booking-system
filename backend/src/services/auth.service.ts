@@ -17,6 +17,7 @@ import type {
   GoogleAuthInput,
   OtpRequestInput,
   OtpVerifyInput,
+  UpdateProfileInput,
 } from "../schemas/auth.schemas";
 
 // Never send the password hash back to a client.
@@ -186,5 +187,13 @@ export async function getCurrentUser(userId: string): Promise<PublicUser> {
   if (!user) {
     throw new HttpError(404, "User not found");
   }
+  return toPublicUser(user);
+}
+
+export async function updateProfile(
+  userId: string,
+  input: UpdateProfileInput,
+): Promise<PublicUser> {
+  const user = await prisma.user.update({ where: { id: userId }, data: input });
   return toPublicUser(user);
 }

@@ -37,3 +37,9 @@ export const otpVerifySchema = z.object({
   code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
 });
 export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
+
+export const updateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  preferredLocale: z.enum(["km", "en"]).optional(),
+});
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

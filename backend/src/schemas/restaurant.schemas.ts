@@ -107,6 +107,9 @@ export const createTableSchema = z.object({
   zone: z.string().trim().max(60).optional(),
   description: z.string().trim().max(255).optional(),
   status: tableStatusEnum.default("AVAILABLE"),
+  // Floor-plan grid cell; null clears placement.
+  positionX: z.number().int().min(0).max(50).nullable().optional(),
+  positionY: z.number().int().min(0).max(50).nullable().optional(),
 });
 export type CreateTableInput = z.infer<typeof createTableSchema>;
 

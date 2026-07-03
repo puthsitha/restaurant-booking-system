@@ -8,26 +8,50 @@ import type { ComponentType, ReactNode } from "react";
 
 import { MenuIcon } from "@/components/ui/icons";
 
+import { Avatar } from "@/components/ui/Avatar";
+
 export interface DashboardNavItem {
   href: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  badge?: number;
 }
+
+// Owner gets the warm orange brand accent; admin gets the distinct purple
+// "platform" accent — both on a dark sidebar, matching the reference.
+export type DashboardVariant = "owner" | "admin";
+
+const VARIANT_STYLE: Record<
+  DashboardVariant,
+  { sidebarBg: string; accent: string; accentTint: string }
+> = {
+  owner: { sidebarBg: "bg-ownerSidebar", accent: "#C2410C", accentTint: "rgba(194,65,12,.16)" },
+  admin: { sidebarBg: "bg-adminSidebar", accent: "#6D28D9", accentTint: "rgba(109,40,217,.18)" }
+};
 
 interface DashboardShellProps {
   brand: string;
+  variant: DashboardVariant;
   navItems: DashboardNavItem[];
   userName: string;
   onLogout: () => void;
   children: ReactNode;
 }
 
-// Shared sidebar shell for the owner and admin sites: a fixed nav on
+// Shared sidebar shell for the owner and admin sites: a fixed dark nav on
 // desktop, a slide-in drawer on mobile, driven by a small nav-item list so
 // each surface only wires up the sections it actually has.
-export function DashboardShell({ brand, navItems, userName, onLogout, children }: DashboardShellProps) {
+export function DashboardShell({
+  brand,
+  variant,
+  navItems,
+  userName,
+  onLogout,
+  children
+}: DashboardShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const style = VARIANT_STYLE[variant];
 
   function isActive(href: string): boolean {
     if (pathname === href) return true;
@@ -35,10 +59,11 @@ export function DashboardShell({ brand, navItems, userName, onLogout, children }
   }
 
   return (
-    <div className="flex min-h-screen bg-bg">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
+    <div className="flex min-h-screen bg-dashboardBg">
+      <aside className={`sticky top-0 hidden h-screen w-64 shrink-0 flex-col ${style.sidebarBg} lg:flex`}>
         <SidebarContent
           brand={brand}
+          style={style}
           navItems={navItems}
           isActive={isActive}
           userName={userName}
@@ -60,7 +85,7 @@ export function DashboardShell({ brand, navItems, userName, onLogout, children }
               aria-hidden="true"
             />
             <motion.aside
-              className="absolute left-0 top-0 flex h-full w-64 flex-col bg-surface"
+              className={`absolute left-0 top-0 flex h-full w-64 flex-col ${style.sidebarBg}`}
               initial={{ x: -260 }}
               animate={{ x: 0 }}
               exit={{ x: -260 }}
@@ -68,6 +93,7 @@ export function DashboardShell({ brand, navItems, userName, onLogout, children }
             >
               <SidebarContent
                 brand={brand}
+                style={style}
                 navItems={navItems}
                 isActive={isActive}
                 userName={userName}
@@ -80,7 +106,7 @@ export function DashboardShell({ brand, navItems, userName, onLogout, children }
       </AnimatePresence>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-border bg-surface px-5 py-3.5 lg:hidden">
+        <header className="flex items-center gap-3 border-b border-dashboardBorder bg-surface px-5 py-3.5 lg:hidden">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -90,7 +116,8 @@ export function DashboardShell({ brand, navItems, userName, onLogout, children }
             <MenuIcon className="h-5 w-5" />
           </button>
           <span className="disp text-base font-extrabold text-ink">
-            Table<span className="text-accent">Site</span> <span className="text-muted">{brand}</span>
+            Table<span style={{ color: style.accent }}>Site</span>{" "}
+            <span className="text-muted">{brand}</span>
           </span>
         </header>
         <main className="flex-1">{children}</main>
@@ -101,6 +128,7 @@ export function DashboardShell({ brand, navItems, userName, onLogout, children }
 
 interface SidebarContentProps {
   brand: string;
+  style: (typeof VARIANT_STYLE)[DashboardVariant];
   navItems: DashboardNavItem[];
   isActive: (href: string) => boolean;
   userName: string;
@@ -110,19 +138,28 @@ interface SidebarContentProps {
 
 function SidebarContent({
   brand,
+  style,
   navItems,
   isActive,
   userName,
   onLogout,
-  onNavigate,
+  onNavigate
 }: SidebarContentProps) {
   return (
     <>
-      <div className="px-6 py-6">
-        <span className="disp text-lg font-extrabold text-ink">
-          Table<span className="text-accent">Site</span>
-        </span>
-        <p className="mt-0.5 text-xs font-bold uppercase tracking-wide text-muted">{brand}</p>
+      <div className="flex items-center gap-2.5 px-6 py-6">
+        <div
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-extrabold text-white"
+          style={{ background: style.accent }}
+        >
+          T
+        </div>
+        <div>
+          <span className="disp text-base font-extrabold text-white">TableSite</span>
+          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-sidebarMuted">
+            {brand} panel
+          </p>
+        </div>
       </div>
       <nav className="flex-1 space-y-1 px-3">
         {navItems.map((item) => {
@@ -132,22 +169,32 @@ function SidebarContent({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                active ? "bg-accent/10 text-accent" : "text-ink hover:bg-bg"
-              }`}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-sidebarText transition hover:bg-white/5"
+              style={active ? { background: style.accentTint, color: "#fff" } : undefined}
             >
               <item.icon className="h-5 w-5" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {typeof item.badge === "number" && item.badge > 0 && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white"
+                  style={{ background: style.accent }}
+                >
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
-      <div className="border-t border-border px-4 py-4">
-        <p className="truncate px-1 text-sm font-semibold text-ink">{userName}</p>
+      <div className="border-t border-sidebarBorder px-4 py-4">
+        <div className="flex items-center gap-2.5 px-1">
+          <Avatar name={userName} size="sm" />
+          <p className="truncate text-sm font-semibold text-white">{userName}</p>
+        </div>
         <button
           type="button"
           onClick={onLogout}
-          className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm font-semibold text-ink transition hover:bg-bg"
+          className="mt-3 w-full rounded-lg border border-sidebarBorder px-3 py-2 text-sm font-semibold text-sidebarText transition hover:bg-white/5"
         >
           Log out
         </button>

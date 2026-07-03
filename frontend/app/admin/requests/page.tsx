@@ -38,7 +38,7 @@ export default function AdminRequestsPage() {
   useEffect(load, [load]);
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">Restaurant limit requests</h1>
       <p className="mt-1 text-sm text-muted">Approve or deny an owner&apos;s request for more restaurants.</p>
 

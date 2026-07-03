@@ -26,3 +26,8 @@ export const createOwnerSchema = z.object({
   restaurantLimit: z.number().int().min(1).max(100).default(3),
 });
 export type CreateOwnerInput = z.infer<typeof createOwnerSchema>;
+
+export const updateRestaurantLimitSchema = z.object({
+  restaurantLimit: z.number().int().min(1).max(100),
+});
+export type UpdateRestaurantLimitInput = z.infer<typeof updateRestaurantLimitSchema>;

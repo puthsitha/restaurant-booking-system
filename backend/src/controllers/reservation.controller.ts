@@ -8,6 +8,7 @@ import type {
   UpdateReservationStatusInput,
   ListReservationsQuery,
   CheckAvailabilityQuery,
+  BookingStatsQuery,
 } from "../schemas/reservation.schemas";
 
 function requireUser(req: { user?: Request["user"] }): NonNullable<Request["user"]> {
@@ -109,6 +110,27 @@ export async function listForAdmin(req: Request, res: Response, next: NextFuncti
     const query = res.locals.query as ListReservationsQuery;
     const result = await reservationService.listAllReservationsForAdmin(query);
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function statsForOwner(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const user = requireUser(req);
+    const query = res.locals.query as BookingStatsQuery;
+    const days = await reservationService.bookingStatsForOwner(user.id, query);
+    res.json({ days });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function statsForAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = res.locals.query as BookingStatsQuery;
+    const days = await reservationService.bookingStatsForAdmin(query);
+    res.json({ days });
   } catch (err) {
     next(err);
   }

@@ -29,6 +29,7 @@ export interface AuthContextValue {
   loginWithGoogle: (idToken: string) => Promise<AuthUser>;
   requestOtp: (phone: string) => Promise<OtpRequestResponse>;
   verifyOtp: (phone: string, code: string) => Promise<AuthUser>;
+  updateProfile: (input: { name?: string; preferredLocale?: "km" | "en" }) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -164,6 +165,21 @@ export function createAuthContext(options: CreateAuthContextOptions): AuthContex
       [applyAuthResponse],
     );
 
+    const updateProfile = useCallback(
+      (input: { name?: string; preferredLocale?: "km" | "en" }) => {
+        if (!token) return Promise.reject(new Error("Not authenticated"));
+        return apiFetch<{ user: AuthUser }>("/api/auth/me", {
+          method: "PATCH",
+          body: input,
+          token,
+        }).then((res) => {
+          setUser(res.user);
+          return res.user;
+        });
+      },
+      [token],
+    );
+
     const logout = useCallback(() => {
       window.localStorage.removeItem(storageKey);
       setUser(null);
@@ -185,6 +201,7 @@ export function createAuthContext(options: CreateAuthContextOptions): AuthContex
         loginWithGoogle,
         requestOtp,
         verifyOtp,
+        updateProfile,
         logout,
       }),
       [
@@ -198,6 +215,7 @@ export function createAuthContext(options: CreateAuthContextOptions): AuthContex
         loginWithGoogle,
         requestOtp,
         verifyOtp,
+        updateProfile,
         logout,
       ],
     );

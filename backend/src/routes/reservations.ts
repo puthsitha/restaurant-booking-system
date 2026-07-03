@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import * as paymentController from "../controllers/payment.controller";
 import * as reservationController from "../controllers/reservation.controller";
 import { authenticate, requireRole } from "../middleware/auth";
 import { validateBody, validateQuery } from "../middleware/validate";
@@ -9,6 +10,7 @@ import {
   updateReservationStatusSchema,
   listReservationsQuerySchema,
   checkAvailabilityQuerySchema,
+  bookingStatsQuerySchema,
 } from "../schemas/reservation.schemas";
 
 export const reservationsRouter: Router = Router();
@@ -206,4 +208,93 @@ reservationsRouter.get(
   adminOnly,
   validateQuery(listReservationsQuerySchema),
   reservationController.listForAdmin,
+);
+
+/**
+ * @openapi
+ * /api/reservations/stats:
+ *   get:
+ *     summary: Daily booking counts across the signed-in owner's restaurants
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema: { type: integer, default: 14 }
+ *     responses:
+ *       200: { description: OK }
+ */
+reservationsRouter.get(
+  "/api/reservations/stats",
+  ownerOnly,
+  validateQuery(bookingStatsQuerySchema),
+  reservationController.statsForOwner,
+);
+
+/**
+ * @openapi
+ * /api/reservations/stats/all:
+ *   get:
+ *     summary: Platform-wide daily booking counts (admin only)
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema: { type: integer, default: 14 }
+ *     responses:
+ *       200: { description: OK }
+ */
+reservationsRouter.get(
+  "/api/reservations/stats/all",
+  adminOnly,
+  validateQuery(bookingStatsQuerySchema),
+  reservationController.statsForAdmin,
+);
+
+/**
+ * @openapi
+ * /api/reservations/{id}/payment:
+ *   get:
+ *     summary: Get the deposit payment for the signed-in diner's reservation
+ *     tags: [Payments]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: OK }
+ *       404: { description: Not found }
+ *   post:
+ *     summary: Create (or fetch the existing) KHQR deposit payment for a reservation
+ *     description: >
+ *       No real payment gateway is integrated in this scaffold — the
+ *       `khqrPayload` is a deterministic placeholder string for the QR code
+ *       to render, not a valid EMV-KHQR payload.
+ *     tags: [Payments]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       201: { description: Created }
+ *       400: { description: This reservation has no deposit due }
+ *       404: { description: Not found }
+ */
+reservationsRouter.get("/api/reservations/:id/payment", dinerOnly, paymentController.get);
+reservationsRouter.post("/api/reservations/:id/payment", dinerOnly, paymentController.create);
+
+/**
+ * @openapi
+ * /api/reservations/{id}/payment/confirm:
+ *   post:
+ *     summary: Dev-simulated "I've paid" confirmation for a KHQR deposit
+ *     description: >
+ *       Simulates the customer completing payment (no real gateway callback
+ *       exists yet) — marks the deposit paid and, if the reservation was
+ *       still pending, confirms it.
+ *     tags: [Payments]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Confirmed }
+ *       404: { description: No payment found for this reservation }
+ */
+reservationsRouter.post(
+  "/api/reservations/:id/payment/confirm",
+  dinerOnly,
+  paymentController.confirm,
 );

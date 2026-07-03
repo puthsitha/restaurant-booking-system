@@ -17,7 +17,24 @@ const config: Config = {
         surface: "#FFFFFF",
         border: "#ECE1D5",
         ink: "#241D19",
-        muted: "#9A8E82"
+        muted: "#9A8E82",
+        label: "#5C5048",
+        dashboardBg: "#F4F1ED",
+        dashboardBorder: "#E7E0D8",
+        ownerSidebar: "#1C1714",
+        adminSidebar: "#15110F",
+        sidebarText: "#B7ABA0",
+        sidebarMuted: "#6B5F55",
+        sidebarBorder: "#2D2520",
+        adminAccent: "#6D28D9",
+        status: {
+          pending: { text: "#B45309", bg: "#FEF3C7" },
+          confirmed: { text: "#1F6F54", bg: "#DCFCE7" },
+          seated: { text: "#1D4ED8", bg: "#DBEAFE" },
+          completed: { text: "#1F6F54", bg: "#DCFCE7" },
+          cancelled: { text: "#9A8E82", bg: "#EDE7E0" },
+          noShow: { text: "#B91C1C", bg: "#FEE2E2" }
+        }
       },
       fontFamily: {
         sans: ["var(--font-sans)", "var(--font-khmer)", "sans-serif"],

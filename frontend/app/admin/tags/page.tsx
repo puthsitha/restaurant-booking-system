@@ -57,7 +57,7 @@ export default function AdminTagsPage() {
   }
 
   return (
-    <main style={{ maxWidth: 560, padding: 32 }}>
+    <main className="mx-auto max-w-[560px] p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">Tags</h1>
       <p className="mt-2 text-sm text-muted">
         Owners assign these to their restaurants; diners filter search by them.
@@ -65,7 +65,7 @@ export default function AdminTagsPage() {
 
       <form onSubmit={handleAdd} className="mt-6 flex items-end gap-3">
         <div className="flex-1">
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">New tag</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">New tag</label>
           <input
             required
             value={name}

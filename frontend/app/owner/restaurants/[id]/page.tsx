@@ -8,6 +8,7 @@ import { GalleryTab } from "@/components/restaurants/manage/GalleryTab";
 import { HoursTab } from "@/components/restaurants/manage/HoursTab";
 import { MenuTab } from "@/components/restaurants/manage/MenuTab";
 import { ProfileTab } from "@/components/restaurants/manage/ProfileTab";
+import { ReviewsTab } from "@/components/restaurants/manage/ReviewsTab";
 import { TablesTab } from "@/components/restaurants/manage/TablesTab";
 import { TagsTab } from "@/components/restaurants/manage/TagsTab";
 import type { DirtyTabHandle } from "@/components/restaurants/manage/types";
@@ -26,6 +27,7 @@ const OWNER_TABS = [
   { key: "menu", label: "Menu" },
   { key: "gallery", label: "Gallery" },
   { key: "closures", label: "Closures" },
+  { key: "reviews", label: "Reviews" },
   { key: "tags", label: "Tags" },
 ] as const;
 
@@ -139,7 +141,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
 
   if (error) {
     return (
-      <main style={{ padding: 32 }}>
+      <main className="p-8">
         <ErrorState message={error} onRetry={reload} />
       </main>
     );
@@ -147,14 +149,14 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
 
   if (!restaurant) {
     return (
-      <main style={{ padding: 32 }}>
+      <main className="p-8">
         <LoadingSpinner label="Setting up the kitchen…" size="lg" />
       </main>
     );
   }
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="disp text-2xl font-extrabold text-ink">{restaurant.name}</h1>
@@ -219,6 +221,9 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
         )}
         {tab === "closures" && (
           <ClosuresTab restaurant={restaurant} token={token!} onSaved={reload} />
+        )}
+        {tab === "reviews" && (
+          <ReviewsTab restaurant={restaurant} token={token!} onSaved={reload} />
         )}
         {tab === "tags" && (
           <TagsTab

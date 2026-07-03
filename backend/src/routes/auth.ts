@@ -9,6 +9,7 @@ import {
   googleAuthSchema,
   otpRequestSchema,
   otpVerifySchema,
+  updateProfileSchema,
 } from "../schemas/auth.schemas";
 
 export const authRouter: Router = Router();
@@ -264,3 +265,32 @@ authRouter.post(
  *               $ref: "#/components/schemas/Error"
  */
 authRouter.get("/api/auth/me", authenticate, authController.me);
+
+/**
+ * @openapi
+ * /api/auth/me:
+ *   patch:
+ *     summary: Update the signed-in user's profile (name, preferred locale)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               preferredLocale: { type: string, enum: [km, en] }
+ *     responses:
+ *       200:
+ *         description: Updated
+ *       401:
+ *         description: Not authenticated
+ */
+authRouter.patch(
+  "/api/auth/me",
+  authenticate,
+  validateBody(updateProfileSchema),
+  authController.updateMe,
+);

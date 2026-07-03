@@ -39,7 +39,7 @@ export default function OwnerRequestsPage() {
   const hasPending = requests?.some((r) => r.status === "PENDING") ?? false;
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="disp text-2xl font-extrabold text-ink">Restaurant limit requests</h1>

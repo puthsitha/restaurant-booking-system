@@ -45,7 +45,7 @@ export function GalleryTab({ restaurant, token, onSaved }: ManageTabProps) {
     <div className="max-w-2xl">
       <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3">
         <div className="flex-1">
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Image URL</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Image URL</label>
           <input
             required
             value={url}
@@ -55,7 +55,7 @@ export function GalleryTab({ restaurant, token, onSaved }: ManageTabProps) {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Caption</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Caption</label>
           <input
             value={caption}
             onChange={(e) => setCaption(e.target.value)}

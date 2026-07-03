@@ -8,6 +8,7 @@ import type {
   GoogleAuthInput,
   OtpRequestInput,
   OtpVerifyInput,
+  UpdateProfileInput,
 } from "../schemas/auth.schemas";
 
 export async function signup(
@@ -85,6 +86,22 @@ export async function me(
       throw new HttpError(401, "Not authenticated");
     }
     const user = await authService.getCurrentUser(req.user.id);
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateMe(
+  req: Request<unknown, unknown, UpdateProfileInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) {
+      throw new HttpError(401, "Not authenticated");
+    }
+    const user = await authService.updateProfile(req.user.id, req.body);
     res.json({ user });
   } catch (err) {
     next(err);

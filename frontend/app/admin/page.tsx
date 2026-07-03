@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { BarChart } from "@/components/dashboard/BarChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { CalendarIcon, ChefHatIcon, InboxIcon, UsersIcon } from "@/components/ui/icons";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
-import { listAllReservationsAdmin } from "@/lib/reservations/api";
+import { getAdminBookingStats, listAllReservationsAdmin } from "@/lib/reservations/api";
+import type { DailyBookingCount } from "@/lib/reservations/api";
 import { listAllRestaurantRequests } from "@/lib/requests/api";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
 import { listUsers } from "@/lib/users/api";
@@ -23,6 +25,14 @@ interface DashboardStats {
 export default function AdminDashboardPage() {
   const { user, token } = useAdminAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [chartData, setChartData] = useState<DailyBookingCount[] | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    getAdminBookingStats(14, token)
+      .then((res) => setChartData(res.days))
+      .catch(() => setChartData(null));
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -55,7 +65,7 @@ export default function AdminDashboardPage() {
   }, [token]);
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">Welcome back, {user?.name.split(" ")[0]}</h1>
       <p className="mt-1 text-sm text-muted">Platform overview across every restaurant.</p>
 
@@ -80,6 +90,13 @@ export default function AdminDashboardPage() {
             hint={stats.pendingRequests > 0 ? "Needs your review" : "All caught up"}
             tone="secondary"
           />
+        </div>
+      )}
+
+      {chartData && chartData.some((d) => d.count > 0) && (
+        <div className="mt-8 rounded-2xl border border-border bg-surface p-5">
+          <h2 className="disp text-sm font-bold text-ink">Platform bookings, last 14 days</h2>
+          <BarChart data={chartData} className="mt-4" />
         </div>
       )}
 

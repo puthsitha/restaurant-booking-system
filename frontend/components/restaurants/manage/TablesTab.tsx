@@ -6,13 +6,16 @@ import type { FormEvent } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TextField } from "@/components/ui/FormField";
 import { EmptyPlateIcon } from "@/components/ui/icons";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ApiError } from "@/lib/api";
 import { createTable, deleteTable, updateTable } from "@/lib/restaurants/api";
 import type { TableStatus } from "@/lib/restaurants/types";
 
+import { FloorPlanView } from "./FloorPlanView";
 import type { ManageTabProps } from "./types";
 
 export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
+  const [view, setView] = useState<"list" | "floorplan">("list");
   const [tableNumber, setTableNumber] = useState("");
   const [capacity, setCapacity] = useState(2);
   const [floor, setFloor] = useState("");
@@ -132,40 +135,63 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
           compact
         />
       ) : (
-        <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface">
-          {restaurant.tables.map((table) => (
-            <div key={table.id} className="flex items-center justify-between gap-4 p-4">
-              <div>
-                <p className="font-semibold text-ink">
-                  {table.tableNumber} · {table.capacity} seats
-                </p>
-                <p className="text-sm text-muted">
-                  {[table.floor, table.zone].filter(Boolean).join(" · ")}
-                </p>
-                {table.description && (
-                  <p className="mt-0.5 text-sm text-muted">{table.description}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={table.status}
-                  onChange={(e) => handleStatusChange(table.id, e.target.value as TableStatus)}
-                  className="rounded-lg border border-border px-2 py-1.5 text-sm text-ink"
-                >
-                  <option value="AVAILABLE">Available</option>
-                  <option value="SEATED">Seated</option>
-                  <option value="RESERVED">Reserved</option>
-                </select>
-                <button
-                  onClick={() => handleDelete(table.id)}
-                  className="text-sm font-semibold text-red-600"
-                >
-                  Delete
-                </button>
-              </div>
+        <>
+          <SegmentedControl
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "list", label: "List" },
+              { value: "floorplan", label: "Floor plan" },
+            ]}
+            className="mt-6"
+          />
+
+          {view === "list" ? (
+            <div className="mt-4 divide-y divide-border rounded-2xl border border-border bg-surface">
+              {restaurant.tables.map((table) => (
+                <div key={table.id} className="flex items-center justify-between gap-4 p-4">
+                  <div>
+                    <p className="font-semibold text-ink">
+                      {table.tableNumber} · {table.capacity} seats
+                    </p>
+                    <p className="text-sm text-muted">
+                      {[table.floor, table.zone].filter(Boolean).join(" · ")}
+                    </p>
+                    {table.description && (
+                      <p className="mt-0.5 text-sm text-muted">{table.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={table.status}
+                      onChange={(e) => handleStatusChange(table.id, e.target.value as TableStatus)}
+                      className="rounded-lg border border-border px-2 py-1.5 text-sm text-ink"
+                    >
+                      <option value="AVAILABLE">Available</option>
+                      <option value="SEATED">Seated</option>
+                      <option value="RESERVED">Reserved</option>
+                    </select>
+                    <button
+                      onClick={() => handleDelete(table.id)}
+                      className="text-sm font-semibold text-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          ) : (
+            <div className="mt-4">
+              <FloorPlanView
+                restaurantId={restaurant.id}
+                tables={restaurant.tables}
+                token={token}
+                onSaved={onSaved}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

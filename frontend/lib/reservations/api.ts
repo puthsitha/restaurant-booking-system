@@ -106,3 +106,24 @@ export function listAllReservationsAdmin(
     { token },
   );
 }
+
+// ============================ Stats =================================
+
+export interface DailyBookingCount {
+  date: string;
+  count: number;
+}
+
+export function getOwnerBookingStats(
+  days: number,
+  token: string,
+): Promise<{ days: DailyBookingCount[] }> {
+  return apiFetch(`/api/reservations/stats?days=${days}`, { token });
+}
+
+export function getAdminBookingStats(
+  days: number,
+  token: string,
+): Promise<{ days: DailyBookingCount[] }> {
+  return apiFetch(`/api/reservations/stats/all?days=${days}`, { token });
+}

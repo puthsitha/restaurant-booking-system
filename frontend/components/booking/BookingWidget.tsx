@@ -4,10 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
+import { QrCode } from "@/components/ui/QrCode";
 import { CalendarIcon, CheckIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { confirmPayment, createPayment } from "@/lib/payments/api";
+import type { Payment } from "@/lib/payments/types";
 import { checkAvailability, createReservation } from "@/lib/reservations/api";
 import type { AvailabilityResult, Reservation, SeatingPreference } from "@/lib/reservations/types";
 import type { DayOfWeek, RestaurantPublicDetail } from "@/lib/restaurants/types";
@@ -74,6 +77,9 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<Reservation | null>(null);
+  const [payment, setPayment] = useState<Payment | null>(null);
+  const [payingConfirm, setPayingConfirm] = useState(false);
+  const [paid, setPaid] = useState(false);
 
   const hoursByDay = useMemo(
     () => new Map(restaurant.operatingHours.map((h) => [h.dayOfWeek, h])),
@@ -130,11 +136,36 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         token,
       );
       setConfirmed(reservation);
+      setPaid(false);
+      setPayment(null);
+      if (Number(reservation.depositAmount) > 0) {
+        const { payment: created } = await createPayment(reservation.id, token);
+        setPayment(created);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong, please try again.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleConfirmPayment(): Promise<void> {
+    if (!confirmed || !token) return;
+    setPayingConfirm(true);
+    try {
+      await confirmPayment(confirmed.id, token);
+      setPaid(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't confirm payment, please try again.");
+    } finally {
+      setPayingConfirm(false);
+    }
+  }
+
+  function closeConfirmation(): void {
+    setConfirmed(null);
+    setPayment(null);
+    setPaid(false);
   }
 
   const maxDate = addDaysIso(restaurant.maxBookingDays);
@@ -149,7 +180,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Date</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Date</label>
           <input
             type="date"
             value={date}
@@ -160,7 +191,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Party size</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Party size</label>
           <input
             type="number"
             min={restaurant.minCapacity}
@@ -173,7 +204,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Time</label>
+        <label className="mb-1.5 block text-xs font-bold text-label">Time</label>
         {timeSlots.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-3 py-2.5 text-sm text-muted">
             {isClosedDate ? "Closed on this date" : "Closed on this day"}
@@ -197,7 +228,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Seating</label>
+        <label className="mb-1.5 block text-xs font-bold text-label">Seating</label>
         <div className="flex gap-1.5">
           {SEATING_OPTIONS.map((opt) => (
             <button
@@ -215,7 +246,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">
+        <label className="mb-1.5 block text-xs font-bold text-label">
           Special requests <span className="font-normal text-muted">(optional)</span>
         </label>
         <textarea
@@ -264,27 +295,66 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         {status !== "authenticated" ? "Sign in to reserve" : submitting ? "Booking…" : "Reserve a table"}
       </button>
 
-      <Modal open={confirmed !== null} onClose={() => setConfirmed(null)} title="Table reserved!">
-        {confirmed && (
+      <Modal
+        open={confirmed !== null}
+        onClose={closeConfirmation}
+        title={confirmed && payment && !paid ? "Pay your deposit" : "Table reserved!"}
+      >
+        {confirmed && payment && !paid ? (
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-secondary/10 text-secondary">
-              <CheckIcon className="h-7 w-7" />
+            <div
+              className="mx-auto flex items-center justify-between gap-3 rounded-t-xl px-4 py-2.5 text-xs font-bold text-white"
+              style={{ background: "linear-gradient(90deg,#C2410C,#E85D2C)" }}
+            >
+              <span>KHQR</span>
+              <span>${Number(payment.amount).toFixed(2)}</span>
             </div>
-            <p className="disp mt-4 text-2xl font-extrabold text-ink">{confirmed.confirmationCode}</p>
-            <p className="mt-1 text-sm text-muted">
-              {confirmed.date.slice(0, 10)} at {confirmed.time} · {confirmed.partySize} guests
-            </p>
-            <p className="mt-3 text-sm text-ink">
-              We&apos;ve sent this to your account. Show the confirmation code when you arrive.
-            </p>
+            <div className="rounded-b-xl border border-t-0 border-border p-5">
+              <QrCode value={payment.khqrPayload ?? payment.id} size={180} className="mx-auto" />
+              <p className="mt-3 text-sm text-ink">
+                Scan with any KHQR-enabled banking app to pay{" "}
+                <span className="font-bold">${Number(payment.amount).toFixed(2)}</span>
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                Or pay via ABA · Wing · Bakong · ACLEDA at the restaurant
+              </p>
+            </div>
+            {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
             <button
               type="button"
-              onClick={() => setConfirmed(null)}
-              className="mt-5 w-full rounded-xl bg-accent py-3 text-sm font-bold text-white"
+              onClick={handleConfirmPayment}
+              disabled={payingConfirm}
+              className="mt-4 w-full rounded-xl bg-accent py-3 text-sm font-bold text-white disabled:opacity-60"
             >
-              Done
+              {payingConfirm ? "Confirming…" : "I've paid"}
             </button>
+            <p className="mt-2 text-[11px] text-muted">
+              Simulated for this demo — no real payment gateway is connected.
+            </p>
           </div>
+        ) : (
+          confirmed && (
+            <div className="text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                <CheckIcon className="h-7 w-7" />
+              </div>
+              <p className="disp mt-4 text-2xl font-extrabold text-ink">{confirmed.confirmationCode}</p>
+              <p className="mt-1 text-sm text-muted">
+                {confirmed.date.slice(0, 10)} at {confirmed.time} · {confirmed.partySize} guests
+              </p>
+              <p className="mt-3 text-sm text-ink">
+                We&apos;ve sent this to your account. Show this check-in code when you arrive.
+              </p>
+              <QrCode value={confirmed.confirmationCode} size={140} className="mx-auto mt-4" />
+              <button
+                type="button"
+                onClick={closeConfirmation}
+                className="mt-5 w-full rounded-xl bg-accent py-3 text-sm font-bold text-white"
+              >
+                Done
+              </button>
+            </div>
+          )
         )}
       </Modal>
     </div>
