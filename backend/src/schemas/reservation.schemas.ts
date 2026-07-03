@@ -54,10 +54,21 @@ export const listReservationsQuerySchema = z.object({
   restaurantId: z.string().min(1).optional(),
   status: reservationStatusEnum.optional(),
   date: z.coerce.date().optional(),
+  // Matches against the customer's name/phone and, for the admin view, the
+  // restaurant's name too — one box covers everything the owner/admin asked
+  // to search by.
+  search: z.string().trim().min(1).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });
 export type ListReservationsQuery = z.infer<typeof listReservationsQuerySchema>;
+
+// The diner's own booking list: no filters, just pagination.
+export const listMyReservationsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type ListMyReservationsQuery = z.infer<typeof listMyReservationsQuerySchema>;
 
 // ============================ Stats =================================
 

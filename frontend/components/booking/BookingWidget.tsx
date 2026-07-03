@@ -77,6 +77,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<Reservation | null>(null);
+  const [showConfirmStep, setShowConfirmStep] = useState(false);
   const [payment, setPayment] = useState<Payment | null>(null);
   const [payingConfirm, setPayingConfirm] = useState(false);
   const [paid, setPaid] = useState(false);
@@ -123,6 +124,14 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
     return () => clearTimeout(handle);
   }, [restaurant.id, date, time, partySize]);
 
+  function handleReserveClick(): void {
+    if (status !== "authenticated" || !token) {
+      openLogin();
+      return;
+    }
+    setShowConfirmStep(true);
+  }
+
   async function handleSubmit(): Promise<void> {
     if (status !== "authenticated" || !token) {
       openLogin();
@@ -135,6 +144,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         { restaurantId: restaurant.id, date, time, partySize, seatingPreference, specialRequests: specialRequests || undefined },
         token,
       );
+      setShowConfirmStep(false);
       setConfirmed(reservation);
       setPaid(false);
       setPayment(null);
@@ -288,12 +298,73 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
 
       <button
         type="button"
-        onClick={handleSubmit}
+        onClick={handleReserveClick}
         disabled={!canSubmit}
         className="mt-5 w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50"
       >
         {status !== "authenticated" ? "Sign in to reserve" : submitting ? "Booking…" : "Reserve a table"}
       </button>
+
+      <Modal
+        open={showConfirmStep}
+        onClose={() => setShowConfirmStep(false)}
+        title="Confirm your reservation"
+      >
+        <div>
+          <dl className="space-y-2.5 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted">Restaurant</dt>
+              <dd className="text-right font-semibold text-ink">{restaurant.name}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted">Date & time</dt>
+              <dd className="text-right font-semibold text-ink">
+                {date} at {time}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted">Party size</dt>
+              <dd className="text-right font-semibold text-ink">{partySize} guests</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted">Seating</dt>
+              <dd className="text-right font-semibold text-ink">
+                {SEATING_OPTIONS.find((o) => o.value === seatingPreference)?.label}
+              </dd>
+            </div>
+            {specialRequests && (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="shrink-0 text-muted">Special requests</dt>
+                <dd className="text-right font-semibold text-ink">{specialRequests}</dd>
+              </div>
+            )}
+          </dl>
+          {restaurant.depositRequired && (
+            <p className="mt-4 rounded-xl bg-bg p-3 text-xs text-ink">
+              A ${Number(restaurant.depositAmount).toFixed(2)} deposit will be required to secure
+              this booking.
+            </p>
+          )}
+          {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
+          <div className="mt-5 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowConfirmStep(false)}
+              className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
+            >
+              Go back
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-bold text-white disabled:opacity-60"
+            >
+              {submitting ? "Booking…" : "Confirm booking"}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         open={confirmed !== null}

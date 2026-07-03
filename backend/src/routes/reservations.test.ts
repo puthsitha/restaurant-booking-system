@@ -243,14 +243,16 @@ describe("POST /api/reservations", () => {
 });
 
 describe("GET /api/reservations/mine", () => {
-  it("only returns the signed-in diner's reservations", async () => {
+  it("only returns the signed-in diner's reservations, paginated", async () => {
     vi.mocked(prisma.reservation.findMany).mockResolvedValueOnce([]);
+    vi.mocked(prisma.reservation.count).mockResolvedValueOnce(0);
 
     const res = await request(app)
       .get("/api/reservations/mine")
       .set("Authorization", `Bearer ${dinerToken}`);
 
     expect(res.status).toBe(200);
+    expect(res.body).toEqual({ items: [], total: 0, page: 1, pageSize: 20 });
     const whereArg = vi.mocked(prisma.reservation.findMany).mock.calls[0]?.[0]?.where;
     expect(whereArg?.userId).toBe(DINER_ID);
   });
@@ -369,6 +371,25 @@ describe("GET /api/reservations (owner)", () => {
     expect(res.status).toBe(200);
     const whereArg = vi.mocked(prisma.reservation.findMany).mock.calls[0]?.[0]?.where;
     expect(whereArg?.restaurantId).toEqual({ in: ["rest_1"] });
+  });
+
+  it("searches by customer name/phone or restaurant name", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([{ id: "rest_1" }]);
+    vi.mocked(prisma.reservation.findMany).mockResolvedValueOnce([]);
+    vi.mocked(prisma.reservation.count).mockResolvedValueOnce(0);
+
+    const res = await request(app)
+      .get("/api/reservations")
+      .query({ search: "Sophea" })
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(res.status).toBe(200);
+    const whereArg = vi.mocked(prisma.reservation.findMany).mock.calls[0]?.[0]?.where;
+    expect(whereArg?.OR).toEqual([
+      { user: { name: { contains: "Sophea", mode: "insensitive" } } },
+      { user: { phone: { contains: "Sophea", mode: "insensitive" } } },
+      { restaurant: { name: { contains: "Sophea", mode: "insensitive" } } },
+    ]);
   });
 });
 

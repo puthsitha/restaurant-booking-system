@@ -7,6 +7,7 @@ import type {
   CreateManualReservationInput,
   UpdateReservationStatusInput,
   ListReservationsQuery,
+  ListMyReservationsQuery,
   CheckAvailabilityQuery,
   BookingStatsQuery,
 } from "../schemas/reservation.schemas";
@@ -45,8 +46,9 @@ export async function create(
 export async function listMine(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = requireUser(req);
-    const reservations = await reservationService.listMyReservations(user.id);
-    res.json({ reservations });
+    const query = res.locals.query as ListMyReservationsQuery;
+    const result = await reservationService.listMyReservations(user.id, query);
+    res.json(result);
   } catch (err) {
     next(err);
   }

@@ -7,6 +7,7 @@ import type {
   CreateManualReservationInput,
   UpdateReservationStatusInput,
   ListReservationsQuery,
+  ListMyReservationsQuery,
   CheckAvailabilityQuery,
   BookingStatsQuery,
 } from "../schemas/reservation.schemas";
@@ -198,12 +199,21 @@ export async function createReservation(userId: string, input: CreateReservation
   });
 }
 
-export async function listMyReservations(userId: string) {
-  return prisma.reservation.findMany({
-    where: { userId },
-    include: reservationListInclude,
-    orderBy: [{ date: "desc" }, { time: "desc" }],
-  });
+export async function listMyReservations(userId: string, query: ListMyReservationsQuery) {
+  const where: Prisma.ReservationWhereInput = { userId };
+
+  const [items, total] = await Promise.all([
+    prisma.reservation.findMany({
+      where,
+      include: reservationListInclude,
+      orderBy: [{ date: "desc" }, { time: "desc" }],
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+    }),
+    prisma.reservation.count({ where }),
+  ]);
+
+  return { items, total, page: query.page, pageSize: query.pageSize };
 }
 
 export async function cancelMyReservation(userId: string, reservationId: string) {
@@ -284,6 +294,19 @@ export async function updateReservationStatus(
   });
 }
 
+// One search box covers the customer's name/phone and the restaurant's
+// name — matches what owners and admins asked to search by.
+function reservationSearchFilter(search: string | undefined): Prisma.ReservationWhereInput {
+  if (!search) return {};
+  return {
+    OR: [
+      { user: { name: { contains: search, mode: "insensitive" } } },
+      { user: { phone: { contains: search, mode: "insensitive" } } },
+      { restaurant: { name: { contains: search, mode: "insensitive" } } },
+    ],
+  };
+}
+
 export async function listOwnerReservations(ownerId: string, query: ListReservationsQuery) {
   let restaurantIds: string[];
   if (query.restaurantId) {
@@ -301,6 +324,7 @@ export async function listOwnerReservations(ownerId: string, query: ListReservat
     restaurantId: { in: restaurantIds },
     ...(query.status ? { status: query.status } : {}),
     ...(query.date ? { date: query.date } : {}),
+    ...reservationSearchFilter(query.search),
   };
 
   const [items, total] = await Promise.all([
@@ -325,6 +349,7 @@ export async function listAllReservationsForAdmin(query: ListReservationsQuery) 
     ...(query.restaurantId ? { restaurantId: query.restaurantId } : {}),
     ...(query.status ? { status: query.status } : {}),
     ...(query.date ? { date: query.date } : {}),
+    ...reservationSearchFilter(query.search),
   };
 
   const [items, total] = await Promise.all([

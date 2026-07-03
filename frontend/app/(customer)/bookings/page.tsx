@@ -16,7 +16,7 @@ import { ApiError } from "@/lib/api";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { cancelMyReservation, listMyReservations } from "@/lib/reservations/api";
-import type { Reservation, ReservationStatus } from "@/lib/reservations/types";
+import type { ListReservationsResponse, Reservation, ReservationStatus } from "@/lib/reservations/types";
 
 const STATUS_TONE: Record<ReservationStatus, StatusTone> = {
   PENDING: "pending",
@@ -32,27 +32,34 @@ const PAST_STATUSES: ReservationStatus[] = ["COMPLETED", "CANCELLED", "NO_SHOW"]
 
 export default function MyBookingsPage() {
   const { token, status: authStatus } = useCustomerAuth();
-  const [reservations, setReservations] = useState<Reservation[] | null>(null);
+  const [result, setResult] = useState<ListReservationsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toCancel, setToCancel] = useState<Reservation | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [tab]);
 
   const load = useCallback(() => {
     if (!token) return;
     setError(null);
-    listMyReservations(token)
-      .then((res) => setReservations(res.reservations))
+    listMyReservations({ page, pageSize: 8 }, token)
+      .then((res) => setResult(res))
       .catch(() => setError("Couldn't load your bookings."));
-  }, [token]);
+  }, [token, page]);
 
   useEffect(load, [load]);
 
   const visible = useMemo(() => {
-    if (!reservations) return null;
+    if (!result) return null;
     const isPast = (r: Reservation) => PAST_STATUSES.includes(r.status);
-    return reservations.filter((r) => (tab === "past" ? isPast(r) : !isPast(r)));
-  }, [reservations, tab]);
+    return result.items.filter((r) => (tab === "past" ? isPast(r) : !isPast(r)));
+  }, [result, tab]);
+
+  const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
 
   async function handleCancel(): Promise<void> {
     if (!toCancel || !token) return;
@@ -164,6 +171,30 @@ export default function MyBookingsPage() {
             </motion.div>
           ))}
         </motion.div>
+      )}
+
+      {result && totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-muted">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
       )}
 
       <Modal open={toCancel !== null} onClose={() => setToCancel(null)} title="Cancel this booking?">

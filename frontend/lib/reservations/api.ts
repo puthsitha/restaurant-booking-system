@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api";
 import type {
   AvailabilityResult,
+  ListMyReservationsParams,
   ListReservationsParams,
   ListReservationsResponse,
   Reservation,
@@ -50,8 +51,14 @@ export function createReservation(
   return apiFetch("/api/reservations", { method: "POST", body: input, token });
 }
 
-export function listMyReservations(token: string): Promise<{ reservations: Reservation[] }> {
-  return apiFetch("/api/reservations/mine", { token });
+export function listMyReservations(
+  params: ListMyReservationsParams = {},
+  token: string,
+): Promise<ListReservationsResponse> {
+  return apiFetch<ListReservationsResponse>(
+    `/api/reservations/mine${toQueryString(params as Record<string, string | number | undefined>)}`,
+    { token },
+  );
 }
 
 export function cancelMyReservation(
