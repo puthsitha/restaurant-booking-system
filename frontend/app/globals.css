@@ -14,13 +14,34 @@
   --label: #5c5048;
   --dashboard-bg: #f4f1ed;
   --dashboard-border: #e7e0d8;
+  /* Sidebar chrome stays dark regardless of the light/dark theme toggle, so
+     it isn't overridden below. */
   --owner-sidebar: #1c1714;
   --admin-sidebar: #15110f;
   --sidebar-text: #b7aba0;
   --sidebar-muted: #6b5f55;
   --sidebar-border: #2d2520;
   --admin-accent: #6d28d9;
+  /* Fixed dark tint for modal/lightbox scrims and image-hover overlays —
+     unlike --ink it never flips in dark mode, since it's a translucency
+     effect rather than body text. */
+  --scrim: #241d19;
   --usd-to-khr: 4100;
+}
+
+/* Dark theme overrides, applied by ThemeProvider (lib/theme/context.tsx) via
+   a `data-theme` attribute on <html>. Only the tokens that represent
+   page/surface/text swap here — brand accents and the always-dark sidebar
+   chrome stay constant across themes. */
+:root[data-theme="dark"] {
+  --bg: #1b1512;
+  --surface: #241d19;
+  --border: #3a2e27;
+  --ink: #f3eae2;
+  --muted: #a6968a;
+  --label: #d8ccc2;
+  --dashboard-bg: #15110e;
+  --dashboard-border: #2c2420;
 }
 
 * {
@@ -37,8 +58,9 @@ body {
 body {
   font-family: var(--font-sans), var(--font-khmer), sans-serif;
   background: var(--bg);
-  color: #2a2320;
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 ::selection {

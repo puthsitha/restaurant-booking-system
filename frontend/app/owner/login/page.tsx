@@ -9,9 +9,11 @@ import { FormField, TextField } from "@/components/ui/FormField";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 
 export default function OwnerLoginPage() {
   const { login, sessionMessage, clearSessionMessage } = useOwnerAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +28,7 @@ export default function OwnerLoginPage() {
       await login(email, password);
       router.replace("/owner");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("auth.somethingWentWrong"));
     } finally {
       setIsSubmitting(false);
     }
@@ -34,21 +36,21 @@ export default function OwnerLoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[420px] flex-col justify-center px-6 py-12">
-      <h1 className="disp text-2xl font-extrabold text-ink">Restaurant owner login</h1>
-      <p className="mt-2 text-sm text-muted">Sign in to manage your restaurant.</p>
+      <h1 className="disp text-2xl font-extrabold text-ink">{t("owner.loginTitle")}</h1>
+      <p className="mt-2 text-sm text-muted">{t("owner.loginSubtitle")}</p>
 
       <SessionEndedModal message={sessionMessage} onDismiss={clearSessionMessage} />
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <TextField
-          label="Email"
+          label={t("auth.email")}
           required
           type="email"
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <FormField label="Password" htmlFor="owner-password">
+        <FormField label={t("auth.password")} htmlFor="owner-password">
           <PasswordInput
             id="owner-password"
             required
@@ -63,7 +65,7 @@ export default function OwnerLoginPage() {
           disabled={isSubmitting}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {isSubmitting ? "Signing in…" : "Sign in"}
+          {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
         </button>
       </form>
     </main>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/ui/Modal";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface ConfirmLogoutModalProps {
   open: boolean;
@@ -13,23 +14,24 @@ interface ConfirmLogoutModalProps {
 // a shared/kiosk device, so it gets a confirmation like other one-way
 // actions (cancel booking, delete review) instead of firing immediately.
 export function ConfirmLogoutModal({ open, onClose, onConfirm }: ConfirmLogoutModalProps) {
+  const { t } = useLanguage();
   return (
-    <Modal open={open} onClose={onClose} title="Log out?">
-      <p className="text-sm text-ink">You&apos;ll need to sign in again to continue.</p>
+    <Modal open={open} onClose={onClose} title={t("common.logOutConfirmTitle")}>
+      <p className="text-sm text-ink">{t("common.logOutConfirmBody")}</p>
       <div className="mt-5 flex gap-3">
         <button
           type="button"
           onClick={onClose}
           className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
         >
-          Cancel
+          {t("common.cancel")}
         </button>
         <button
           type="button"
           onClick={onConfirm}
           className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white"
         >
-          Log out
+          {t("common.logOut")}
         </button>
       </div>
     </Modal>

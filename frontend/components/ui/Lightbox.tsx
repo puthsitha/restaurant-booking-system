@@ -37,7 +37,7 @@ export function Lightbox({ open, onClose, children }: LightboxProps) {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="absolute inset-0 bg-ink/90"
+            className="absolute inset-0 bg-scrim/90"
             onClick={onClose}
             aria-hidden="true"
           />
