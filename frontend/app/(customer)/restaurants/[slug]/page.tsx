@@ -4,6 +4,7 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { ReviewsSection } from "@/components/restaurants/ReviewsSection";
 import { SaveRestaurantButton } from "@/components/restaurants/SaveRestaurantButton";
 import { FadeIn } from "@/components/ui/FadeIn";
+import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import { ApiError } from "@/lib/api";
 import { getRestaurantBySlug } from "@/lib/restaurants/api";
 import type { DayOfWeek } from "@/lib/restaurants/types";
@@ -58,8 +59,7 @@ export default async function RestaurantDetailPage({
     <main className="mx-auto max-w-[1120px] px-8 py-12">
       <FadeIn className="relative h-64 w-full overflow-hidden rounded-2xl bg-bg">
         {restaurant.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ZoomableImage
             src={restaurant.coverImageUrl}
             alt={restaurant.name}
             className="h-full w-full object-cover"
@@ -152,11 +152,22 @@ export default async function RestaurantDetailPage({
                             key={item.id}
                             className="flex items-start justify-between gap-4 py-3"
                           >
-                            <div>
-                              <p className="font-semibold text-ink">{item.name}</p>
-                              {item.description && (
-                                <p className="mt-0.5 text-sm text-muted">{item.description}</p>
+                            <div className="flex items-start gap-3">
+                              {item.imageUrl && (
+                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg">
+                                  <ZoomableImage
+                                    src={item.imageUrl}
+                                    alt={item.name}
+                                    className="h-14 w-14 object-cover"
+                                  />
+                                </div>
                               )}
+                              <div>
+                                <p className="font-semibold text-ink">{item.name}</p>
+                                {item.description && (
+                                  <p className="mt-0.5 text-sm text-muted">{item.description}</p>
+                                )}
+                              </div>
                             </div>
                             <span className="shrink-0 font-semibold text-ink">
                               ${Number(item.price).toFixed(2)}
@@ -174,13 +185,13 @@ export default async function RestaurantDetailPage({
               <h2 className="disp text-lg font-bold text-ink">Gallery</h2>
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {restaurant.galleryImages.map((image) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={image.id}
-                    src={image.url}
-                    alt={image.caption ?? restaurant.name}
-                    className="h-32 w-full rounded-xl object-cover transition hover:opacity-90"
-                  />
+                  <div key={image.id} className="h-32 w-full overflow-hidden rounded-xl">
+                    <ZoomableImage
+                      src={image.url}
+                      alt={image.caption ?? restaurant.name}
+                      className="h-32 w-full object-cover transition hover:opacity-90"
+                    />
+                  </div>
                 ))}
               </div>
             </section>
