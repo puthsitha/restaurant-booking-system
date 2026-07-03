@@ -139,7 +139,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
 
   if (error) {
     return (
-      <main style={{ padding: 32 }}>
+      <main className="p-8">
         <ErrorState message={error} onRetry={reload} />
       </main>
     );
@@ -147,14 +147,14 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
 
   if (!restaurant) {
     return (
-      <main style={{ padding: 32 }}>
+      <main className="p-8">
         <LoadingSpinner label="Setting up the kitchen…" size="lg" />
       </main>
     );
   }
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="disp text-2xl font-extrabold text-ink">{restaurant.name}</h1>

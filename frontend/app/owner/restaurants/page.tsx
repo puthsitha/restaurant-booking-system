@@ -32,7 +32,7 @@ export default function OwnerRestaurantsPage() {
   useEffect(load, [load]);
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="disp text-2xl font-extrabold text-ink">My restaurants</h1>

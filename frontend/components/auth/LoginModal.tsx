@@ -102,7 +102,7 @@ export function LoginModal() {
             <p className="mb-6 text-sm text-muted">Sign in with your phone number</p>
 
             <form onSubmit={handleSendCode}>
-              <label className="mb-2 block text-[12.5px] font-bold text-[#5C5048]">
+              <label className="mb-2 block text-[12.5px] font-bold text-label">
                 Phone number
               </label>
               <div className="mb-4 flex gap-2.5">

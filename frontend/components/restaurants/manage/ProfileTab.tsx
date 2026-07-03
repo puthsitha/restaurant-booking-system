@@ -13,7 +13,7 @@ import type { DirtyTabHandle, ManageTabProps } from "./types";
 
 const FIELD_CLASS =
   "w-full rounded-xl border border-border px-4 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15";
-const LABEL_CLASS = "mb-1.5 block text-xs font-bold text-[#5C5048]";
+const LABEL_CLASS = "mb-1.5 block text-xs font-bold text-label";
 
 interface ProfileDraft {
   name: string;

@@ -64,6 +64,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="admin-shell">
       <DashboardShell
         brand="Admin"
+        variant="admin"
         navItems={NAV_ITEMS}
         userName={user.name}
         onLogout={() => {

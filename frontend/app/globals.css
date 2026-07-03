@@ -11,6 +11,15 @@
   --border: #ece1d5;
   --ink: #241d19;
   --muted: #9a8e82;
+  --label: #5c5048;
+  --dashboard-bg: #f4f1ed;
+  --dashboard-border: #e7e0d8;
+  --owner-sidebar: #1c1714;
+  --admin-sidebar: #15110f;
+  --sidebar-text: #b7aba0;
+  --sidebar-muted: #6b5f55;
+  --sidebar-border: #2d2520;
+  --admin-accent: #6d28d9;
   --usd-to-khr: 4100;
 }
 

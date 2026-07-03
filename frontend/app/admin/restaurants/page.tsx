@@ -40,7 +40,7 @@ export default function AdminRestaurantsPage() {
   useEffect(load, [load]);
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">All restaurants</h1>
 
       <div className="mt-6 flex flex-wrap gap-3">

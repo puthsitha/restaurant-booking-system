@@ -15,7 +15,7 @@ interface FormFieldProps {
 export function FormField({ label, htmlFor, error, hint, children, className }: FormFieldProps) {
   return (
     <div className={className}>
-      <label htmlFor={htmlFor} className="mb-2 block text-xs font-bold text-[#5C5048]">
+      <label htmlFor={htmlFor} className="mb-2 block text-xs font-bold text-label">
         {label}
       </label>
       {children}

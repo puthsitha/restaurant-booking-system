@@ -149,7 +149,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Date</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Date</label>
           <input
             type="date"
             value={date}
@@ -160,7 +160,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Party size</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Party size</label>
           <input
             type="number"
             min={restaurant.minCapacity}
@@ -173,7 +173,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Time</label>
+        <label className="mb-1.5 block text-xs font-bold text-label">Time</label>
         {timeSlots.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-3 py-2.5 text-sm text-muted">
             {isClosedDate ? "Closed on this date" : "Closed on this day"}
@@ -197,7 +197,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Seating</label>
+        <label className="mb-1.5 block text-xs font-bold text-label">Seating</label>
         <div className="flex gap-1.5">
           {SEATING_OPTIONS.map((opt) => (
             <button
@@ -215,7 +215,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">
+        <label className="mb-1.5 block text-xs font-bold text-label">
           Special requests <span className="font-normal text-muted">(optional)</span>
         </label>
         <textarea

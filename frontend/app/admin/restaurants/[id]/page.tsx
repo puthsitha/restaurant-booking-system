@@ -43,7 +43,7 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
 
   if (error) {
     return (
-      <main style={{ padding: 32 }}>
+      <main className="p-8">
         <ErrorState message={error} onRetry={reload} />
       </main>
     );
@@ -51,14 +51,14 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
 
   if (!restaurant) {
     return (
-      <main style={{ padding: 32 }}>
+      <main className="p-8">
         <LoadingSpinner label="Pulling up the file…" size="lg" />
       </main>
     );
   }
 
   return (
-    <main style={{ maxWidth: 720, padding: 32 }}>
+    <main className="mx-auto max-w-[720px] p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">{restaurant.name}</h1>
       <p className="mt-1 text-sm text-muted">
         {restaurant.cuisineType} · {restaurant.address}, {restaurant.city}

@@ -49,7 +49,7 @@ export default function AdminBookingsPage() {
   useEffect(load, [load]);
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">Bookings</h1>
       <p className="mt-1 text-sm text-muted">
         Platform-wide oversight, read-only — owners manage their own bookings.

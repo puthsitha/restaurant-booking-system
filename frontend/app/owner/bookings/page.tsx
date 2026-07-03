@@ -90,7 +90,7 @@ export default function OwnerBookingsPage() {
   }
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="disp text-2xl font-extrabold text-ink">Bookings</h1>
@@ -263,7 +263,7 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
     <Modal open={open} onClose={onClose} title="Add a walk-in / phone booking">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Restaurant</label>
+          <label className="mb-2 block text-xs font-bold text-label">Restaurant</label>
           <select
             required
             value={restaurantId}
@@ -316,7 +316,7 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
             onChange={(e) => setPartySize(Number(e.target.value))}
           />
           <div>
-            <label className="mb-2 block text-xs font-bold text-[#5C5048]">Seating</label>
+            <label className="mb-2 block text-xs font-bold text-label">Seating</label>
             <select
               value={seatingPreference}
               onChange={(e) => setSeatingPreference(e.target.value as SeatingPreference)}

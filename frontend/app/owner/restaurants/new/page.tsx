@@ -46,7 +46,7 @@ export default function NewRestaurantPage() {
   }
 
   return (
-    <main style={{ maxWidth: 560, padding: 32 }}>
+    <main className="mx-auto max-w-[560px] p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">New restaurant</h1>
       <p className="mt-2 text-sm text-muted">
         You can add hours, tables, and a menu after creating it.
@@ -54,7 +54,7 @@ export default function NewRestaurantPage() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Name</label>
+          <label className="mb-2 block text-xs font-bold text-label">Name</label>
           <input
             required
             value={name}
@@ -63,7 +63,7 @@ export default function NewRestaurantPage() {
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">
+          <label className="mb-2 block text-xs font-bold text-label">
             URL slug (tablesite.com/restaurants/…)
           </label>
           <input
@@ -77,7 +77,7 @@ export default function NewRestaurantPage() {
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Cuisine type</label>
+          <label className="mb-2 block text-xs font-bold text-label">Cuisine type</label>
           <input
             required
             value={cuisineType}
@@ -87,7 +87,7 @@ export default function NewRestaurantPage() {
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">Address</label>
+          <label className="mb-2 block text-xs font-bold text-label">Address</label>
           <input
             required
             value={address}
@@ -96,7 +96,7 @@ export default function NewRestaurantPage() {
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold text-[#5C5048]">City</label>
+          <label className="mb-2 block text-xs font-bold text-label">City</label>
           <input
             required
             value={city}

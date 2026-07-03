@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
   }, [token]);
 
   return (
-    <main style={{ padding: 32 }}>
+    <main className="p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">Welcome back, {user?.name.split(" ")[0]}</h1>
       <p className="mt-1 text-sm text-muted">Platform overview across every restaurant.</p>
 

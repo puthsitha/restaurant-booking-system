@@ -45,7 +45,7 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
     <div className="max-w-xl">
       <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Date</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Date</label>
           <input
             required
             type="date"
@@ -55,7 +55,7 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
           />
         </div>
         <div className="flex-1">
-          <label className="mb-1.5 block text-xs font-bold text-[#5C5048]">Reason</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">Reason</label>
           <input
             value={reason}
             onChange={(e) => setReason(e.target.value)}

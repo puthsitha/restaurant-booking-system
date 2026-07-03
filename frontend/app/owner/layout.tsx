@@ -56,6 +56,7 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
     <div className="owner-shell">
       <DashboardShell
         brand="Owner"
+        variant="owner"
         navItems={NAV_ITEMS}
         userName={user.name}
         onLogout={() => {
