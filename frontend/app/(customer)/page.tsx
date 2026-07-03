@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HomeHero } from "@/components/home/HomeHero";
 import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FadeIn } from "@/components/ui/FadeIn";
@@ -25,41 +26,7 @@ export default async function HomePage() {
 
   return (
     <main>
-      {/* Hero — a gradient stand-in for a photo (no image asset pipeline is
-          wired up yet), matching the reference's dark-overlay hero tone. */}
-      <section
-        className="relative overflow-hidden px-8 py-20 text-white sm:py-28"
-        style={{ background: "linear-gradient(110deg, #241D19 0%, #2E2018 46%, #C2410C 140%)" }}
-      >
-        <FadeIn className="mx-auto max-w-[1280px]">
-          <span className="km inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wide backdrop-blur">
-            TableSite · Cambodia
-          </span>
-          <h1 className="disp mt-4 max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl">
-            Find your table across Cambodia
-          </h1>
-          <p className="mt-4 max-w-lg text-base leading-relaxed text-white/80">
-            Reserve Cambodia&apos;s best tables — bilingual, dual-currency, KHQR-ready.
-          </p>
-
-          <form
-            action="/search"
-            className="mt-8 flex max-w-xl flex-col gap-2 rounded-2xl bg-white p-2 shadow-[0_22px_50px_rgba(0,0,0,.28)] sm:flex-row"
-          >
-            <input
-              name="search"
-              placeholder="Search by restaurant name…"
-              className="flex-1 rounded-xl px-4 py-3 text-sm text-ink outline-none"
-            />
-            <button
-              type="submit"
-              className="rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white shadow-[0_8px_18px_rgba(194,65,12,.28)]"
-            >
-              Search
-            </button>
-          </form>
-        </FadeIn>
-      </section>
+      <HomeHero />
 
       <div className="mx-auto max-w-[1280px] px-8 py-14">
         {/* Cuisine tiles */}
