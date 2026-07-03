@@ -221,6 +221,19 @@ export function CheckIcon({ className }: IconProps) {
   );
 }
 
+export function HeartIcon({ className, filled }: IconProps & { filled?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} className={className} aria-hidden="true">
+      <path
+        d="M12 20.5s-7.5-4.6-10-9.3C.6 8 1.8 4.5 5 3.4c2.2-.8 4.4 0 5.9 1.9l1.1 1.4 1.1-1.4c1.5-1.9 3.7-2.7 5.9-1.9 3.2 1.1 4.4 4.6 3 7.8-2.5 4.7-10 9.3-10 9.3Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function ChefHatIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

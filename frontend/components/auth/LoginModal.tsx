@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { GoogleButton } from "@/components/auth/GoogleButton";
@@ -25,10 +26,6 @@ export function LoginModal() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) {
-    return null;
-  }
-
   const phone = `+855${phoneDigits.replace(/\D/g, "")}`;
 
   function reset(): void {
@@ -43,6 +40,16 @@ export function LoginModal() {
     reset();
     close();
   }
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(e: KeyboardEvent): void {
+      if (e.key === "Escape") handleClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   async function handleSendCode(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -84,17 +91,26 @@ export function LoginModal() {
   }
 
   return (
-    <div
-      onClick={handleClose}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/55 p-6 backdrop-blur-sm"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[420px] rounded-[22px] bg-surface p-9 shadow-2xl"
-      >
-        <div className="mb-5 flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-accent text-2xl">
-          🍽️
-        </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          onClick={handleClose}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/55 p-6 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-[420px] rounded-[22px] bg-surface p-9 shadow-2xl"
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ type: "spring", damping: 26, stiffness: 340 }}
+          >
+            <div className="mb-5 flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-accent text-2xl">
+              🍽️
+            </div>
 
         {step === "phone" ? (
           <>
@@ -176,7 +192,9 @@ export function LoginModal() {
             </button>
           </>
         )}
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

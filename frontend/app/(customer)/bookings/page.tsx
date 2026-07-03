@@ -1,27 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { CalendarIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ListSkeleton } from "@/components/ui/skeletons";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { StatusTone } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { fadeUp, staggerContainer } from "@/lib/motion";
 import { cancelMyReservation, listMyReservations } from "@/lib/reservations/api";
 import type { Reservation, ReservationStatus } from "@/lib/reservations/types";
 
-const STATUS_STYLE: Record<ReservationStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  CONFIRMED: "bg-secondary/10 text-secondary",
-  SEATED: "bg-secondary/10 text-secondary",
-  COMPLETED: "bg-bg text-muted",
-  CANCELLED: "bg-red-100 text-red-700",
-  NO_SHOW: "bg-red-100 text-red-700",
+const STATUS_TONE: Record<ReservationStatus, StatusTone> = {
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  SEATED: "seated",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+  NO_SHOW: "noShow",
 };
 
 const CANCELLABLE: ReservationStatus[] = ["PENDING", "CONFIRMED"];
+const PAST_STATUSES: ReservationStatus[] = ["COMPLETED", "CANCELLED", "NO_SHOW"];
 
 export default function MyBookingsPage() {
   const { token, status: authStatus } = useCustomerAuth();
@@ -29,6 +35,7 @@ export default function MyBookingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [toCancel, setToCancel] = useState<Reservation | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
 
   const load = useCallback(() => {
     if (!token) return;
@@ -39,6 +46,12 @@ export default function MyBookingsPage() {
   }, [token]);
 
   useEffect(load, [load]);
+
+  const visible = useMemo(() => {
+    if (!reservations) return null;
+    const isPast = (r: Reservation) => PAST_STATUSES.includes(r.status);
+    return reservations.filter((r) => (tab === "past" ? isPast(r) : !isPast(r)));
+  }, [reservations, tab]);
 
   async function handleCancel(): Promise<void> {
     if (!toCancel || !token) return;
@@ -56,7 +69,7 @@ export default function MyBookingsPage() {
 
   if (authStatus === "loading") {
     return (
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 32px" }}>
+      <main className="mx-auto max-w-[720px] px-8 py-12">
         <ListSkeleton rows={3} />
       </main>
     );
@@ -64,7 +77,7 @@ export default function MyBookingsPage() {
 
   if (authStatus !== "authenticated") {
     return (
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 32px" }}>
+      <main className="mx-auto max-w-[720px] px-8 py-12">
         <EmptyState
           icon={CalendarIcon}
           title="Sign in to see your bookings"
@@ -75,28 +88,47 @@ export default function MyBookingsPage() {
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 32px" }}>
-      <h1 className="disp text-2xl font-extrabold text-ink">My bookings</h1>
+    <main className="mx-auto max-w-[720px] px-8 py-12">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="disp text-2xl font-extrabold text-ink">My bookings</h1>
+        <SegmentedControl
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "upcoming", label: "Upcoming" },
+            { value: "past", label: "Past" },
+          ]}
+        />
+      </div>
 
       {error ? (
         <ErrorState className="mt-8" message={error} onRetry={load} />
-      ) : reservations === null ? (
+      ) : visible === null ? (
         <div className="mt-8">
           <ListSkeleton rows={3} />
         </div>
-      ) : reservations.length === 0 ? (
+      ) : visible.length === 0 ? (
         <EmptyState
           className="mt-8"
           icon={CalendarIcon}
-          title="No bookings yet"
+          title={tab === "past" ? "No past bookings" : "No upcoming bookings"}
           message="Find a restaurant you love and reserve a table — it only takes a minute."
           actionLabel="Browse restaurants"
           actionHref="/search"
         />
       ) : (
-        <div className="mt-8 space-y-3">
-          {reservations.map((r) => (
-            <div key={r.id} className="rounded-2xl border border-border bg-surface p-5">
+        <motion.div
+          className="mt-8 space-y-3"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+        >
+          {visible.map((r) => (
+            <motion.div
+              key={r.id}
+              variants={fadeUp}
+              className="rounded-2xl border border-border bg-surface p-5"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-bold text-ink">{r.restaurant.name}</p>
@@ -105,11 +137,9 @@ export default function MyBookingsPage() {
                   </p>
                   <p className="mt-1 text-xs text-muted">Confirmation {r.confirmationCode}</p>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${STATUS_STYLE[r.status]}`}
-                >
+                <StatusBadge tone={STATUS_TONE[r.status]} className="shrink-0">
                   {r.status}
-                </span>
+                </StatusBadge>
               </div>
               {CANCELLABLE.includes(r.status) && (
                 <button
@@ -120,9 +150,9 @@ export default function MyBookingsPage() {
                   Cancel booking
                 </button>
               )}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       <Modal open={toCancel !== null} onClose={() => setToCancel(null)} title="Cancel this booking?">

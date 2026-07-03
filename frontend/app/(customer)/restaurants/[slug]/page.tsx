@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { SaveRestaurantButton } from "@/components/restaurants/SaveRestaurantButton";
+import { FadeIn } from "@/components/ui/FadeIn";
 import { ApiError } from "@/lib/api";
 import { getRestaurantBySlug } from "@/lib/restaurants/api";
 import type { DayOfWeek } from "@/lib/restaurants/types";
@@ -42,10 +44,18 @@ export default async function RestaurantDetailPage({
   }
 
   const hoursByDay = new Map(restaurant.operatingHours.map((h) => [h.dayOfWeek, h]));
+  const quickInfo = [
+    restaurant.dressCode ? { label: "Dress code", value: restaurant.dressCode } : null,
+    restaurant.depositRequired
+      ? { label: "Deposit", value: `$${Number(restaurant.depositAmount).toFixed(2)} per booking` }
+      : { label: "Deposit", value: "Not required" },
+    { label: "Cancellation", value: `${restaurant.cancellationHours}h notice` },
+    restaurant.parkingAvailable ? { label: "Parking", value: "Available" } : null,
+  ].filter((x): x is { label: string; value: string } => x !== null);
 
   return (
-    <main style={{ maxWidth: 1120, margin: "0 auto", padding: "48px 32px" }}>
-      <div className="h-64 w-full overflow-hidden rounded-2xl bg-bg">
+    <main className="mx-auto max-w-[1120px] px-8 py-12">
+      <FadeIn className="relative h-64 w-full overflow-hidden rounded-2xl bg-bg">
         {restaurant.coverImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -56,10 +66,14 @@ export default async function RestaurantDetailPage({
         ) : (
           <div className="flex h-full items-center justify-center text-5xl">🍽️</div>
         )}
-      </div>
+        <SaveRestaurantButton
+          restaurantId={restaurant.id}
+          className="absolute right-4 top-4"
+        />
+      </FadeIn>
 
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_340px]">
-        <div>
+        <FadeIn delay={0.05}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="disp text-3xl font-extrabold text-ink">{restaurant.name}</h1>
@@ -89,6 +103,19 @@ export default async function RestaurantDetailPage({
             <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink">
               {restaurant.description}
             </p>
+          )}
+
+          {quickInfo.length > 0 && (
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {quickInfo.map((info) => (
+                <div key={info.label} className="rounded-xl border border-border bg-surface p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
+                    {info.label}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-ink">{info.value}</p>
+                </div>
+              ))}
+            </div>
           )}
 
           <section className="mt-10">
@@ -151,15 +178,15 @@ export default async function RestaurantDetailPage({
                     key={image.id}
                     src={image.url}
                     alt={image.caption ?? restaurant.name}
-                    className="h-32 w-full rounded-xl object-cover"
+                    className="h-32 w-full rounded-xl object-cover transition hover:opacity-90"
                   />
                 ))}
               </div>
             </section>
           )}
-        </div>
+        </FadeIn>
 
-        <div className="lg:sticky lg:top-8 lg:self-start">
+        <div className="lg:sticky lg:top-24 lg:self-start">
           <BookingWidget restaurant={restaurant} />
         </div>
       </div>

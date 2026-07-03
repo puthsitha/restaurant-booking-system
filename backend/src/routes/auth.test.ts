@@ -429,3 +429,36 @@ describe("GET /api/auth/me", () => {
     expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 });
+
+describe("PATCH /api/auth/me", () => {
+  it("rejects requests without a bearer token", async () => {
+    const res = await request(app).patch("/api/auth/me").send({ preferredLocale: "en" });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects an invalid locale", async () => {
+    const token = jwt.sign({ sub: baseUser.id, role: baseUser.role }, "test-secret");
+    const res = await request(app)
+      .patch("/api/auth/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ preferredLocale: "fr" });
+    expect(res.status).toBe(400);
+  });
+
+  it("updates the preferred locale", async () => {
+    const token = jwt.sign({ sub: baseUser.id, role: baseUser.role }, "test-secret");
+    vi.mocked(prisma.user.update).mockResolvedValueOnce({ ...baseUser, preferredLocale: "en" });
+
+    const res = await request(app)
+      .patch("/api/auth/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ preferredLocale: "en" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.preferredLocale).toBe("en");
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: baseUser.id },
+      data: { preferredLocale: "en" },
+    });
+  });
+});
