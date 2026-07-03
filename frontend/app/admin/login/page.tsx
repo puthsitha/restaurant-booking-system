@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { SessionEndedModal } from "@/components/auth/SessionEndedModal";
 import { FormField, TextField } from "@/components/ui/FormField";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { ApiError } from "@/lib/api";
@@ -36,19 +37,7 @@ export default function AdminLoginPage() {
       <h1 className="disp text-2xl font-extrabold text-ink">Platform admin login</h1>
       <p className="mt-2 text-sm text-muted">Sign in to moderate the platform.</p>
 
-      {sessionMessage && (
-        <div className="mt-6 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span>{sessionMessage}</span>
-          <button
-            type="button"
-            onClick={clearSessionMessage}
-            aria-label="Dismiss"
-            className="font-bold text-red-700"
-          >
-            ×
-          </button>
-        </div>
-      )}
+      <SessionEndedModal message={sessionMessage} onDismiss={clearSessionMessage} />
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <TextField
