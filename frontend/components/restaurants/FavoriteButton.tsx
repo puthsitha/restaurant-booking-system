@@ -50,14 +50,15 @@ export function FavoriteButton({ restaurantId, size = "md", className }: Favorit
       aria-label={isSaved ? "Remove from saved restaurants" : "Save restaurant"}
       aria-pressed={isSaved}
       onClick={handleClick}
-      className={`relative flex items-center justify-center rounded-full bg-white/85 text-accent backdrop-blur transition hover:bg-white ${dims.button} ${className ?? ""}`}
+      className={`flex items-center justify-center rounded-full bg-white/85 text-accent backdrop-blur transition hover:bg-white ${dims.button} ${className ?? ""}`}
     >
       <AnimatePresence>
         {bursting &&
           BURST_ANGLES.map((angle) => (
             <motion.span
               key={angle}
-              className="pointer-events-none absolute h-1.5 w-1.5 rounded-full bg-accent"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-accent"
+              style={{ marginLeft: -3, marginTop: -3 }}
               initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
               animate={{
                 opacity: 0,
