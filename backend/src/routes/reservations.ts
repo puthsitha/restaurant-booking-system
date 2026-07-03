@@ -10,6 +10,7 @@ import {
   updateReservationStatusSchema,
   listReservationsQuerySchema,
   checkAvailabilityQuerySchema,
+  bookingStatsQuerySchema,
 } from "../schemas/reservation.schemas";
 
 export const reservationsRouter: Router = Router();
@@ -207,6 +208,48 @@ reservationsRouter.get(
   adminOnly,
   validateQuery(listReservationsQuerySchema),
   reservationController.listForAdmin,
+);
+
+/**
+ * @openapi
+ * /api/reservations/stats:
+ *   get:
+ *     summary: Daily booking counts across the signed-in owner's restaurants
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema: { type: integer, default: 14 }
+ *     responses:
+ *       200: { description: OK }
+ */
+reservationsRouter.get(
+  "/api/reservations/stats",
+  ownerOnly,
+  validateQuery(bookingStatsQuerySchema),
+  reservationController.statsForOwner,
+);
+
+/**
+ * @openapi
+ * /api/reservations/stats/all:
+ *   get:
+ *     summary: Platform-wide daily booking counts (admin only)
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema: { type: integer, default: 14 }
+ *     responses:
+ *       200: { description: OK }
+ */
+reservationsRouter.get(
+  "/api/reservations/stats/all",
+  adminOnly,
+  validateQuery(bookingStatsQuerySchema),
+  reservationController.statsForAdmin,
 );
 
 /**

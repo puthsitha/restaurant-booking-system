@@ -8,6 +8,7 @@ import type {
   UpdateReservationStatusInput,
   ListReservationsQuery,
   CheckAvailabilityQuery,
+  BookingStatsQuery,
 } from "../schemas/reservation.schemas";
 
 // Statuses that still hold a table for a given date/time; cancelled/completed/
@@ -338,4 +339,50 @@ export async function listAllReservationsForAdmin(query: ListReservationsQuery) 
   ]);
 
   return { items, total, page: query.page, pageSize: query.pageSize };
+}
+
+// ============================ Stats =================================
+
+export interface DailyBookingCount {
+  date: string; // "2026-07-01"
+  count: number;
+}
+
+async function bookingsPerDay(
+  where: Prisma.ReservationWhereInput,
+  days: number,
+): Promise<DailyBookingCount[]> {
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - (days - 1));
+  since.setUTCHours(0, 0, 0, 0);
+
+  const rows = await prisma.reservation.findMany({
+    where: { ...where, date: { gte: since } },
+    select: { date: true },
+  });
+
+  const counts = new Map<string, number>();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(since);
+    d.setUTCDate(d.getUTCDate() + i);
+    counts.set(d.toISOString().slice(0, 10), 0);
+  }
+  for (const row of rows) {
+    const key = row.date.toISOString().slice(0, 10);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries()).map(([date, count]) => ({ date, count }));
+}
+
+export async function bookingStatsForOwner(
+  ownerId: string,
+  query: BookingStatsQuery,
+): Promise<DailyBookingCount[]> {
+  const owned = await prisma.restaurant.findMany({ where: { ownerId }, select: { id: true } });
+  return bookingsPerDay({ restaurantId: { in: owned.map((r) => r.id) } }, query.days);
+}
+
+export async function bookingStatsForAdmin(query: BookingStatsQuery): Promise<DailyBookingCount[]> {
+  return bookingsPerDay({}, query.days);
 }

@@ -565,3 +565,49 @@ describe("POST /api/reservations/:id/payment/confirm", () => {
     expect(prisma.payment.update).not.toHaveBeenCalled();
   });
 });
+
+describe("GET /api/reservations/stats", () => {
+  it("rejects non-owners", async () => {
+    const res = await request(app)
+      .get("/api/reservations/stats")
+      .set("Authorization", `Bearer ${dinerToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns a zero-filled bucket per day, scoped to the owner's restaurants", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([{ id: "rest_1" }]);
+    vi.mocked(prisma.reservation.findMany).mockResolvedValueOnce([
+      { date: new Date() },
+      { date: new Date() },
+    ]);
+
+    const res = await request(app)
+      .get("/api/reservations/stats?days=7")
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.days).toHaveLength(7);
+    const total = res.body.days.reduce((sum: number, d: { count: number }) => sum + d.count, 0);
+    expect(total).toBe(2);
+  });
+});
+
+describe("GET /api/reservations/stats/all", () => {
+  it("rejects non-admins", async () => {
+    const res = await request(app)
+      .get("/api/reservations/stats/all")
+      .set("Authorization", `Bearer ${ownerToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns platform-wide daily counts", async () => {
+    vi.mocked(prisma.reservation.findMany).mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .get("/api/reservations/stats/all?days=14")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.days).toHaveLength(14);
+  });
+});

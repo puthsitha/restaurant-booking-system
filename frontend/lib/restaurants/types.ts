@@ -33,6 +33,8 @@ export interface RestaurantTable {
   zone: string | null;
   description: string | null;
   status: TableStatus;
+  positionX: number | null;
+  positionY: number | null;
 }
 
 export interface MenuItem {

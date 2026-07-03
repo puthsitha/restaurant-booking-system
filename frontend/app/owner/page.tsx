@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { BarChart } from "@/components/dashboard/BarChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { CalendarIcon, ChefHatIcon, InboxIcon } from "@/components/ui/icons";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
-import { listOwnerReservations } from "@/lib/reservations/api";
+import { getOwnerBookingStats, listOwnerReservations } from "@/lib/reservations/api";
+import type { DailyBookingCount } from "@/lib/reservations/api";
 import { listMyRestaurantRequests } from "@/lib/requests/api";
 import { listMyRestaurants } from "@/lib/restaurants/api";
 
@@ -22,6 +24,14 @@ interface DashboardStats {
 export default function OwnerDashboardPage() {
   const { user, token } = useOwnerAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [chartData, setChartData] = useState<DailyBookingCount[] | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    getOwnerBookingStats(14, token)
+      .then((res) => setChartData(res.days))
+      .catch(() => setChartData(null));
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -86,6 +96,13 @@ export default function OwnerDashboardPage() {
             hint={stats.hasPendingRequest ? "Awaiting admin review" : "All caught up"}
             tone="secondary"
           />
+        </div>
+      )}
+
+      {chartData && chartData.some((d) => d.count > 0) && (
+        <div className="mt-8 rounded-2xl border border-border bg-surface p-5">
+          <h2 className="disp text-sm font-bold text-ink">Bookings, last 14 days</h2>
+          <BarChart data={chartData} className="mt-4" />
         </div>
       )}
 

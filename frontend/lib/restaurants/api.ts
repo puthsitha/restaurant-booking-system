@@ -146,6 +146,8 @@ export interface TableInput {
   zone?: string;
   description?: string;
   status?: TableStatus;
+  positionX?: number | null;
+  positionY?: number | null;
 }
 
 export function listTables(id: string, token: string): Promise<{ tables: RestaurantTable[] }> {

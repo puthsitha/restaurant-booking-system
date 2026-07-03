@@ -215,6 +215,10 @@ model RestaurantTable {
   zone         String? // Garden, Upper, VIP, Bar...
   description  String?
   status       TableStatus @default(AVAILABLE)
+  // Grid cell coordinates for the owner's floor-plan view; null until the
+  // owner places the table.
+  positionX    Int?
+  positionY    Int?
 
   reservations Reservation[]
 
