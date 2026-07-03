@@ -57,13 +57,13 @@ export default function AdminTagsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[560px] p-8">
+    <main className="p-8">
       <h1 className="disp text-2xl font-extrabold text-ink">Tags</h1>
       <p className="mt-2 text-sm text-muted">
         Owners assign these to their restaurants; diners filter search by them.
       </p>
 
-      <form onSubmit={handleAdd} className="mt-6 flex items-end gap-3">
+      <form onSubmit={handleAdd} className="mt-6 flex max-w-[560px] items-end gap-3">
         <div className="flex-1">
           <label className="mb-1.5 block text-xs font-bold text-label">New tag</label>
           <input
