@@ -22,6 +22,22 @@ export function createReview(
   });
 }
 
+export function updateReview(
+  reviewId: string,
+  input: CreateReviewInput,
+  token: string,
+): Promise<{ review: Review }> {
+  return apiFetch(`/api/reviews/${reviewId}`, {
+    method: "PATCH",
+    body: input,
+    token,
+  });
+}
+
+export function deleteReview(reviewId: string, token: string): Promise<void> {
+  return apiFetch(`/api/reviews/${reviewId}`, { method: "DELETE", token });
+}
+
 export function replyToReview(
   reviewId: string,
   reply: string,

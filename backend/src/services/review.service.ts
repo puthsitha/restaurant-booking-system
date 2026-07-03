@@ -1,6 +1,10 @@
 import { prisma } from "../lib/prisma";
 import { HttpError } from "../lib/httpError";
-import type { CreateReviewInput, ReplyToReviewInput } from "../schemas/review.schemas";
+import type {
+  CreateReviewInput,
+  ReplyToReviewInput,
+  UpdateReviewInput,
+} from "../schemas/review.schemas";
 
 const reviewSelect = {
   id: true,
@@ -57,6 +61,28 @@ export async function createReview(
     data: { restaurantId, userId, rating: input.rating, text: input.text },
     select: reviewSelect,
   });
+}
+
+async function getOwnReviewOrThrow(userId: string, reviewId: string) {
+  const review = await prisma.review.findUnique({ where: { id: reviewId } });
+  if (!review || review.userId !== userId) {
+    throw new HttpError(404, "Review not found");
+  }
+  return review;
+}
+
+export async function updateReview(userId: string, reviewId: string, input: UpdateReviewInput) {
+  await getOwnReviewOrThrow(userId, reviewId);
+  return prisma.review.update({
+    where: { id: reviewId },
+    data: { rating: input.rating, text: input.text },
+    select: reviewSelect,
+  });
+}
+
+export async function deleteReview(userId: string, reviewId: string): Promise<void> {
+  await getOwnReviewOrThrow(userId, reviewId);
+  await prisma.review.delete({ where: { id: reviewId } });
 }
 
 export async function replyToReview(

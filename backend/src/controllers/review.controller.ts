@@ -2,7 +2,11 @@ import type { NextFunction, Request, Response } from "express";
 
 import { HttpError } from "../lib/httpError";
 import * as reviewService from "../services/review.service";
-import type { CreateReviewInput, ReplyToReviewInput } from "../schemas/review.schemas";
+import type {
+  CreateReviewInput,
+  ReplyToReviewInput,
+  UpdateReviewInput,
+} from "../schemas/review.schemas";
 
 function requireUser(req: { user?: Request["user"] }): NonNullable<Request["user"]> {
   if (!req.user) {
@@ -28,6 +32,28 @@ export async function create(
   try {
     const review = await reviewService.createReview(requireUser(req).id, req.params.id, req.body);
     res.status(201).json({ review });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function update(
+  req: Request<{ id: string }, unknown, UpdateReviewInput>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const review = await reviewService.updateReview(requireUser(req).id, req.params.id, req.body);
+    res.json({ review });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await reviewService.deleteReview(requireUser(req).id, req.params.id);
+    res.status(204).send();
   } catch (err) {
     next(err);
   }
