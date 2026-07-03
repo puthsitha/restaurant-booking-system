@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import { UserIcon } from "@/components/ui/icons";
 
 interface AvatarProps {
@@ -37,12 +41,20 @@ export function Avatar({
   size = "md",
   className,
 }: AvatarProps) {
-  if (imageUrl) {
+  // Google's googleusercontent.com avatar URLs reject cross-site requests
+  // that carry a Referer header, and any photo URL can otherwise 404/expire
+  // — track a load failure so we fall back to the initials tile instead of
+  // showing the browser's broken-image icon forever.
+  const [failed, setFailed] = useState(false);
+
+  if (imageUrl && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={imageUrl}
         alt={name ?? ""}
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
         className={`${SIZE_CLASS[size]} rounded-full object-cover ${className ?? ""}`}
       />
     );
@@ -56,7 +68,7 @@ export function Avatar({
       className={`flex shrink-0 items-center justify-center rounded-full font-bold text-white ${SIZE_CLASS[size]} ${className ?? ""}`}
       style={{ background: "linear-gradient(135deg, #C2410C, #1F6F54)" }}
     >
-      {label != "+" ? label : <UserIcon className={ICON_SIZE_CLASS[size]} />}
+      {label ? label : <UserIcon className={ICON_SIZE_CLASS[size]} />}
     </div>
   );
 }
