@@ -12,7 +12,11 @@ import { SearchOffIcon } from "@/components/ui/icons";
 import { RestaurantGridSkeleton } from "@/components/ui/skeletons";
 import { staggerContainer, fadeUp } from "@/lib/motion";
 import { listRestaurants, listTags } from "@/lib/restaurants/api";
-import type { ListRestaurantsResponse, PriceRange, Tag } from "@/lib/restaurants/types";
+import type {
+  ListRestaurantsResponse,
+  PriceRange,
+  Tag,
+} from "@/lib/restaurants/types";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 const PRICE_OPTIONS: { value: PriceRange | ""; label: string }[] = [
@@ -35,7 +39,9 @@ function SearchPageContent() {
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [city, setCity] = useState(searchParams.get("city") ?? "");
-  const [cuisineType, setCuisineType] = useState(searchParams.get("cuisineType") ?? "");
+  const [cuisineType, setCuisineType] = useState(
+    searchParams.get("cuisineType") ?? "",
+  );
   const [tag, setTag] = useState(searchParams.get("tag") ?? "");
   const [priceRange, setPriceRange] = useState<PriceRange | "">(
     (searchParams.get("priceRange") as PriceRange | null) ?? "",
@@ -80,7 +86,14 @@ function SearchPageContent() {
       .then(setResult)
       .catch(() => setError("Couldn't load restaurants. Try again."))
       .finally(() => setIsLoading(false));
-  }, [debouncedSearch, debouncedCity, debouncedCuisineType, tag, priceRange, page]);
+  }, [
+    debouncedSearch,
+    debouncedCity,
+    debouncedCuisineType,
+    tag,
+    priceRange,
+    page,
+  ]);
 
   useEffect(() => {
     runSearch();
@@ -100,11 +113,15 @@ function SearchPageContent() {
     setPage(1);
   }
 
-  const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
+  const totalPages = result
+    ? Math.max(1, Math.ceil(result.total / result.pageSize))
+    : 1;
 
   return (
     <main className="mx-auto max-w-[1280px] px-8 py-12">
-      <h1 className="disp text-2xl font-extrabold text-ink">Search restaurants</h1>
+      <h1 className="disp text-2xl font-extrabold text-ink">
+        Search restaurants
+      </h1>
 
       <div className="mt-6 flex flex-col gap-8 lg:flex-row">
         <form
@@ -112,7 +129,9 @@ function SearchPageContent() {
           className="sticky top-20 h-fit w-full shrink-0 space-y-4 rounded-2xl border border-border bg-surface p-5 lg:w-64"
         >
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-label">Restaurant name</label>
+            <label className="mb-1.5 block text-xs font-bold text-label">
+              Restaurant name
+            </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -121,7 +140,9 @@ function SearchPageContent() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-label">City</label>
+            <label className="mb-1.5 block text-xs font-bold text-label">
+              City
+            </label>
             <input
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -130,7 +151,9 @@ function SearchPageContent() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-label">Cuisine</label>
+            <label className="mb-1.5 block text-xs font-bold text-label">
+              Cuisine
+            </label>
             <input
               value={cuisineType}
               onChange={(e) => setCuisineType(e.target.value)}
@@ -139,7 +162,9 @@ function SearchPageContent() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-label">Tag</label>
+            <label className="mb-1.5 block text-xs font-bold text-label">
+              Tag
+            </label>
             <select
               value={tag}
               onChange={(e) => {
@@ -157,7 +182,9 @@ function SearchPageContent() {
             </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-label">Price</label>
+            <label className="mb-1.5 block text-xs font-bold text-label">
+              Price
+            </label>
             <div className="flex gap-1.5">
               {PRICE_OPTIONS.map((opt) => (
                 <button
@@ -197,12 +224,14 @@ function SearchPageContent() {
 
         <div className="min-w-0 flex-1">
           {isLoading ? (
-            <RestaurantGridSkeleton count={6} />
+            <RestaurantGridSkeleton count={3} />
           ) : error ? (
             <ErrorState message={error} onRetry={runSearch} />
           ) : result && result.items.length > 0 ? (
             <>
-              <p className="text-sm text-muted">{result.total} restaurants found</p>
+              <p className="text-sm text-muted">
+                {result.total} restaurants found
+              </p>
               <motion.div
                 className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
                 variants={staggerContainer}
