@@ -16,6 +16,13 @@ interface ApiFetchOptions {
   token?: string | null;
 }
 
+// Fired whenever an authenticated request (one sent with a token) comes back
+// 401 — most notably when an admin suspends the account mid-session. Each
+// auth context listens for this to force a client-side logout and surface
+// the server's reason, rather than leaving the stale session usable until
+// its next explicit request fails silently in some page-local try/catch.
+export const SESSION_ENDED_EVENT = "tablesite:session-ended";
+
 function extractErrorMessage(data: unknown, status: number): string {
   if (
     data &&
@@ -48,7 +55,11 @@ export async function apiFetch<T>(
   const data: unknown = await res.json().catch(() => null);
 
   if (!res.ok) {
-    throw new ApiError(res.status, extractErrorMessage(data, res.status));
+    const message = extractErrorMessage(data, res.status);
+    if (res.status === 401 && options.token && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent<string>(SESSION_ENDED_EVENT, { detail: message }));
+    }
+    throw new ApiError(res.status, message);
   }
 
   return data as T;

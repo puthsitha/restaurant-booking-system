@@ -19,6 +19,7 @@ const userListSelect = {
   phone: true,
   avatarUrl: true,
   status: true,
+  statusReason: true,
   restaurantLimit: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
@@ -77,7 +78,7 @@ export async function updateUserStatus(userId: string, input: UpdateUserStatusIn
 
   return prisma.user.update({
     where: { id: userId },
-    data: { status: input.status },
+    data: { status: input.status, statusReason: input.reason },
     select: userListSelect,
   });
 }

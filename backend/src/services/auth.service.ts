@@ -33,8 +33,14 @@ export interface AuthResult {
 
 function assertActive(user: User): void {
   if (user.status === "SUSPENDED") {
-    throw new HttpError(403, "This account has been suspended");
+    throw new HttpError(403, suspensionMessage(user.statusReason));
   }
+}
+
+export function suspensionMessage(reason: string | null): string {
+  return reason
+    ? `This account has been suspended: ${reason}`
+    : "This account has been suspended";
 }
 
 export async function signup(input: SignupInput): Promise<AuthResult> {

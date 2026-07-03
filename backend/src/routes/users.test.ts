@@ -8,6 +8,10 @@ import { prisma } from "../lib/prisma";
 vi.mock("../lib/prisma", () => {
   const user = {
     findUnique: vi.fn(),
+    // Used by the `authenticate` middleware to check the token subject is
+    // still active; defaults to "found and active" so existing tests don't
+    // need to stub it, and is overridden per-test to simulate suspension.
+    findFirst: vi.fn().mockResolvedValue({ status: "ACTIVE", statusReason: null }),
     findMany: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
@@ -129,13 +133,23 @@ describe("POST /api/users", () => {
 });
 
 describe("PATCH /api/users/:id/status", () => {
+  it("rejects a status change with no reason", async () => {
+    const res = await request(app)
+      .patch("/api/users/user_1/status")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "SUSPENDED" });
+
+    expect(res.status).toBe(400);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
   it("returns 404 for a user that doesn't exist", async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
 
     const res = await request(app)
       .patch("/api/users/user_1/status")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "SUSPENDED" });
+      .send({ status: "SUSPENDED", reason: "Repeated no-shows" });
 
     expect(res.status).toBe(404);
   });
@@ -149,13 +163,13 @@ describe("PATCH /api/users/:id/status", () => {
     const res = await request(app)
       .patch("/api/users/user_admin_2/status")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "SUSPENDED" });
+      .send({ status: "SUSPENDED", reason: "Repeated no-shows" });
 
     expect(res.status).toBe(404);
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
-  it("suspends a diner account", async () => {
+  it("suspends a diner account and records the reason", async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
       id: "user_diner_1",
       role: "DINER",
@@ -163,18 +177,24 @@ describe("PATCH /api/users/:id/status", () => {
     vi.mocked(prisma.user.update).mockResolvedValueOnce({
       id: "user_diner_1",
       status: "SUSPENDED",
+      statusReason: "Repeated no-shows",
     });
 
     const res = await request(app)
       .patch("/api/users/user_diner_1/status")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "SUSPENDED" });
+      .send({ status: "SUSPENDED", reason: "Repeated no-shows" });
 
     expect(res.status).toBe(200);
     expect(res.body.user.status).toBe("SUSPENDED");
+    expect(res.body.user.statusReason).toBe("Repeated no-shows");
+    expect(vi.mocked(prisma.user.update).mock.calls[0]?.[0]?.data).toEqual({
+      status: "SUSPENDED",
+      statusReason: "Repeated no-shows",
+    });
   });
 
-  it("reactivates a suspended owner account", async () => {
+  it("reactivates a suspended owner account and records the reason", async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
       id: "user_owner_9",
       role: "OWNER",
@@ -182,14 +202,16 @@ describe("PATCH /api/users/:id/status", () => {
     vi.mocked(prisma.user.update).mockResolvedValueOnce({
       id: "user_owner_9",
       status: "ACTIVE",
+      statusReason: "Dispute resolved",
     });
 
     const res = await request(app)
       .patch("/api/users/user_owner_9/status")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "ACTIVE" });
+      .send({ status: "ACTIVE", reason: "Dispute resolved" });
 
     expect(res.status).toBe(200);
     expect(res.body.user.status).toBe("ACTIVE");
+    expect(res.body.user.statusReason).toBe("Dispute resolved");
   });
 });

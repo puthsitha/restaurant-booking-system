@@ -86,9 +86,10 @@ usersRouter.post(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [status]
+ *             required: [status, reason]
  *             properties:
  *               status: { type: string, enum: [ACTIVE, SUSPENDED] }
+ *               reason: { type: string, description: "Shown to the affected user." }
  *     responses:
  *       200: { description: Updated }
  *       404: { description: Not found }

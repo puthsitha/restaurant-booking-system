@@ -9,6 +9,10 @@ vi.mock("../lib/prisma", () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),
+      // Used by the `authenticate` middleware to check the token subject is
+      // still active; defaults to "found and active" so existing tests don't
+      // need to stub it, and is overridden per-test to simulate suspension.
+      findFirst: vi.fn().mockResolvedValue({ status: "ACTIVE", statusReason: null }),
       create: vi.fn(),
       update: vi.fn(),
     },
@@ -407,5 +411,21 @@ describe("GET /api/auth/me", () => {
       .set("Authorization", `Bearer ${token}`);
 
     expect(res.status).toBe(404);
+  });
+
+  it("rejects a still-valid token once the account has been suspended", async () => {
+    const token = jwt.sign({ sub: baseUser.id, role: baseUser.role }, "test-secret");
+    vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
+      status: "SUSPENDED",
+      statusReason: "Repeated no-shows",
+    });
+
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toContain("Repeated no-shows");
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 });

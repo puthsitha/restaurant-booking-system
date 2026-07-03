@@ -33,7 +33,12 @@ export function createOwner(
 export function updateUserStatus(
   id: string,
   status: UserAccountStatus,
+  reason: string,
   token: string,
 ): Promise<{ user: ManagedUser }> {
-  return apiFetch(`/api/users/${id}/status`, { method: "PATCH", body: { status }, token });
+  return apiFetch(`/api/users/${id}/status`, {
+    method: "PATCH",
+    body: { status, reason },
+    token,
+  });
 }

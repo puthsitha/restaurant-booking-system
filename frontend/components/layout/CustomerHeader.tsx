@@ -6,11 +6,24 @@ import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useAuthModal } from "@/lib/auth/authModal";
 
 export function CustomerHeader() {
-  const { user, status, logout } = useCustomerAuth();
+  const { user, status, logout, sessionMessage, clearSessionMessage } = useCustomerAuth();
   const { open } = useAuthModal();
 
   return (
     <header className="border-b border-border bg-surface">
+      {sessionMessage && (
+        <div className="flex items-center justify-between gap-3 bg-red-50 px-8 py-2.5 text-sm text-red-700">
+          <span>{sessionMessage}</span>
+          <button
+            type="button"
+            onClick={clearSessionMessage}
+            aria-label="Dismiss"
+            className="font-bold text-red-700"
+          >
+            ×
+          </button>
+        </div>
+      )}
       <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8 py-4">
         <Link href="/" className="disp text-lg font-extrabold text-ink">
           Table<span className="text-accent">Site</span>

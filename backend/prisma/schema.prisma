@@ -99,6 +99,7 @@ model User {
   googleId        String?    @unique // set when the account signed up/linked via Google OAuth
   avatarUrl       String?
   status          UserStatus @default(ACTIVE)
+  statusReason    String? // admin-supplied reason for the current status (suspend or reactivate)
   preferredLocale String     @default("km") // "km" | "en"
 
   // Owner-specific: how many restaurants this owner may create.

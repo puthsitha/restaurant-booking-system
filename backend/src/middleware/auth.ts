@@ -3,6 +3,8 @@ import type { Role } from "@prisma/client";
 
 import { HttpError } from "../lib/httpError";
 import { verifyAuthToken } from "../lib/jwt";
+import { prisma } from "../lib/prisma";
+import { suspensionMessage } from "../services/auth.service";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -15,34 +17,55 @@ declare global {
 
 const BEARER_PREFIX = "Bearer ";
 
+// Rejects the token's subject if the account was suspended (or deleted)
+// since the token was issued — a JWT is otherwise self-contained and would
+// keep authenticating a suspended user until it naturally expires.
+async function assertUserActive(userId: string): Promise<void> {
+  const user = await prisma.user.findFirst({
+    where: { id: userId },
+    select: { status: true, statusReason: true },
+  });
+  if (!user) {
+    throw new HttpError(401, "Invalid or expired token");
+  }
+  if (user.status === "SUSPENDED") {
+    throw new HttpError(401, suspensionMessage(user.statusReason));
+  }
+}
+
 // Verifies the Authorization header and attaches the authenticated user's id
 // and role to the request. Routes that need a signed-in user place this
 // before their handler.
-export function authenticate(
+export async function authenticate(
   req: Request,
   _res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const header = req.headers.authorization;
   if (!header?.startsWith(BEARER_PREFIX)) {
     next(new HttpError(401, "Missing bearer token"));
     return;
   }
 
-  const payload = verifyAuthToken(header.slice(BEARER_PREFIX.length));
-  req.user = { id: payload.sub, role: payload.role };
-  next();
+  try {
+    const payload = verifyAuthToken(header.slice(BEARER_PREFIX.length));
+    await assertUserActive(payload.sub);
+    req.user = { id: payload.sub, role: payload.role };
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 // Like authenticate, but a missing/invalid token is not an error — it just
 // leaves req.user unset. Used by endpoints that behave differently for
 // signed-in vs. anonymous callers (e.g. a restaurant detail page that's
 // public when ACTIVE but visible to its owner/an admin regardless of status).
-export function optionalAuthenticate(
+export async function optionalAuthenticate(
   req: Request,
   _res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const header = req.headers.authorization;
   if (!header?.startsWith(BEARER_PREFIX)) {
     next();
@@ -51,10 +74,11 @@ export function optionalAuthenticate(
 
   try {
     const payload = verifyAuthToken(header.slice(BEARER_PREFIX.length));
+    await assertUserActive(payload.sub);
     req.user = { id: payload.sub, role: payload.role };
   } catch {
-    // Ignore an invalid/expired token here; the route treats this request
-    // as anonymous rather than failing it.
+    // Ignore an invalid/expired/suspended token here; the route treats this
+    // request as anonymous rather than failing it.
   }
   next();
 }
