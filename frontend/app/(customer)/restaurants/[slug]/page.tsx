@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { ReviewsSection } from "@/components/restaurants/ReviewsSection";
 import { SaveRestaurantButton } from "@/components/restaurants/SaveRestaurantButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ApiError } from "@/lib/api";
@@ -184,6 +185,8 @@ export default async function RestaurantDetailPage({
               </div>
             </section>
           )}
+
+          <ReviewsSection restaurantId={restaurant.id} />
         </FadeIn>
 
         <div className="lg:sticky lg:top-24 lg:self-start">
