@@ -16,6 +16,7 @@ import {
   UsersIcon,
 } from "@/components/ui/icons";
 import { AdminAuthProvider, useAdminAuth } from "@/lib/auth/adminAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { listAllRestaurantRequests } from "@/lib/requests/api";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
 
@@ -45,6 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, token, status, logout } = useAdminAuth();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
   const isPublicPath = PUBLIC_PATHS.includes(pathname);
@@ -101,30 +103,30 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     ? {
         count: pending.restaurantCount + pending.requestCount,
         items: [...pending.restaurantItems, ...pending.requestItems].slice(0, 5),
-        emptyLabel: "Nothing awaiting review.",
+        emptyLabel: t("admin.nothingAwaitingReview"),
         viewAllHref: "/admin/restaurants",
-        viewAllLabel: "View all restaurants",
+        viewAllLabel: t("admin.viewAllRestaurants"),
       }
     : undefined;
 
   const navItems = [
-    { href: "/admin", label: "Dashboard", icon: DashboardIcon },
+    { href: "/admin", label: t("admin.navDashboard"), icon: DashboardIcon },
     {
       href: "/admin/restaurants",
-      label: "Restaurants",
+      label: t("admin.navRestaurants"),
       icon: ChefHatIcon,
       badge: pending?.restaurantCount,
     },
-    { href: "/admin/bookings", label: "Bookings", icon: CalendarIcon },
-    { href: "/admin/users", label: "Users", icon: UsersIcon },
+    { href: "/admin/bookings", label: t("admin.navBookings"), icon: CalendarIcon },
+    { href: "/admin/users", label: t("admin.navUsers"), icon: UsersIcon },
     {
       href: "/admin/requests",
-      label: "Requests",
+      label: t("admin.navRequests"),
       icon: InboxIcon,
       badge: pending?.requestCount,
     },
-    { href: "/admin/tags", label: "Tags", icon: TagIcon },
-    { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
+    { href: "/admin/tags", label: t("admin.navTags"), icon: TagIcon },
+    { href: "/admin/settings", label: t("admin.navSettings"), icon: SettingsIcon },
   ];
 
   if (isPublicPath) {
@@ -134,7 +136,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   if (status !== "authenticated" || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
-        Checking your session…
+        {t("common.checkingSession")}
       </div>
     );
   }
@@ -142,7 +144,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="admin-shell">
       <DashboardShell
-        brand="Admin"
+        brand={t("admin.brand")}
         variant="admin"
         navItems={navItems}
         userName={user.name}

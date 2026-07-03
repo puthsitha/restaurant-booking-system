@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { BellIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 export interface NotificationItem {
   id: string;
@@ -35,6 +36,7 @@ export function NotificationBell({
   viewAllLabel,
   accent,
 }: NotificationBellProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +56,7 @@ export function NotificationBell({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Notifications"
+        aria-label={t("notifications.open")}
         className="relative flex h-9 w-9 items-center justify-center rounded-lg text-sidebarText transition hover:bg-white/5"
       >
         <BellIcon className="h-5 w-5" />
@@ -78,7 +80,7 @@ export function NotificationBell({
             className="absolute left-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-border bg-surface shadow-lg"
           >
             <div className="border-b border-border px-4 py-3">
-              <p className="text-sm font-bold text-ink">Pending approval</p>
+              <p className="text-sm font-bold text-ink">{t("notifications.pendingApproval")}</p>
             </div>
             {items.length === 0 ? (
               <p className="px-4 py-6 text-center text-xs text-muted">{emptyLabel}</p>

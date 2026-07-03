@@ -7,6 +7,7 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import type { DashboardNotifications } from "@/components/dashboard/DashboardShell";
 import { CalendarIcon, ChefHatIcon, DashboardIcon, InboxIcon } from "@/components/ui/icons";
 import { OwnerAuthProvider, useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { listOwnerReservations } from "@/lib/reservations/api";
 
 // Login lives inside this tree for shared styling but must not be gated by
@@ -28,6 +29,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
 function OwnerShell({ children }: { children: React.ReactNode }) {
   const { user, token, status, logout } = useOwnerAuth();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
   const isPublicPath = PUBLIC_PATHS.includes(pathname);
@@ -57,9 +59,9 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
               subtitle: `${r.restaurant.name} · ${r.date.slice(0, 10)} at ${r.time}`,
               href: "/owner/bookings",
             })),
-            emptyLabel: "No pending bookings.",
+            emptyLabel: t("owner.noPendingBookings"),
             viewAllHref: "/owner/bookings",
-            viewAllLabel: "View all bookings",
+            viewAllLabel: t("owner.viewAllBookings"),
           });
         })
         .catch(() => undefined);
@@ -71,18 +73,18 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [token]);
+  }, [token, t]);
 
   const navItems = [
-    { href: "/owner", label: "Dashboard", icon: DashboardIcon },
-    { href: "/owner/restaurants", label: "Restaurants", icon: ChefHatIcon },
+    { href: "/owner", label: t("owner.navDashboard"), icon: DashboardIcon },
+    { href: "/owner/restaurants", label: t("owner.navRestaurants"), icon: ChefHatIcon },
     {
       href: "/owner/bookings",
-      label: "Bookings",
+      label: t("owner.navBookings"),
       icon: CalendarIcon,
       badge: pending?.count,
     },
-    { href: "/owner/requests", label: "Requests", icon: InboxIcon },
+    { href: "/owner/requests", label: t("owner.navRequests"), icon: InboxIcon },
   ];
 
   if (isPublicPath) {
@@ -92,7 +94,7 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
   if (status !== "authenticated" || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
-        Checking your session…
+        {t("common.checkingSession")}
       </div>
     );
   }
@@ -100,7 +102,7 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="owner-shell">
       <DashboardShell
-        brand="Owner"
+        brand={t("owner.brand")}
         variant="owner"
         navItems={navItems}
         userName={user.name}

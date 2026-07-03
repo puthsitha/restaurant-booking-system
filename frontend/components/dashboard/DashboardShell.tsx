@@ -10,8 +10,11 @@ import { MenuIcon } from "@/components/ui/icons";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmLogoutModal } from "@/components/ui/ConfirmLogoutModal";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import type { NotificationItem } from "@/components/dashboard/NotificationBell";
+import { useLanguage } from "@/lib/i18n/context";
 
 export interface DashboardNavItem {
   href: string;
@@ -65,6 +68,7 @@ export function DashboardShell({
   notifications
 }: DashboardShellProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
   const style = VARIANT_STYLE[variant];
 
@@ -97,7 +101,7 @@ export function DashboardShell({
             exit={{ opacity: 0 }}
           >
             <div
-              className="absolute inset-0 bg-ink/40"
+              className="absolute inset-0 bg-scrim/40"
               onClick={() => setMobileOpen(false)}
               aria-hidden="true"
             />
@@ -129,15 +133,17 @@ export function DashboardShell({
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
+            aria-label={t("common.openMenu")}
             className="rounded-lg p-2 text-ink hover:bg-bg"
           >
             <MenuIcon className="h-5 w-5" />
           </button>
-          <span className="disp text-base font-extrabold text-ink">
+          <span className="disp flex-1 text-base font-extrabold text-ink">
             Table<span style={{ color: style.accent }}>Site</span>{" "}
             <span className="text-muted">{brand}</span>
           </span>
+          <LanguageToggle />
+          <ThemeToggle />
         </header>
         <main className="flex-1">{children}</main>
       </div>
@@ -168,6 +174,7 @@ function SidebarContent({
   notifications,
   onNavigate
 }: SidebarContentProps) {
+  const { t } = useLanguage();
   const [confirmingLogout, setConfirmingLogout] = useState(false);
 
   return (
@@ -185,16 +192,20 @@ function SidebarContent({
             {brand} panel
           </p>
         </div>
-        {notifications && (
-          <NotificationBell
-            count={notifications.count}
-            items={notifications.items}
-            emptyLabel={notifications.emptyLabel}
-            viewAllHref={notifications.viewAllHref}
-            viewAllLabel={notifications.viewAllLabel}
-            accent={style.accent}
-          />
-        )}
+        <div className="flex items-center gap-1">
+          <LanguageToggle variant="dark" />
+          <ThemeToggle variant="dark" />
+          {notifications && (
+            <NotificationBell
+              count={notifications.count}
+              items={notifications.items}
+              emptyLabel={notifications.emptyLabel}
+              viewAllHref={notifications.viewAllHref}
+              viewAllLabel={notifications.viewAllLabel}
+              accent={style.accent}
+            />
+          )}
+        </div>
       </div>
       <nav className="flex-1 space-y-1 px-3">
         {navItems.map((item) => {
@@ -231,7 +242,7 @@ function SidebarContent({
           onClick={() => setConfirmingLogout(true)}
           className="mt-3 w-full rounded-lg border border-sidebarBorder px-3 py-2 text-sm font-semibold text-sidebarText transition hover:bg-white/5"
         >
-          Log out
+          {t("common.logOut")}
         </button>
       </div>
 
