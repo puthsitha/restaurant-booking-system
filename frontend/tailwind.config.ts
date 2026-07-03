@@ -11,27 +11,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // These mirror frontend/app/globals.css's CSS custom properties
-        // rather than hardcoding hex, so utilities like `bg-bg`/`text-ink`
-        // automatically follow the light/dark theme toggle.
-        accent: "var(--accent)",
-        secondary: "var(--secondary)",
-        bg: "var(--bg)",
-        surface: "var(--surface)",
-        border: "var(--border)",
-        ink: "var(--ink)",
-        muted: "var(--muted)",
-        label: "var(--label)",
-        dashboardBg: "var(--dashboard-bg)",
-        dashboardBorder: "var(--dashboard-border)",
-        ownerSidebar: "var(--owner-sidebar)",
-        adminSidebar: "var(--admin-sidebar)",
-        sidebarText: "var(--sidebar-text)",
-        sidebarMuted: "var(--sidebar-muted)",
-        sidebarBorder: "var(--sidebar-border)",
-        adminAccent: "var(--admin-accent)",
-        // Fixed dark tint for scrims/overlays — see --scrim in globals.css.
-        scrim: "var(--scrim)",
+        accent: "#C2410C",
+        secondary: "#1F6F54",
+        bg: "#FBF7F2",
+        surface: "#FFFFFF",
+        border: "#ECE1D5",
+        ink: "#241D19",
+        muted: "#9A8E82",
+        label: "#5C5048",
+        dashboardBg: "#F4F1ED",
+        dashboardBorder: "#E7E0D8",
+        ownerSidebar: "#1C1714",
+        adminSidebar: "#15110F",
+        sidebarText: "#B7ABA0",
+        sidebarMuted: "#6B5F55",
+        sidebarBorder: "#2D2520",
+        adminAccent: "#6D28D9",
         status: {
           pending: { text: "#B45309", bg: "#FEF3C7" },
           confirmed: { text: "#1F6F54", bg: "#DCFCE7" },

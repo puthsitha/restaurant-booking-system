@@ -11,7 +11,6 @@ import { MenuIcon } from "@/components/ui/icons";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmLogoutModal } from "@/components/ui/ConfirmLogoutModal";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import type { NotificationItem } from "@/components/dashboard/NotificationBell";
 import { useLanguage } from "@/lib/i18n/context";
@@ -101,7 +100,7 @@ export function DashboardShell({
             exit={{ opacity: 0 }}
           >
             <div
-              className="absolute inset-0 bg-scrim/40"
+              className="absolute inset-0 bg-ink/40"
               onClick={() => setMobileOpen(false)}
               aria-hidden="true"
             />
@@ -143,7 +142,6 @@ export function DashboardShell({
             <span className="text-muted">{brand}</span>
           </span>
           <LanguageToggle />
-          <ThemeToggle />
         </header>
         <main className="flex-1">{children}</main>
       </div>
@@ -194,7 +192,6 @@ function SidebarContent({
         </div>
         <div className="flex items-center gap-1">
           <LanguageToggle variant="dark" />
-          <ThemeToggle variant="dark" />
           {notifications && (
             <NotificationBell
               count={notifications.count}

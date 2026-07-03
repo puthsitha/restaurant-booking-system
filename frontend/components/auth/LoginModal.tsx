@@ -95,7 +95,7 @@ export function LoginModal() {
       {isOpen && (
         <motion.div
           onClick={handleClose}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim/55 p-6 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/55 p-6 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

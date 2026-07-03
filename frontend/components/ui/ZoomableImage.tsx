@@ -28,7 +28,7 @@ export function ZoomableImage({ src, alt, className }: ZoomableImageProps) {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} className={className} />
-        <span className="absolute inset-0 flex items-center justify-center bg-scrim/0 opacity-0 transition group-hover:bg-scrim/20 group-hover:opacity-100">
+        <span className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition group-hover:bg-ink/20 group-hover:opacity-100">
           <ZoomInIcon className="h-6 w-6 text-white drop-shadow" />
         </span>
       </button>

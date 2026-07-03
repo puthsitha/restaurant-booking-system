@@ -11,10 +11,6 @@ const en = {
     cancel: "Cancel",
     checkingSession: "Checking your session…",
     language: "Language",
-    theme: "Theme",
-    themeLight: "Light",
-    themeDark: "Dark",
-    themeSystem: "System",
     openMenu: "Open menu"
   },
   customerHeader: {
@@ -81,10 +77,6 @@ const km = {
     cancel: "បោះបង់",
     checkingSession: "កំពុងពិនិត្យសម័យរបស់អ្នក…",
     language: "ភាសា",
-    theme: "រូបរាង",
-    themeLight: "ភ្លឺ",
-    themeDark: "ងងឹត",
-    themeSystem: "តាមប្រព័ន្ធ",
     openMenu: "បើកម៉ឺនុយ"
   },
   customerHeader: {
