@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { CalendarIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
+import { QrCode } from "@/components/ui/QrCode";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -127,28 +128,38 @@ export default function MyBookingsPage() {
             <motion.div
               key={r.id}
               variants={fadeUp}
-              className="rounded-2xl border border-border bg-surface p-5"
+              className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-surface p-5"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-bold text-ink">{r.restaurant.name}</p>
-                  <p className="mt-1 text-sm text-muted">
-                    {r.date.slice(0, 10)} at {r.time} · {r.partySize} guests
-                  </p>
-                  <p className="mt-1 text-xs text-muted">Confirmation {r.confirmationCode}</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-bold text-ink">{r.restaurant.name}</p>
+                    <p className="mt-1 text-sm text-muted">
+                      {r.date.slice(0, 10)} at {r.time} · {r.partySize} guests
+                    </p>
+                    <p className="mt-1 text-xs text-muted">Confirmation {r.confirmationCode}</p>
+                  </div>
+                  <StatusBadge tone={STATUS_TONE[r.status]} className="shrink-0">
+                    {r.status}
+                  </StatusBadge>
                 </div>
-                <StatusBadge tone={STATUS_TONE[r.status]} className="shrink-0">
-                  {r.status}
-                </StatusBadge>
+                {CANCELLABLE.includes(r.status) && (
+                  <button
+                    type="button"
+                    onClick={() => setToCancel(r)}
+                    className="mt-3 rounded-lg border border-border px-4 py-2 text-xs font-bold text-ink transition hover:bg-bg"
+                  >
+                    Cancel booking
+                  </button>
+                )}
               </div>
-              {CANCELLABLE.includes(r.status) && (
-                <button
-                  type="button"
-                  onClick={() => setToCancel(r)}
-                  className="mt-3 rounded-lg border border-border px-4 py-2 text-xs font-bold text-ink transition hover:bg-bg"
-                >
-                  Cancel booking
-                </button>
+              {tab === "upcoming" && !PAST_STATUSES.includes(r.status) && (
+                <div className="flex shrink-0 flex-col items-center gap-1 border-l border-dashed border-border pl-4">
+                  <QrCode value={r.confirmationCode} size={72} />
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-muted">
+                    Check-in
+                  </span>
+                </div>
               )}
             </motion.div>
           ))}
