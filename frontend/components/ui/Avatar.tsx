@@ -10,13 +10,13 @@ interface AvatarProps {
 const SIZE_CLASS: Record<NonNullable<AvatarProps["size"]>, string> = {
   sm: "h-8 w-8 text-xs",
   md: "h-10 w-10 text-sm",
-  lg: "h-16 w-16 text-lg"
+  lg: "h-16 w-16 text-lg",
 };
 
 const ICON_SIZE_CLASS: Record<NonNullable<AvatarProps["size"]>, string> = {
   sm: "h-4 w-4",
   md: "h-5 w-5",
-  lg: "h-8 w-8"
+  lg: "h-8 w-8",
 };
 
 function initials(name: string): string {
@@ -31,7 +31,12 @@ function initials(name: string): string {
 // when they have a name, or a generic person icon when they don't (e.g. a
 // guest account with no name set yet) — matches the accent→secondary
 // gradient used throughout design/TableSite.reference.html for user identity.
-export function Avatar({ name, imageUrl, size = "md", className }: AvatarProps) {
+export function Avatar({
+  name,
+  imageUrl,
+  size = "md",
+  className,
+}: AvatarProps) {
   if (imageUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -51,7 +56,7 @@ export function Avatar({ name, imageUrl, size = "md", className }: AvatarProps) 
       className={`flex shrink-0 items-center justify-center rounded-full font-bold text-white ${SIZE_CLASS[size]} ${className ?? ""}`}
       style={{ background: "linear-gradient(135deg, #C2410C, #1F6F54)" }}
     >
-      {label ? label : <UserIcon className={ICON_SIZE_CLASS[size]} />}
+      {label != "+" ? label : <UserIcon className={ICON_SIZE_CLASS[size]} />}
     </div>
   );
 }
