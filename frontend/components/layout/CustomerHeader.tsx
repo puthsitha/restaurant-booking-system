@@ -1,19 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { SessionEndedModal } from "@/components/auth/SessionEndedModal";
 import { Avatar } from "@/components/ui/Avatar";
+import { ConfirmLogoutModal } from "@/components/ui/ConfirmLogoutModal";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useAuthModal } from "@/lib/auth/authModal";
 
 export function CustomerHeader() {
   const { user, status, logout, sessionMessage, clearSessionMessage } = useCustomerAuth();
   const { open } = useAuthModal();
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur-md">
       <SessionEndedModal message={sessionMessage} onDismiss={clearSessionMessage} />
+      <ConfirmLogoutModal
+        open={confirmingLogout}
+        onClose={() => setConfirmingLogout(false)}
+        onConfirm={() => {
+          setConfirmingLogout(false);
+          logout();
+        }}
+      />
       <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8 py-4">
         <Link href="/" className="disp text-lg font-extrabold text-ink">
           Table<span className="text-accent">Site</span>
@@ -32,7 +43,7 @@ export function CustomerHeader() {
               <span className="hidden sm:inline">{user.name}</span>
             </Link>
             <button
-              onClick={logout}
+              onClick={() => setConfirmingLogout(true)}
               className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface"
             >
               Log out

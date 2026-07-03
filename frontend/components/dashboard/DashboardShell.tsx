@@ -9,6 +9,7 @@ import type { ComponentType, ReactNode } from "react";
 import { MenuIcon } from "@/components/ui/icons";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { ConfirmLogoutModal } from "@/components/ui/ConfirmLogoutModal";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import type { NotificationItem } from "@/components/dashboard/NotificationBell";
 
@@ -161,6 +162,8 @@ function SidebarContent({
   notifications,
   onNavigate
 }: SidebarContentProps) {
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
+
   return (
     <>
       <div className="flex items-center gap-2.5 px-6 py-6">
@@ -219,12 +222,21 @@ function SidebarContent({
         </div>
         <button
           type="button"
-          onClick={onLogout}
+          onClick={() => setConfirmingLogout(true)}
           className="mt-3 w-full rounded-lg border border-sidebarBorder px-3 py-2 text-sm font-semibold text-sidebarText transition hover:bg-white/5"
         >
           Log out
         </button>
       </div>
+
+      <ConfirmLogoutModal
+        open={confirmingLogout}
+        onClose={() => setConfirmingLogout(false)}
+        onConfirm={() => {
+          setConfirmingLogout(false);
+          onLogout();
+        }}
+      />
     </>
   );
 }

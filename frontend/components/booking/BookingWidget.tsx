@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
+import { DateField } from "@/components/ui/DateField";
 import { Modal } from "@/components/ui/Modal";
 import { QrCodeViewer } from "@/components/ui/QrCodeViewer";
 import { CalendarIcon, CheckIcon } from "@/components/ui/icons";
@@ -191,13 +192,11 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div>
           <label className="mb-1.5 block text-xs font-bold text-label">Date</label>
-          <input
-            type="date"
+          <DateField
             value={date}
             min={todayIso()}
             max={maxDate}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
           />
         </div>
         <div>

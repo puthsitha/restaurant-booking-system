@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { RatingStars } from "@/components/ui/RatingStars";
+import { StarRatingInput } from "@/components/ui/StarRatingInput";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
@@ -143,20 +144,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
       {showForm && (
         <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
           <label className="mb-1.5 block text-xs font-bold text-label">Your rating</label>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setRating(n)}
-                className="text-xl"
-                style={{ color: n <= rating ? "#E8B04B" : "#D8CCBF" }}
-                aria-label={`${n} star${n > 1 ? "s" : ""}`}
-              >
-                ★
-              </button>
-            ))}
-          </div>
+          <StarRatingInput value={rating} onChange={setRating} size="lg" />
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}

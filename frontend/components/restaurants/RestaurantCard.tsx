@@ -3,18 +3,12 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-import { HeartIcon } from "@/components/ui/icons";
-import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { FavoriteButton } from "@/components/restaurants/FavoriteButton";
 import type { RestaurantSummary } from "@/lib/restaurants/types";
-import { useSavedRestaurants } from "@/lib/savedRestaurants/context";
 
 const PRICE_LABEL: Record<string, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$" };
 
 export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }) {
-  const { status } = useCustomerAuth();
-  const { savedIds, toggle } = useSavedRestaurants();
-  const isSaved = savedIds.has(restaurant.id);
-
   return (
     <motion.div whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 400, damping: 26 }}>
       <Link
@@ -32,20 +26,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
           ) : (
             <div className="flex h-full items-center justify-center text-3xl">🍽️</div>
           )}
-          {status === "authenticated" && (
-            <button
-              type="button"
-              aria-label={isSaved ? "Remove from saved restaurants" : "Save restaurant"}
-              aria-pressed={isSaved}
-              onClick={(e) => {
-                e.preventDefault();
-                toggle(restaurant.id);
-              }}
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-accent backdrop-blur transition hover:bg-white"
-            >
-              <HeartIcon className="h-4 w-4" filled={isSaved} />
-            </button>
-          )}
+          <FavoriteButton restaurantId={restaurant.id} size="sm" className="absolute right-3 top-3" />
         </div>
         <div className="p-4">
           <div className="flex items-start justify-between gap-2">
