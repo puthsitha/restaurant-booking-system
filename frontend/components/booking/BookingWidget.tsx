@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
-import { QrCode } from "@/components/ui/QrCode";
+import { QrCodeViewer } from "@/components/ui/QrCodeViewer";
 import { CalendarIcon, CheckIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
@@ -381,7 +381,13 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               <span>${Number(payment.amount).toFixed(2)}</span>
             </div>
             <div className="rounded-b-xl border border-t-0 border-border p-5">
-              <QrCode value={payment.khqrPayload ?? payment.id} size={180} className="mx-auto" />
+              <QrCodeViewer
+                value={payment.khqrPayload ?? payment.id}
+                size={180}
+                className="mx-auto"
+                label="KHQR payment"
+                downloadName={`khqr-payment-${confirmed?.confirmationCode ?? payment.id}`}
+              />
               <p className="mt-3 text-sm text-ink">
                 Scan with any KHQR-enabled banking app to pay{" "}
                 <span className="font-bold">${Number(payment.amount).toFixed(2)}</span>
@@ -416,7 +422,13 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               <p className="mt-3 text-sm text-ink">
                 We&apos;ve sent this to your account. Show this check-in code when you arrive.
               </p>
-              <QrCode value={confirmed.confirmationCode} size={140} className="mx-auto mt-4" />
+              <QrCodeViewer
+                value={confirmed.confirmationCode}
+                size={140}
+                className="mx-auto mt-4"
+                label="Check-in code"
+                downloadName={`check-in-${confirmed.confirmationCode}`}
+              />
               <button
                 type="button"
                 onClick={closeConfirmation}

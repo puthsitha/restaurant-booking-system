@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { CalendarIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
-import { QrCode } from "@/components/ui/QrCode";
+import { QrCodeViewer } from "@/components/ui/QrCodeViewer";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -162,7 +162,12 @@ export default function MyBookingsPage() {
               </div>
               {tab === "upcoming" && !PAST_STATUSES.includes(r.status) && (
                 <div className="flex shrink-0 flex-col items-center gap-1 border-l border-dashed border-border pl-4">
-                  <QrCode value={r.confirmationCode} size={72} />
+                  <QrCodeViewer
+                    value={r.confirmationCode}
+                    size={72}
+                    label="Check-in code"
+                    downloadName={`check-in-${r.confirmationCode}`}
+                  />
                   <span className="text-[10px] font-bold uppercase tracking-wide text-muted">
                     Check-in
                   </span>
