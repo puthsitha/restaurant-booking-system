@@ -13,6 +13,7 @@ import { RestaurantGridSkeleton } from "@/components/ui/skeletons";
 import { staggerContainer, fadeUp } from "@/lib/motion";
 import { listRestaurants, listTags } from "@/lib/restaurants/api";
 import type { ListRestaurantsResponse, PriceRange, Tag } from "@/lib/restaurants/types";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 const PRICE_OPTIONS: { value: PriceRange | ""; label: string }[] = [
   { value: "", label: "Any" },
@@ -41,6 +42,12 @@ function SearchPageContent() {
   );
   const [page, setPage] = useState(Number(searchParams.get("page") ?? "1"));
 
+  // Debounce the free-text fields so typing doesn't fire a request per
+  // keystroke — city/cuisine/name filters run 350ms after the user pauses.
+  const debouncedSearch = useDebouncedValue(search, 350);
+  const debouncedCity = useDebouncedValue(city, 350);
+  const debouncedCuisineType = useDebouncedValue(cuisineType, 350);
+
   const [tags, setTags] = useState<Tag[]>([]);
   const [result, setResult] = useState<ListRestaurantsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,13 +59,19 @@ function SearchPageContent() {
       .catch(() => setTags([]));
   }, []);
 
+  // A new debounced text filter should restart pagination at page 1, same
+  // as the tag/price handlers already do.
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, debouncedCity, debouncedCuisineType]);
+
   const runSearch = useCallback(() => {
     setIsLoading(true);
     setError(null);
     listRestaurants({
-      search: search || undefined,
-      city: city || undefined,
-      cuisineType: cuisineType || undefined,
+      search: debouncedSearch || undefined,
+      city: debouncedCity || undefined,
+      cuisineType: debouncedCuisineType || undefined,
       tag: tag || undefined,
       priceRange: priceRange || undefined,
       page,
@@ -67,7 +80,7 @@ function SearchPageContent() {
       .then(setResult)
       .catch(() => setError("Couldn't load restaurants. Try again."))
       .finally(() => setIsLoading(false));
-  }, [search, city, cuisineType, tag, priceRange, page]);
+  }, [debouncedSearch, debouncedCity, debouncedCuisineType, tag, priceRange, page]);
 
   useEffect(() => {
     runSearch();
