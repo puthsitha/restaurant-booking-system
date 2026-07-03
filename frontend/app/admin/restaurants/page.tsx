@@ -11,6 +11,7 @@ import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
 import type { RestaurantStatus, RestaurantSummary } from "@/lib/restaurants/types";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 const STATUS_STYLE: Record<string, string> = {
   ACTIVE: "bg-secondary/10 text-secondary",
@@ -20,6 +21,7 @@ const STATUS_STYLE: Record<string, string> = {
 export default function AdminRestaurantsPage() {
   const { token } = useAdminAuth();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState<RestaurantStatus | "">("");
   const [restaurants, setRestaurants] = useState<RestaurantSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,14 +30,14 @@ export default function AdminRestaurantsPage() {
     if (!token) return;
     setError(null);
     listAllRestaurantsAdmin(
-      { search: search || undefined, status: status || undefined, pageSize: 50 },
+      { search: debouncedSearch || undefined, status: status || undefined, pageSize: 50 },
       token,
     )
       .then((res) => setRestaurants(res.items))
       .catch((err) => {
         setError(err instanceof ApiError ? err.message : "Couldn't load restaurants.");
       });
-  }, [token, search, status]);
+  }, [token, debouncedSearch, status]);
 
   useEffect(load, [load]);
 
