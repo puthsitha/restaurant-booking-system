@@ -9,6 +9,8 @@ import type { ComponentType, ReactNode } from "react";
 import { MenuIcon } from "@/components/ui/icons";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import type { NotificationItem } from "@/components/dashboard/NotificationBell";
 
 export interface DashboardNavItem {
   href: string;
@@ -29,6 +31,14 @@ const VARIANT_STYLE: Record<
   admin: { sidebarBg: "bg-adminSidebar", accent: "#6D28D9", accentTint: "rgba(109,40,217,.18)" }
 };
 
+export interface DashboardNotifications {
+  count: number;
+  items: NotificationItem[];
+  emptyLabel: string;
+  viewAllHref: string;
+  viewAllLabel: string;
+}
+
 interface DashboardShellProps {
   brand: string;
   variant: DashboardVariant;
@@ -36,6 +46,7 @@ interface DashboardShellProps {
   userName: string;
   onLogout: () => void;
   children: ReactNode;
+  notifications?: DashboardNotifications;
 }
 
 // Shared sidebar shell for the owner and admin sites: a fixed dark nav on
@@ -47,7 +58,8 @@ export function DashboardShell({
   navItems,
   userName,
   onLogout,
-  children
+  children,
+  notifications
 }: DashboardShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -68,6 +80,7 @@ export function DashboardShell({
           isActive={isActive}
           userName={userName}
           onLogout={onLogout}
+          notifications={notifications}
         />
       </aside>
 
@@ -98,6 +111,7 @@ export function DashboardShell({
                 isActive={isActive}
                 userName={userName}
                 onLogout={onLogout}
+                notifications={notifications}
                 onNavigate={() => setMobileOpen(false)}
               />
             </motion.aside>
@@ -133,6 +147,7 @@ interface SidebarContentProps {
   isActive: (href: string) => boolean;
   userName: string;
   onLogout: () => void;
+  notifications?: DashboardNotifications;
   onNavigate?: () => void;
 }
 
@@ -143,6 +158,7 @@ function SidebarContent({
   isActive,
   userName,
   onLogout,
+  notifications,
   onNavigate
 }: SidebarContentProps) {
   return (
@@ -154,12 +170,22 @@ function SidebarContent({
         >
           T
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <span className="disp text-base font-extrabold text-white">TableSite</span>
           <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-sidebarMuted">
             {brand} panel
           </p>
         </div>
+        {notifications && (
+          <NotificationBell
+            count={notifications.count}
+            items={notifications.items}
+            emptyLabel={notifications.emptyLabel}
+            viewAllHref={notifications.viewAllHref}
+            viewAllLabel={notifications.viewAllLabel}
+            accent={style.accent}
+          />
+        )}
       </div>
       <nav className="flex-1 space-y-1 px-3">
         {navItems.map((item) => {
