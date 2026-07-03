@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -64,13 +63,6 @@ export default function AdminLoginPage() {
           {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
-
-      <p className="mt-6 text-center text-xs text-muted">
-        Restaurant owner?{" "}
-        <Link href="/owner/login" className="font-semibold text-accent">
-          Sign in here
-        </Link>
-      </p>
     </main>
   );
 }
