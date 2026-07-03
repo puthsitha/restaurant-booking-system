@@ -1,13 +1,14 @@
 "use client";
 
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import Image from "next/image";
 import type { CSSProperties, PointerEvent, ReactNode } from "react";
 
-// Two hand-drawn illustrated scenes (no photo asset pipeline exists), swapped
-// via a cursor-follow circular "erase" mask: the restaurant-ambience scene
-// sits on top and gets a transparent hole cut out around the pointer,
-// revealing the dish scene underneath.
+// The two scenes are now real photos (frontend/public/images/hero-*.png).
+// Kept the original hand-drawn SVG scenes below, commented out rather than
+// deleted, as a fallback/reference in case photos ever need to come back out.
 
+/*
 function RestaurantScene() {
   return (
     <svg
@@ -106,6 +107,7 @@ function DishScene() {
     </svg>
   );
 }
+*/
 
 interface HeroRevealProps {
   children: ReactNode;
@@ -141,13 +143,27 @@ export function HeroReveal({ children, className }: HeroRevealProps) {
       onPointerLeave={() => radiusTarget.set(0)}
     >
       <div className="absolute inset-0 -z-20">
-        <DishScene />
+        <Image
+          src="/images/hero-dish.png"
+          alt="Steaming Cambodian crab curry in a banana leaf bowl"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
       </div>
       <motion.div
         className="absolute inset-0 -z-20"
         style={{ WebkitMaskImage: maskImage, maskImage } as unknown as CSSProperties}
       >
-        <RestaurantScene />
+        <Image
+          src="/images/hero-restaurant.png"
+          alt="Warm Cambodian restaurant interior with pendant lighting"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
       </motion.div>
       {/* Overlay for text legibility, on top of both scenes. */}
       <div className="absolute inset-0 -z-20 bg-gradient-to-r from-ink/85 via-ink/55 to-ink/15" />
