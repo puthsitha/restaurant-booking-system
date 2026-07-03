@@ -3,6 +3,7 @@ import type {
   AdminListRestaurantsParams,
   DayOfWeek,
   GalleryImage,
+  ListMyRestaurantsParams,
   ListRestaurantsParams,
   ListRestaurantsResponse,
   Menu,
@@ -71,8 +72,14 @@ export function getRestaurantBySlug(slug: string): Promise<{ restaurant: Restaur
   return apiFetch(`/api/restaurants/slug/${encodeURIComponent(slug)}`);
 }
 
-export function listMyRestaurants(token: string): Promise<{ restaurants: RestaurantOwned[] }> {
-  return apiFetch("/api/restaurants/mine", { token });
+export function listMyRestaurants(
+  params: ListMyRestaurantsParams = {},
+  token: string,
+): Promise<ListRestaurantsResponse> {
+  return apiFetch<ListRestaurantsResponse>(
+    `/api/restaurants/mine${toQueryString(params as Record<string, string | number | undefined>)}`,
+    { token },
+  );
 }
 
 // Admin-only moderation view: every restaurant regardless of status.
@@ -111,11 +118,12 @@ export function updateRestaurant(
 export function updateRestaurantStatus(
   id: string,
   status: RestaurantStatus,
+  reason: string,
   token: string,
 ): Promise<{ restaurant: RestaurantFull }> {
   return apiFetch(`/api/restaurants/${id}/status`, {
     method: "PATCH",
-    body: { status },
+    body: { status, reason },
     token,
   });
 }

@@ -76,7 +76,7 @@ export default function OwnerDashboardPage() {
     const yesterdayIso = toIsoDate(new Date(Date.now() - 86_400_000));
 
     Promise.all([
-      listMyRestaurants(token),
+      listMyRestaurants({ pageSize: 50 }, token),
       listOwnerReservations({ date: todayIso, pageSize: 50 }, token),
       listOwnerReservations({ date: yesterdayIso, pageSize: 50 }, token),
       listOwnerReservations({ pageSize: 5 }, token)
@@ -85,7 +85,7 @@ export default function OwnerDashboardPage() {
         if (cancelled) return;
 
         const tableLists = await Promise.all(
-          restaurants.restaurants.map((r) => listTables(r.id, token)),
+          restaurants.items.map((r) => listTables(r.id, token)),
         );
         const allTables = tableLists.flatMap((t) => t.tables);
 

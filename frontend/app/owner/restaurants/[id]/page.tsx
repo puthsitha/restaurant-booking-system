@@ -15,10 +15,18 @@ import type { DirtyTabHandle } from "@/components/restaurants/manage/types";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Modal } from "@/components/ui/Modal";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { StatusTone } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
 import { getRestaurant } from "@/lib/restaurants/api";
-import type { RestaurantManagementDetail } from "@/lib/restaurants/types";
+import type { RestaurantManagementDetail, RestaurantStatus } from "@/lib/restaurants/types";
+
+const STATUS_TONE: Record<RestaurantStatus, StatusTone> = {
+  PENDING: "pending",
+  ACTIVE: "success",
+  DISABLED: "danger",
+};
 
 const OWNER_TABS = [
   { key: "profile", label: "Profile" },
@@ -162,16 +170,21 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
           <h1 className="disp text-2xl font-extrabold text-ink">{restaurant.name}</h1>
           <p className="mt-1 text-sm text-muted">/{restaurant.slug}</p>
         </div>
-        <span
-          className={`rounded-full px-3 py-1.5 text-xs font-bold ${
-            restaurant.status === "ACTIVE"
-              ? "bg-secondary/10 text-secondary"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {restaurant.status}
-        </span>
+        <StatusBadge tone={STATUS_TONE[restaurant.status]}>{restaurant.status}</StatusBadge>
       </div>
+
+      {restaurant.status === "PENDING" && (
+        <p className="mt-3 rounded-xl border border-border bg-bg px-4 py-3 text-sm text-ink">
+          Your restaurant is pending admin review. It won&apos;t be visible to diners until approved.
+        </p>
+      )}
+
+      {restaurant.statusReason && (
+        <div className="mt-3 rounded-xl border border-border bg-bg px-4 py-3 text-sm text-ink">
+          <span className="font-bold">Admin note: </span>
+          {restaurant.statusReason}
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-1 border-b border-border">
         {OWNER_TABS.map((t) => (

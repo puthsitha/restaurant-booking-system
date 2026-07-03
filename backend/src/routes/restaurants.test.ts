@@ -214,6 +214,38 @@ describe("POST /api/restaurants", () => {
     expect(res.body.restaurant.slug).toBe("pho-corner");
     const createArgs = vi.mocked(prisma.restaurant.create).mock.calls[0]?.[0];
     expect(createArgs?.data.ownerId).toBe(OWNER_ID);
+    expect(createArgs?.data.status).toBe("PENDING");
+  });
+});
+
+describe("GET /api/restaurants/mine", () => {
+  it("scopes to the signed-in owner and paginates", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
+
+    const res = await request(app)
+      .get("/api/restaurants/mine")
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.total).toBe(1);
+    const whereArg = vi.mocked(prisma.restaurant.findMany).mock.calls[0]?.[0]?.where;
+    expect(whereArg?.ownerId).toBe(OWNER_ID);
+  });
+
+  it("filters by name search and status", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([]);
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(0);
+
+    const res = await request(app)
+      .get("/api/restaurants/mine?search=pho&status=PENDING")
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(res.status).toBe(200);
+    const whereArg = vi.mocked(prisma.restaurant.findMany).mock.calls[0]?.[0]?.where;
+    expect(whereArg?.status).toBe("PENDING");
+    expect(whereArg?.name).toEqual({ contains: "pho", mode: "insensitive" });
   });
 });
 
@@ -357,25 +389,71 @@ describe("PATCH /api/restaurants/:id/status", () => {
     const res = await request(app)
       .patch("/api/restaurants/rest_1/status")
       .set("Authorization", `Bearer ${ownerToken}`)
-      .send({ status: "DISABLED" });
+      .send({ status: "DISABLED", reason: "Menu photos looked stale" });
 
     expect(res.status).toBe(403);
   });
 
-  it("lets an admin disable any restaurant", async () => {
-    vi.mocked(prisma.restaurant.findUnique).mockResolvedValueOnce(baseRestaurant);
-    vi.mocked(prisma.restaurant.update).mockResolvedValueOnce({
-      ...baseRestaurant,
-      status: "DISABLED",
-    });
-
+  it("requires a reason", async () => {
     const res = await request(app)
       .patch("/api/restaurants/rest_1/status")
       .set("Authorization", `Bearer ${adminToken}`)
       .send({ status: "DISABLED" });
 
+    expect(res.status).toBe(400);
+    expect(prisma.restaurant.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects PENDING as a target status — only ACTIVE/DISABLED are admin-settable", async () => {
+    const res = await request(app)
+      .patch("/api/restaurants/rest_1/status")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "PENDING", reason: "Just created" });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("lets an admin approve a pending restaurant with a reason", async () => {
+    vi.mocked(prisma.restaurant.findUnique).mockResolvedValueOnce({
+      ...baseRestaurant,
+      status: "PENDING",
+    });
+    vi.mocked(prisma.restaurant.update).mockResolvedValueOnce({
+      ...baseRestaurant,
+      status: "ACTIVE",
+      statusReason: "Looks great, welcome aboard!",
+    });
+
+    const res = await request(app)
+      .patch("/api/restaurants/rest_1/status")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "ACTIVE", reason: "Looks great, welcome aboard!" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.restaurant.status).toBe("ACTIVE");
+    expect(res.body.restaurant.statusReason).toBe("Looks great, welcome aboard!");
+    expect(vi.mocked(prisma.restaurant.update).mock.calls[0]?.[0]?.data).toEqual({
+      status: "ACTIVE",
+      statusReason: "Looks great, welcome aboard!",
+    });
+  });
+
+  it("lets an admin disable any restaurant with a reason", async () => {
+    vi.mocked(prisma.restaurant.findUnique).mockResolvedValueOnce(baseRestaurant);
+    vi.mocked(prisma.restaurant.update).mockResolvedValueOnce({
+      ...baseRestaurant,
+      status: "DISABLED",
+      statusReason: "Repeated customer complaints",
+    });
+
+    const res = await request(app)
+      .patch("/api/restaurants/rest_1/status")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "DISABLED", reason: "Repeated customer complaints" });
+
     expect(res.status).toBe(200);
     expect(res.body.restaurant.status).toBe("DISABLED");
+    expect(res.body.restaurant.statusReason).toBe("Repeated customer complaints");
   });
 });
 
