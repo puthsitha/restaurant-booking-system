@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { FacebookIcon, InstagramIcon, PhoneIcon } from "@/components/ui/icons";
+
 const FOOTER_COLUMNS = [
   {
     heading: "Discover",
@@ -14,29 +16,21 @@ const FOOTER_COLUMNS = [
     heading: "Account",
     links: [{ label: "My bookings", href: "/bookings" }],
   },
-  {
-    heading: "For restaurants",
-    links: [
-      { label: "Owner portal", href: "/owner/login" },
-      { label: "List your restaurant", href: "/owner/login" },
-      { label: "Platform admin", href: "/admin/login" },
-    ],
-  },
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Facebook", icon: "📘" },
-  { label: "Instagram", icon: "📷" },
-  { label: "Phone", icon: "✆" },
+  { label: "Facebook", icon: FacebookIcon },
+  { label: "Instagram", icon: InstagramIcon },
+  { label: "Phone", icon: PhoneIcon },
 ];
 
 // Mirrors design/TableSite.reference.html's footer() renderer: dark ink
-// background, brand blurb + socials, three link columns, and a bottom bar
-// with copyright + payment rails.
+// background, brand blurb + socials, link columns, and a bottom bar with
+// copyright + payment rails.
 export function CustomerFooter() {
   return (
     <footer className="mt-16 bg-ink text-[#C9BCB0]">
-      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-10 px-8 py-14 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-10 px-8 py-14 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]">
         <div>
           <Link href="/" className="disp flex items-center gap-2.5 text-lg font-extrabold text-white">
             Table<span className="text-accent">Site</span>
@@ -49,9 +43,9 @@ export function CustomerFooter() {
               <span
                 key={social.label}
                 aria-label={social.label}
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-[#332925] text-sm"
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-[#332925] text-[#C9BCB0]"
               >
-                {social.icon}
+                <social.icon className="h-4 w-4" />
               </span>
             ))}
           </div>
