@@ -1,15 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { Modal } from "@/components/ui/Modal";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
-import { createReview, listReviews } from "@/lib/reviews/api";
+import { createReview, deleteReview, listReviews, updateReview } from "@/lib/reviews/api";
 import type { ListReviewsResponse } from "@/lib/reviews/types";
 
 interface ReviewsSectionProps {
@@ -17,7 +18,7 @@ interface ReviewsSectionProps {
 }
 
 export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
-  const { token, status } = useCustomerAuth();
+  const { token, status, user } = useCustomerAuth();
   const { open: openLogin } = useAuthModal();
   const [data, setData] = useState<ListReviewsResponse | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -25,6 +26,8 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(() => {
     listReviews(restaurantId)
@@ -34,6 +37,22 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
 
   useEffect(load, [load]);
 
+  const myReview = useMemo(
+    () => (user ? (data?.items.find((r) => r.userId === user.id) ?? null) : null),
+    [data, user],
+  );
+
+  function openForm(): void {
+    if (status !== "authenticated") {
+      openLogin();
+      return;
+    }
+    setError(null);
+    setRating(myReview?.rating ?? 5);
+    setText(myReview?.text ?? "");
+    setShowForm(true);
+  }
+
   async function handleSubmit(): Promise<void> {
     if (status !== "authenticated" || !token) {
       openLogin();
@@ -42,15 +61,31 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
     setError(null);
     setSubmitting(true);
     try {
-      await createReview(restaurantId, { rating, text: text || undefined }, token);
+      if (myReview) {
+        await updateReview(myReview.id, { rating, text: text || undefined }, token);
+      } else {
+        await createReview(restaurantId, { rating, text: text || undefined }, token);
+      }
       setShowForm(false);
-      setText("");
-      setRating(5);
       load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong, please try again.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(): Promise<void> {
+    if (!myReview || !token) return;
+    setDeleting(true);
+    try {
+      await deleteReview(myReview.id, token);
+      setConfirmDelete(false);
+      load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't delete this review.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -60,13 +95,24 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
     <section className="mt-10">
       <div className="flex items-center justify-between">
         <h2 className="disp text-lg font-bold text-ink">Reviews</h2>
-        <button
-          type="button"
-          onClick={() => setShowForm((v) => !v)}
-          className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg"
-        >
-          Write a review
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => (showForm ? setShowForm(false) : openForm())}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg"
+          >
+            {myReview ? "Edit your review" : "Write a review"}
+          </button>
+          {myReview && (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-50"
+            >
+              Delete
+            </button>
+          )}
+        </div>
       </div>
 
       {data.total > 0 && (
@@ -125,7 +171,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
             disabled={submitting}
             className="mt-3 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Submitting…" : "Submit review"}
+            {submitting ? "Saving…" : myReview ? "Save changes" : "Submit review"}
           </button>
         </div>
       )}
@@ -142,7 +188,14 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
               <div className="flex items-center gap-3">
                 <Avatar name={review.user.name} imageUrl={review.user.avatarUrl} size="sm" />
                 <div>
-                  <p className="text-sm font-bold text-ink">{review.user.name}</p>
+                  <p className="text-sm font-bold text-ink">
+                    {review.user.name}
+                    {user && review.userId === user.id && (
+                      <span className="ml-2 rounded-full bg-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+                        You
+                      </span>
+                    )}
+                  </p>
                   <RatingStars rating={review.rating} />
                 </div>
               </div>
@@ -157,6 +210,34 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
           ))}
         </motion.div>
       )}
+
+      <Modal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title="Delete this review?"
+      >
+        <div>
+          <p className="text-sm text-ink">This can&apos;t be undone.</p>
+          {error && <p className="mt-2 text-sm font-semibold text-red-600">{error}</p>}
+          <div className="mt-5 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
+            >
+              Keep review
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+            >
+              {deleting ? "Deleting…" : "Delete review"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }

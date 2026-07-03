@@ -17,6 +17,7 @@ vi.mock("../lib/prisma", () => {
     groupBy: vi.fn().mockResolvedValue([]),
     create: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
   };
 
   return { prisma: { user, restaurant, review } };
@@ -109,6 +110,88 @@ describe("POST /api/restaurants/:id/reviews", () => {
 
     expect(res.status).toBe(201);
     expect(res.body.review.rating).toBe(4);
+  });
+});
+
+describe("PATCH /api/reviews/:id", () => {
+  it("rejects non-diners", async () => {
+    const res = await request(app)
+      .patch("/api/reviews/rev_1")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ rating: 4 });
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 404 when the review isn't the diner's own", async () => {
+    vi.mocked(prisma.review.findUnique).mockResolvedValueOnce({
+      id: "rev_1",
+      userId: "someone_else",
+    });
+
+    const res = await request(app)
+      .patch("/api/reviews/rev_1")
+      .set("Authorization", `Bearer ${dinerToken}`)
+      .send({ rating: 4 });
+
+    expect(res.status).toBe(404);
+    expect(prisma.review.update).not.toHaveBeenCalled();
+  });
+
+  it("updates the diner's own review", async () => {
+    vi.mocked(prisma.review.findUnique).mockResolvedValueOnce({
+      id: "rev_1",
+      userId: "user_diner_1",
+    });
+    vi.mocked(prisma.review.update).mockResolvedValueOnce({
+      id: "rev_1",
+      rating: 3,
+      text: "Updated my mind",
+    });
+
+    const res = await request(app)
+      .patch("/api/reviews/rev_1")
+      .set("Authorization", `Bearer ${dinerToken}`)
+      .send({ rating: 3, text: "Updated my mind" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.review.rating).toBe(3);
+  });
+});
+
+describe("DELETE /api/reviews/:id", () => {
+  it("rejects non-diners", async () => {
+    const res = await request(app)
+      .delete("/api/reviews/rev_1")
+      .set("Authorization", `Bearer ${ownerToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 404 when the review isn't the diner's own", async () => {
+    vi.mocked(prisma.review.findUnique).mockResolvedValueOnce({
+      id: "rev_1",
+      userId: "someone_else",
+    });
+
+    const res = await request(app)
+      .delete("/api/reviews/rev_1")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(404);
+    expect(prisma.review.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes the diner's own review", async () => {
+    vi.mocked(prisma.review.findUnique).mockResolvedValueOnce({
+      id: "rev_1",
+      userId: "user_diner_1",
+    });
+    vi.mocked(prisma.review.delete).mockResolvedValueOnce({ id: "rev_1" });
+
+    const res = await request(app)
+      .delete("/api/reviews/rev_1")
+      .set("Authorization", `Bearer ${dinerToken}`);
+
+    expect(res.status).toBe(204);
   });
 });
 

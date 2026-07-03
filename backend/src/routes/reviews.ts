@@ -3,7 +3,7 @@ import { Router } from "express";
 import * as reviewController from "../controllers/review.controller";
 import { authenticate, requireRole } from "../middleware/auth";
 import { validateBody } from "../middleware/validate";
-import { createReviewSchema, replyToReviewSchema } from "../schemas/review.schemas";
+import { createReviewSchema, replyToReviewSchema, updateReviewSchema } from "../schemas/review.schemas";
 
 export const reviewsRouter: Router = Router();
 
@@ -46,6 +46,48 @@ reviewsRouter.post(
   requireRole("DINER"),
   validateBody(createReviewSchema),
   reviewController.create,
+);
+
+/**
+ * @openapi
+ * /api/reviews/{id}:
+ *   patch:
+ *     summary: Update the signed-in diner's own review
+ *     tags: [Reviews]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [rating]
+ *             properties:
+ *               rating: { type: integer, minimum: 1, maximum: 5 }
+ *               text: { type: string }
+ *     responses:
+ *       200: { description: Updated }
+ *       404: { description: Not found or not yours }
+ *   delete:
+ *     summary: Delete the signed-in diner's own review
+ *     tags: [Reviews]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       204: { description: Deleted }
+ *       404: { description: Not found or not yours }
+ */
+reviewsRouter.patch(
+  "/api/reviews/:id",
+  authenticate,
+  requireRole("DINER"),
+  validateBody(updateReviewSchema),
+  reviewController.update,
+);
+reviewsRouter.delete(
+  "/api/reviews/:id",
+  authenticate,
+  requireRole("DINER"),
+  reviewController.remove,
 );
 
 /**
