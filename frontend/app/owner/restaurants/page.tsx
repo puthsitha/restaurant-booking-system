@@ -29,6 +29,9 @@ export default function OwnerRestaurantsPage() {
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<ListRestaurantsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Unfiltered count, independent of the search/status filters above, so the
+  // "reached your limit" check stays correct while a filter narrows the list.
+  const [totalOwned, setTotalOwned] = useState<number | null>(null);
 
   useEffect(() => {
     setPage(1);
@@ -49,7 +52,17 @@ export default function OwnerRestaurantsPage() {
 
   useEffect(load, [load]);
 
+  useEffect(() => {
+    if (!token) return;
+    listMyRestaurants({ pageSize: 1 }, token)
+      .then((res) => setTotalOwned(res.total))
+      .catch(() => undefined);
+  }, [token]);
+
   const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
+  const atLimit = Boolean(
+    user && totalOwned !== null && user.restaurantLimit > 0 && totalOwned >= user.restaurantLimit,
+  );
 
   return (
     <main className="p-8">
@@ -61,12 +74,18 @@ export default function OwnerRestaurantsPage() {
             allowed on your account.
           </p>
         </div>
-        <Link
-          href="/owner/restaurants/new"
-          className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white"
-        >
-          + New restaurant
-        </Link>
+        {atLimit ? (
+          <div className="max-w-[260px] rounded-xl border border-border bg-surface px-4 py-3 text-right text-xs text-muted">
+            You&apos;ve reached your restaurant limit. Contact an admin to request more.
+          </div>
+        ) : (
+          <Link
+            href="/owner/restaurants/new"
+            className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white"
+          >
+            + New restaurant
+          </Link>
+        )}
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
