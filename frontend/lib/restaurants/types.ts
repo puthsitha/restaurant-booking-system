@@ -1,5 +1,5 @@
 export type PriceRange = "LOW" | "MEDIUM" | "HIGH";
-export type RestaurantStatus = "ACTIVE" | "DISABLED";
+export type RestaurantStatus = "PENDING" | "ACTIVE" | "DISABLED";
 export type DayOfWeek =
   | "MONDAY"
   | "TUESDAY"
@@ -99,6 +99,9 @@ export interface RestaurantCore {
   priceRange: PriceRange;
   isPopular: boolean;
   status: RestaurantStatus;
+  // Admin-supplied reason for the current status (approval, rejection,
+  // suspension, or reactivation) — null until an admin has acted on it.
+  statusReason: string | null;
   minBookingNotice: number;
   maxBookingDays: number;
   cancellationHours: number;
@@ -113,9 +116,9 @@ export interface RestaurantCore {
   updatedAt: string;
 }
 
-// GET /api/restaurants (public) and GET /api/restaurants/all (admin) —
-// a narrow projection, not the full row. status/ownerId are only populated
-// on the admin variant.
+// GET /api/restaurants (public), GET /api/restaurants/all (admin), and
+// GET /api/restaurants/mine (owner) — a narrow projection, not the full row.
+// status/statusReason/ownerId are only populated on the admin/owner variants.
 export interface RestaurantSummary {
   id: string;
   slug: string;
@@ -132,10 +135,11 @@ export interface RestaurantSummary {
   createdAt: string;
   tags: Tag[];
   status?: RestaurantStatus;
+  statusReason?: string | null;
   ownerId?: string;
 }
 
-// GET /api/restaurants/mine and PUT .../tags — the full row plus tags.
+// PUT .../tags — the full row plus tags.
 export interface RestaurantOwned extends RestaurantCore {
   tags: Tag[];
 }
@@ -152,9 +156,18 @@ export interface RestaurantPublicDetail extends RestaurantCore {
   tags: Tag[];
 }
 
-// GET /api/restaurants/:id (owner/admin) — includes tables.
+export interface RestaurantOwnerInfo {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+// GET /api/restaurants/:id (owner/admin) — includes tables and, for the
+// admin moderation view, who owns it.
 export interface RestaurantManagementDetail extends RestaurantPublicDetail {
   tables: RestaurantTable[];
+  owner: RestaurantOwnerInfo;
 }
 
 export interface ListRestaurantsResponse {
@@ -178,4 +191,12 @@ export interface ListRestaurantsParams {
 // the public search params.
 export interface AdminListRestaurantsParams extends ListRestaurantsParams {
   status?: RestaurantStatus;
+}
+
+// GET /api/restaurants/mine (owner) — name search + status filter, paginated.
+export interface ListMyRestaurantsParams {
+  search?: string;
+  status?: RestaurantStatus;
+  page?: number;
+  pageSize?: number;
 }

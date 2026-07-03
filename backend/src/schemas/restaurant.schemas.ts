@@ -4,7 +4,7 @@ const HHMM = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const priceRangeEnum = z.enum(["LOW", "MEDIUM", "HIGH"]);
-export const restaurantStatusEnum = z.enum(["ACTIVE", "DISABLED"]);
+export const restaurantStatusEnum = z.enum(["PENDING", "ACTIVE", "DISABLED"]);
 export const dayOfWeekEnum = z.enum([
   "MONDAY",
   "TUESDAY",
@@ -56,8 +56,12 @@ export type CreateRestaurantInput = z.infer<typeof createRestaurantSchema>;
 export const updateRestaurantSchema = createRestaurantSchema.partial();
 export type UpdateRestaurantInput = z.infer<typeof updateRestaurantSchema>;
 
+// Admins can only move a restaurant to ACTIVE (approve/reactivate) or
+// DISABLED (reject/suspend) — PENDING is only ever set at creation time, an
+// admin never manually reverts a restaurant back to it.
 export const updateRestaurantStatusSchema = z.object({
-  status: restaurantStatusEnum,
+  status: z.enum(["ACTIVE", "DISABLED"]),
+  reason: z.string().trim().min(1).max(500),
 });
 export type UpdateRestaurantStatusInput = z.infer<typeof updateRestaurantStatusSchema>;
 
@@ -73,11 +77,22 @@ export const listRestaurantsQuerySchema = z.object({
 export type ListRestaurantsQuery = z.infer<typeof listRestaurantsQuerySchema>;
 
 // Admin moderation view: same filters, plus an optional status filter since
-// admins (unlike the public listing) can see DISABLED restaurants too.
+// admins (unlike the public listing) can see every status.
 export const adminListRestaurantsQuerySchema = listRestaurantsQuerySchema.extend({
   status: restaurantStatusEnum.optional(),
 });
 export type AdminListRestaurantsQuery = z.infer<typeof adminListRestaurantsQuerySchema>;
+
+// Owner's own restaurant list: same shape as the admin view minus the
+// unneeded filters they'd never search by (city/cuisine/tag/price — an
+// owner already knows those about their own places; just name + status).
+export const listMyRestaurantsQuerySchema = z.object({
+  search: z.string().trim().min(1).optional(),
+  status: restaurantStatusEnum.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type ListMyRestaurantsQuery = z.infer<typeof listMyRestaurantsQuerySchema>;
 
 // ====================== Operating hours ========================
 

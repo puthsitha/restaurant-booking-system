@@ -8,6 +8,7 @@ import type {
   UpdateRestaurantStatusInput,
   ListRestaurantsQuery,
   AdminListRestaurantsQuery,
+  ListMyRestaurantsQuery,
   SetOperatingHoursInput,
   CreateTableInput,
   UpdateTableInput,
@@ -73,7 +74,16 @@ const publicListSelect = {
 const adminListSelect = {
   ...publicListSelect,
   status: true,
+  statusReason: true,
   ownerId: true,
+} satisfies Prisma.RestaurantSelect;
+
+// What an owner sees about their own restaurant in their list — same as the
+// admin list minus the owner id (it's always themself).
+const ownerListSelect = {
+  ...publicListSelect,
+  status: true,
+  statusReason: true,
 } satisfies Prisma.RestaurantSelect;
 
 const publicDetailInclude = {
@@ -88,6 +98,7 @@ const managementDetailInclude = {
   ...publicDetailInclude,
   specialClosures: true,
   tables: true,
+  owner: { select: { id: true, name: true, email: true, phone: true } },
 } satisfies Prisma.RestaurantInclude;
 
 // ========================= Restaurant CRUD ========================
@@ -111,7 +122,9 @@ export async function createRestaurant(
 
   await assertSlugAvailable(input.slug);
 
-  return prisma.restaurant.create({ data: { ...input, ownerId } });
+  // New restaurants start PENDING — an admin has to approve them (with a
+  // reason) before they're ACTIVE and visible to diners.
+  return prisma.restaurant.create({ data: { ...input, ownerId, status: "PENDING" } });
 }
 
 export async function listRestaurants(query: ListRestaurantsQuery) {
@@ -170,12 +183,25 @@ export async function listAllRestaurantsForAdmin(query: AdminListRestaurantsQuer
   return { items, total, page: query.page, pageSize: query.pageSize };
 }
 
-export async function listMyRestaurants(ownerId: string) {
-  return prisma.restaurant.findMany({
-    where: { ownerId },
-    include: { tags: true },
-    orderBy: { createdAt: "desc" },
-  });
+export async function listMyRestaurants(ownerId: string, query: ListMyRestaurantsQuery) {
+  const where: Prisma.RestaurantWhereInput = {
+    ownerId,
+    ...(query.status ? { status: query.status } : {}),
+    ...(query.search ? { name: { contains: query.search, mode: "insensitive" } } : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    prisma.restaurant.findMany({
+      where,
+      select: ownerListSelect,
+      orderBy: { createdAt: "desc" },
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+    }),
+    prisma.restaurant.count({ where }),
+  ]);
+
+  return { items, total, page: query.page, pageSize: query.pageSize };
 }
 
 export async function getPublicRestaurantBySlug(slug: string) {
@@ -223,7 +249,10 @@ export async function updateRestaurantStatus(
   input: UpdateRestaurantStatusInput,
 ): Promise<Restaurant> {
   await getRestaurantOrThrow(id);
-  return prisma.restaurant.update({ where: { id }, data: { status: input.status } });
+  return prisma.restaurant.update({
+    where: { id },
+    data: { status: input.status, statusReason: input.reason },
+  });
 }
 
 // ====================== Operating hours ========================

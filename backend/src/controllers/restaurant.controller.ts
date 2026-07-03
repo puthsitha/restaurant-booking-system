@@ -8,6 +8,7 @@ import type {
   UpdateRestaurantStatusInput,
   ListRestaurantsQuery,
   AdminListRestaurantsQuery,
+  ListMyRestaurantsQuery,
   SetOperatingHoursInput,
   CreateTableInput,
   UpdateTableInput,
@@ -70,8 +71,9 @@ export async function listAll(req: Request, res: Response, next: NextFunction): 
 export async function listMine(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = requireUser(req);
-    const restaurants = await restaurantService.listMyRestaurants(user.id);
-    res.json({ restaurants });
+    const query = res.locals.query as ListMyRestaurantsQuery;
+    const result = await restaurantService.listMyRestaurants(user.id, query);
+    res.json(result);
   } catch (err) {
     next(err);
   }

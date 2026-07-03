@@ -5,31 +5,51 @@ import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { ChefHatIcon } from "@/components/ui/icons";
+import { ChefHatIcon, SearchOffIcon } from "@/components/ui/icons";
 import { ListSkeleton } from "@/components/ui/skeletons";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { StatusTone } from "@/components/ui/StatusBadge";
+import { ApiError } from "@/lib/api";
 import { listMyRestaurants } from "@/lib/restaurants/api";
-import type { RestaurantOwned } from "@/lib/restaurants/types";
+import type { ListRestaurantsResponse, RestaurantStatus } from "@/lib/restaurants/types";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
-const STATUS_STYLE: Record<string, string> = {
-  ACTIVE: "bg-secondary/10 text-secondary",
-  DISABLED: "bg-red-100 text-red-700",
+const STATUS_TONE: Record<RestaurantStatus, StatusTone> = {
+  PENDING: "pending",
+  ACTIVE: "success",
+  DISABLED: "danger",
 };
 
 export default function OwnerRestaurantsPage() {
   const { user, token } = useOwnerAuth();
-  const [restaurants, setRestaurants] = useState<RestaurantOwned[] | null>(null);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 350);
+  const [status, setStatus] = useState<RestaurantStatus | "">("");
+  const [page, setPage] = useState(1);
+  const [result, setResult] = useState<ListRestaurantsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status]);
 
   const load = useCallback(() => {
     if (!token) return;
     setError(null);
-    listMyRestaurants(token)
-      .then((res) => setRestaurants(res.restaurants))
-      .catch(() => setError("Couldn't load your restaurants."));
-  }, [token]);
+    listMyRestaurants(
+      { search: debouncedSearch || undefined, status: status || undefined, page, pageSize: 12 },
+      token,
+    )
+      .then((res) => setResult(res))
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : "Couldn't load your restaurants.");
+      });
+  }, [token, debouncedSearch, status, page]);
 
   useEffect(load, [load]);
+
+  const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
 
   return (
     <main className="p-8">
@@ -49,13 +69,32 @@ export default function OwnerRestaurantsPage() {
         </Link>
       </div>
 
+      <div className="mt-6 flex flex-wrap gap-3">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name"
+          className="min-w-[220px] rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as RestaurantStatus | "")}
+          className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none"
+        >
+          <option value="">Any status</option>
+          <option value="PENDING">Pending review</option>
+          <option value="ACTIVE">Active</option>
+          <option value="DISABLED">Disabled</option>
+        </select>
+      </div>
+
       {error ? (
         <ErrorState className="mt-8" message={error} onRetry={load} />
-      ) : restaurants === null ? (
+      ) : result === null ? (
         <div className="mt-8">
           <ListSkeleton rows={2} />
         </div>
-      ) : restaurants.length === 0 ? (
+      ) : result.items.length === 0 && !debouncedSearch && !status ? (
         <EmptyState
           className="mt-8"
           icon={ChefHatIcon}
@@ -64,28 +103,69 @@ export default function OwnerRestaurantsPage() {
           actionLabel="+ New restaurant"
           actionHref="/owner/restaurants/new"
         />
+      ) : result.items.length === 0 ? (
+        <EmptyState
+          className="mt-8"
+          icon={SearchOffIcon}
+          title="No restaurants match those filters"
+          actionLabel="Clear filters"
+          onAction={() => {
+            setSearch("");
+            setStatus("");
+          }}
+        />
       ) : (
-        <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
-          {restaurants.map((restaurant) => (
-            <Link
-              key={restaurant.id}
-              href={`/owner/restaurants/${restaurant.id}`}
-              className="flex items-center justify-between px-5 py-4 hover:bg-bg"
-            >
-              <div>
-                <p className="font-bold text-ink">{restaurant.name}</p>
-                <p className="text-sm text-muted">
-                  {restaurant.cuisineType} · {restaurant.city}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS_STYLE[restaurant.status]}`}
+        <>
+          <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
+            {result.items.map((restaurant) => (
+              <Link
+                key={restaurant.id}
+                href={`/owner/restaurants/${restaurant.id}`}
+                className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-bg"
               >
-                {restaurant.status}
+                <div className="min-w-0">
+                  <p className="font-bold text-ink">{restaurant.name}</p>
+                  <p className="text-sm text-muted">
+                    {restaurant.cuisineType} · {restaurant.city}
+                  </p>
+                  {restaurant.statusReason && (
+                    <p className="mt-1 text-xs text-muted">
+                      <span className="font-semibold">Reason: </span>
+                      {restaurant.statusReason}
+                    </p>
+                  )}
+                </div>
+                <StatusBadge tone={STATUS_TONE[restaurant.status ?? "ACTIVE"]}>
+                  {restaurant.status}
+                </StatusBadge>
+              </Link>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-muted">
+                Page {page} of {totalPages}
               </span>
-            </Link>
-          ))}
-        </div>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </main>
   );

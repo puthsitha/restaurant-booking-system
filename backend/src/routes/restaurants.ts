@@ -9,6 +9,7 @@ import {
   updateRestaurantStatusSchema,
   listRestaurantsQuerySchema,
   adminListRestaurantsQuerySchema,
+  listMyRestaurantsQuerySchema,
   setOperatingHoursSchema,
   createTableSchema,
   updateTableSchema,
@@ -83,13 +84,31 @@ restaurantsRouter.post(
  * @openapi
  * /api/restaurants/mine:
  *   get:
- *     summary: List the signed-in owner's restaurants (any status)
+ *     summary: List the signed-in owner's restaurants (any status), paginated
  *     tags: [Restaurants]
  *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [PENDING, ACTIVE, DISABLED] }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: pageSize
+ *         schema: { type: integer, default: 20 }
  *     responses:
  *       200: { description: OK }
  */
-restaurantsRouter.get("/api/restaurants/mine", ownerOnly, restaurantController.listMine);
+restaurantsRouter.get(
+  "/api/restaurants/mine",
+  ownerOnly,
+  validateQuery(listMyRestaurantsQuerySchema),
+  restaurantController.listMine,
+);
 
 /**
  * @openapi
@@ -101,7 +120,7 @@ restaurantsRouter.get("/api/restaurants/mine", ownerOnly, restaurantController.l
  *     parameters:
  *       - in: query
  *         name: status
- *         schema: { type: string, enum: [ACTIVE, DISABLED] }
+ *         schema: { type: string, enum: [PENDING, ACTIVE, DISABLED] }
  *       - in: query
  *         name: city
  *         schema: { type: string }
@@ -178,7 +197,10 @@ restaurantsRouter.patch(
  * @openapi
  * /api/restaurants/{id}/status:
  *   patch:
- *     summary: Enable/disable a restaurant (admin only, any restaurant)
+ *     summary: >
+ *       Approve/reject a pending restaurant, or suspend/reactivate an
+ *       existing one (admin only, any restaurant). A reason is always
+ *       required and shown back to the owner.
  *     tags: [Restaurants]
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
@@ -187,9 +209,10 @@ restaurantsRouter.patch(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [status]
+ *             required: [status, reason]
  *             properties:
  *               status: { type: string, enum: [ACTIVE, DISABLED] }
+ *               reason: { type: string, description: "Shown to the restaurant's owner." }
  *     responses:
  *       200: { description: Updated }
  */

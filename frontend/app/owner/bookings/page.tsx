@@ -18,7 +18,7 @@ import {
 } from "@/lib/reservations/api";
 import type { Reservation, ReservationStatus, SeatingPreference } from "@/lib/reservations/types";
 import { listMyRestaurants } from "@/lib/restaurants/api";
-import type { RestaurantOwned } from "@/lib/restaurants/types";
+import type { RestaurantSummary } from "@/lib/restaurants/types";
 
 const STATUS_OPTIONS: ReservationStatus[] = [
   "PENDING",
@@ -46,7 +46,7 @@ function todayIso(): string {
 
 export default function OwnerBookingsPage() {
   const { token } = useOwnerAuth();
-  const [restaurants, setRestaurants] = useState<RestaurantOwned[]>([]);
+  const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([]);
   const [reservations, setReservations] = useState<Reservation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [restaurantFilter, setRestaurantFilter] = useState("");
@@ -74,8 +74,8 @@ export default function OwnerBookingsPage() {
 
   useEffect(() => {
     if (!token) return;
-    listMyRestaurants(token)
-      .then((res) => setRestaurants(res.restaurants))
+    listMyRestaurants({ pageSize: 50 }, token)
+      .then((res) => setRestaurants(res.items))
       .catch(() => undefined);
   }, [token]);
 
@@ -206,7 +206,7 @@ export default function OwnerBookingsPage() {
 interface ManualBookingModalProps {
   open: boolean;
   onClose: () => void;
-  restaurants: RestaurantOwned[];
+  restaurants: RestaurantSummary[];
   token: string | null;
   onCreated: () => void;
 }

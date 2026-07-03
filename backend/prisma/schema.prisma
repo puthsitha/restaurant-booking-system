@@ -31,6 +31,7 @@ enum PriceRange {
 }
 
 enum RestaurantStatus {
+  PENDING
   ACTIVE
   DISABLED
 }
@@ -153,6 +154,9 @@ model Restaurant {
   priceRange    PriceRange       @default(MEDIUM)
   isPopular     Boolean          @default(false)
   status        RestaurantStatus @default(ACTIVE)
+  // Admin-supplied reason for the current status (approval, rejection,
+  // suspension, or reactivation) — shown back to the owner.
+  statusReason  String?
 
   // Booking policy
   minBookingNotice  Int     @default(60) // minutes before a slot
