@@ -91,7 +91,7 @@ export async function loginWithGoogle(input: GoogleAuthInput): Promise<AuthResul
     user = existingByEmail
       ? await prisma.user.update({
           where: { id: existingByEmail.id },
-          data: { googleId: profile.googleId },
+          data: { googleId: profile.googleId, avatarUrl: profile.avatarUrl },
         })
       : await prisma.user.create({
           data: {

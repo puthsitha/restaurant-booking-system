@@ -54,6 +54,7 @@ export default function ProfilePage() {
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <ProfileHeader
           name={user.name}
+          avatarUrl={user.avatarUrl}
           contact={user.phone ?? user.email ?? "—"}
           preferredLocale={user.preferredLocale === "en" ? "en" : "km"}
           onChangeLocale={(locale) => updateProfile({ preferredLocale: locale })}
@@ -73,16 +74,17 @@ export default function ProfilePage() {
 
 interface ProfileHeaderProps {
   name: string;
+  avatarUrl: string | null;
   contact: string;
   preferredLocale: "km" | "en";
   onChangeLocale: (locale: "km" | "en") => void;
 }
 
-function ProfileHeader({ name, contact, preferredLocale, onChangeLocale }: ProfileHeaderProps) {
+function ProfileHeader({ name, avatarUrl, contact, preferredLocale, onChangeLocale }: ProfileHeaderProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-6">
       <div className="flex items-center gap-4">
-        <Avatar name={name} size="lg" />
+        <Avatar name={name} imageUrl={avatarUrl} size="lg" />
         <div>
           <h1 className="disp text-xl font-extrabold text-ink">{name}</h1>
           <p className="mt-0.5 text-sm text-muted">{contact}</p>

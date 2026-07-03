@@ -104,6 +104,7 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
         variant="owner"
         navItems={navItems}
         userName={user.name}
+        userAvatarUrl={user.avatarUrl}
         notifications={pending ?? undefined}
         onLogout={() => {
           logout();

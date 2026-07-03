@@ -146,6 +146,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         variant="admin"
         navItems={navItems}
         userName={user.name}
+        userAvatarUrl={user.avatarUrl}
         notifications={notifications}
         onLogout={() => {
           logout();
