@@ -10,6 +10,7 @@ import { CalendarIcon, CheckIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { confirmPayment, createPayment } from "@/lib/payments/api";
 import type { Payment } from "@/lib/payments/types";
 import { checkAvailability, createReservation } from "@/lib/reservations/api";
@@ -26,11 +27,12 @@ const DAY_ORDER: DayOfWeek[] = [
   "SATURDAY",
 ];
 
-const SEATING_OPTIONS: { value: SeatingPreference; label: string }[] = [
-  { value: "INDOOR", label: "Indoor" },
-  { value: "GARDEN", label: "Garden" },
-  { value: "PRIVATE", label: "Private room" },
-];
+const SEATING_VALUES: SeatingPreference[] = ["INDOOR", "GARDEN", "PRIVATE"];
+const SEATING_LABEL_KEY: Record<SeatingPreference, "bookingWidget.seatingIndoor" | "bookingWidget.seatingGarden" | "bookingWidget.seatingPrivate"> = {
+  INDOOR: "bookingWidget.seatingIndoor",
+  GARDEN: "bookingWidget.seatingGarden",
+  PRIVATE: "bookingWidget.seatingPrivate",
+};
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -66,6 +68,7 @@ interface BookingWidgetProps {
 export function BookingWidget({ restaurant }: BookingWidgetProps) {
   const { token, status } = useCustomerAuth();
   const { open: openLogin } = useAuthModal();
+  const { t } = useLanguage();
 
   const [date, setDate] = useState(addDaysIso(1));
   const [time, setTime] = useState("");
@@ -154,7 +157,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         setPayment(created);
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong, please try again.");
+      setError(err instanceof ApiError ? err.message : t("auth.somethingWentWrong"));
     } finally {
       setSubmitting(false);
     }
@@ -167,7 +170,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       await confirmPayment(confirmed.id, token);
       setPaid(true);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't confirm payment, please try again.");
+      setError(err instanceof ApiError ? err.message : t("bookingWidget.couldntConfirmPayment"));
     } finally {
       setPayingConfirm(false);
     }
@@ -186,12 +189,12 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
     <div className="rounded-3xl border border-border bg-surface p-6 shadow-sm">
       <div className="flex items-center gap-2">
         <CalendarIcon className="h-5 w-5 text-accent" />
-        <h2 className="disp text-lg font-bold text-ink">Reserve a table</h2>
+        <h2 className="disp text-lg font-bold text-ink">{t("bookingWidget.reserveTable")}</h2>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-label">Date</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.date")}</label>
           <DateField
             value={date}
             min={todayIso()}
@@ -200,7 +203,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-label">Party size</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.partySize")}</label>
           <input
             type="number"
             min={restaurant.minCapacity}
@@ -213,10 +216,10 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-label">Time</label>
+        <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.time")}</label>
         {timeSlots.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-3 py-2.5 text-sm text-muted">
-            {isClosedDate ? "Closed on this date" : "Closed on this day"}
+            {isClosedDate ? t("bookingWidget.closedOnDate") : t("bookingWidget.closedOnDay")}
           </p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
@@ -237,18 +240,18 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       </div>
 
       <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-label">Seating</label>
+        <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.seating")}</label>
         <div className="flex gap-1.5">
-          {SEATING_OPTIONS.map((opt) => (
+          {SEATING_VALUES.map((value) => (
             <button
-              key={opt.value}
+              key={value}
               type="button"
-              onClick={() => setSeatingPreference(opt.value)}
+              onClick={() => setSeatingPreference(value)}
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                seatingPreference === opt.value ? "bg-accent text-white" : "bg-bg text-ink hover:bg-border/60"
+                seatingPreference === value ? "bg-accent text-white" : "bg-bg text-ink hover:bg-border/60"
               }`}
             >
-              {opt.label}
+              {t(SEATING_LABEL_KEY[value])}
             </button>
           ))}
         </div>
@@ -256,13 +259,13 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
 
       <div className="mt-3">
         <label className="mb-1.5 block text-xs font-bold text-label">
-          Special requests <span className="font-normal text-muted">(optional)</span>
+          {t("bookingWidget.specialRequests")} <span className="font-normal text-muted">{t("bookingWidget.optional")}</span>
         </label>
         <textarea
           value={specialRequests}
           onChange={(e) => setSpecialRequests(e.target.value)}
           rows={2}
-          placeholder="Birthday, allergies, high chair…"
+          placeholder={t("bookingWidget.specialRequestsPlaceholder")}
           className="w-full resize-none rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
         />
       </div>
@@ -279,17 +282,17 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
             }`}
           >
             {checking
-              ? "Checking availability…"
+              ? t("bookingWidget.checkingAvailability")
               : availability?.available
-                ? "This time is available"
-                : (availability?.reason ?? "Not available")}
+                ? t("bookingWidget.available")
+                : (availability?.reason ?? t("bookingWidget.notAvailable"))}
           </motion.p>
         )}
       </AnimatePresence>
 
       {restaurant.depositRequired && (
         <p className="mt-3 text-xs text-muted">
-          A ${Number(restaurant.depositAmount).toFixed(2)} deposit is required to secure this booking.
+          {t("bookingWidget.depositNotice", { amount: `$${Number(restaurant.depositAmount).toFixed(2)}` })}
         </p>
       )}
 
@@ -301,47 +304,54 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         disabled={!canSubmit}
         className="mt-5 w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50"
       >
-        {status !== "authenticated" ? "Sign in to reserve" : submitting ? "Booking…" : "Reserve a table"}
+        {status !== "authenticated"
+          ? t("bookingWidget.signInToReserve")
+          : submitting
+            ? t("bookingWidget.booking")
+            : t("bookingWidget.reserveTable")}
       </button>
 
       <Modal
         open={showConfirmStep}
         onClose={() => setShowConfirmStep(false)}
-        title="Confirm your reservation"
+        title={t("bookingWidget.confirmReservation")}
       >
         <div>
           <dl className="space-y-2.5 text-sm">
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted">Restaurant</dt>
+              <dt className="text-muted">{t("bookingWidget.restaurant")}</dt>
               <dd className="text-right font-semibold text-ink">{restaurant.name}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted">Date & time</dt>
+              <dt className="text-muted">{t("bookingWidget.dateTime")}</dt>
               <dd className="text-right font-semibold text-ink">
-                {date} at {time}
+                {date} {t("bookingsPage.at")} {time}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted">Party size</dt>
-              <dd className="text-right font-semibold text-ink">{partySize} guests</dd>
+              <dt className="text-muted">{t("bookingWidget.partySize")}</dt>
+              <dd className="text-right font-semibold text-ink">
+                {t("bookingWidget.guestsCount", { count: partySize })}
+              </dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted">Seating</dt>
+              <dt className="text-muted">{t("bookingWidget.seating")}</dt>
               <dd className="text-right font-semibold text-ink">
-                {SEATING_OPTIONS.find((o) => o.value === seatingPreference)?.label}
+                {t(SEATING_LABEL_KEY[seatingPreference])}
               </dd>
             </div>
             {specialRequests && (
               <div className="flex items-start justify-between gap-4">
-                <dt className="shrink-0 text-muted">Special requests</dt>
+                <dt className="shrink-0 text-muted">{t("bookingWidget.specialRequestsLabel")}</dt>
                 <dd className="text-right font-semibold text-ink">{specialRequests}</dd>
               </div>
             )}
           </dl>
           {restaurant.depositRequired && (
             <p className="mt-4 rounded-xl bg-bg p-3 text-xs text-ink">
-              A ${Number(restaurant.depositAmount).toFixed(2)} deposit will be required to secure
-              this booking.
+              {t("bookingWidget.depositWillBeRequired", {
+                amount: `$${Number(restaurant.depositAmount).toFixed(2)}`,
+              })}
             </p>
           )}
           {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
@@ -351,7 +361,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               onClick={() => setShowConfirmStep(false)}
               className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
             >
-              Go back
+              {t("bookingWidget.goBack")}
             </button>
             <button
               type="button"
@@ -359,7 +369,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               disabled={submitting}
               className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-bold text-white disabled:opacity-60"
             >
-              {submitting ? "Booking…" : "Confirm booking"}
+              {submitting ? t("bookingWidget.booking") : t("bookingWidget.confirmBooking")}
             </button>
           </div>
         </div>
@@ -368,7 +378,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
       <Modal
         open={confirmed !== null}
         onClose={closeConfirmation}
-        title={confirmed && payment && !paid ? "Pay your deposit" : "Table reserved!"}
+        title={confirmed && payment && !paid ? t("bookingWidget.payDeposit") : t("bookingWidget.tableReserved")}
       >
         {confirmed && payment && !paid ? (
           <div className="text-center">
@@ -388,11 +398,11 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
                 downloadName={`khqr-payment-${confirmed?.confirmationCode ?? payment.id}`}
               />
               <p className="mt-3 text-sm text-ink">
-                Scan with any KHQR-enabled banking app to pay{" "}
+                {t("bookingWidget.scanToPay")}
                 <span className="font-bold">${Number(payment.amount).toFixed(2)}</span>
               </p>
               <p className="mt-1 text-xs text-muted">
-                Or pay via ABA · Wing · Bakong · ACLEDA at the restaurant
+                {t("bookingWidget.payAtRestaurant")}
               </p>
             </div>
             {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
@@ -402,10 +412,10 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               disabled={payingConfirm}
               className="mt-4 w-full rounded-xl bg-accent py-3 text-sm font-bold text-white disabled:opacity-60"
             >
-              {payingConfirm ? "Confirming…" : "I've paid"}
+              {payingConfirm ? t("bookingWidget.confirming") : t("bookingWidget.ivePaid")}
             </button>
             <p className="mt-2 text-[11px] text-muted">
-              Simulated for this demo — no real payment gateway is connected.
+              {t("bookingWidget.simulatedDemo")}
             </p>
           </div>
         ) : (
@@ -416,16 +426,17 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               </div>
               <p className="disp mt-4 text-2xl font-extrabold text-ink">{confirmed.confirmationCode}</p>
               <p className="mt-1 text-sm text-muted">
-                {confirmed.date.slice(0, 10)} at {confirmed.time} · {confirmed.partySize} guests
+                {confirmed.date.slice(0, 10)} {t("bookingsPage.at")} {confirmed.time} ·{" "}
+                {t("bookingWidget.guestsCount", { count: confirmed.partySize })}
               </p>
               <p className="mt-3 text-sm text-ink">
-                We&apos;ve sent this to your account. Show this check-in code when you arrive.
+                {t("bookingWidget.sentToAccount")}
               </p>
               <QrCodeViewer
                 value={confirmed.confirmationCode}
                 size={140}
                 className="mx-auto mt-4"
-                label="Check-in code"
+                label={t("bookingWidget.checkInCode")}
                 downloadName={`check-in-${confirmed.confirmationCode}`}
               />
               <button
@@ -433,7 +444,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
                 onClick={closeConfirmation}
                 className="mt-5 w-full rounded-xl bg-accent py-3 text-sm font-bold text-white"
               >
-                Done
+                {t("bookingWidget.done")}
               </button>
             </div>
           )

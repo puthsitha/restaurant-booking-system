@@ -15,6 +15,7 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { fadeUp } from "@/lib/motion";
 import type { CreatePaymentMethodInput } from "@/lib/paymentMethods/api";
 import { createPaymentMethod, deletePaymentMethod, listPaymentMethods } from "@/lib/paymentMethods/api";
@@ -28,6 +29,7 @@ const PRICE_LABEL: Record<string, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$
 
 export default function ProfilePage() {
   const { user, token, status, updateProfile } = useCustomerAuth();
+  const { t } = useLanguage();
 
   if (status === "loading") {
     return (
@@ -42,8 +44,8 @@ export default function ProfilePage() {
       <main className="mx-auto max-w-[900px] px-8 py-12">
         <EmptyState
           icon={ChefHatIcon}
-          title="Sign in to see your profile"
-          message="Log in from the header to manage saved restaurants and payment methods."
+          title={t("profilePage.signInTitle")}
+          message={t("profilePage.signInMessage")}
         />
       </main>
     );
@@ -81,6 +83,7 @@ interface ProfileHeaderProps {
 }
 
 function ProfileHeader({ name, avatarUrl, contact, preferredLocale, onChangeLocale }: ProfileHeaderProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-6">
       <div className="flex items-center gap-4">
@@ -91,7 +94,7 @@ function ProfileHeader({ name, avatarUrl, contact, preferredLocale, onChangeLoca
         </div>
       </div>
       <div>
-        <p className="mb-1.5 text-xs font-bold text-label">Language</p>
+        <p className="mb-1.5 text-xs font-bold text-label">{t("common.language")}</p>
         <SegmentedControl
           value={preferredLocale}
           onChange={onChangeLocale}
@@ -106,6 +109,7 @@ function ProfileHeader({ name, avatarUrl, contact, preferredLocale, onChangeLoca
 }
 
 function SavedRestaurantsSection({ token }: { token: string }) {
+  const { t } = useLanguage();
   const { savedIds } = useSavedRestaurants();
   const [saved, setSaved] = useState<SavedRestaurant[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -114,8 +118,8 @@ function SavedRestaurantsSection({ token }: { token: string }) {
     setError(null);
     listSavedRestaurants(token)
       .then((res) => setSaved(res.savedRestaurants))
-      .catch(() => setError("Couldn't load saved restaurants."));
-  }, [token]);
+      .catch(() => setError(t("profilePage.loadSavedError")));
+  }, [token, t]);
 
   useEffect(load, [load]);
   // Refresh whenever a heart is toggled elsewhere on the site.
@@ -123,7 +127,7 @@ function SavedRestaurantsSection({ token }: { token: string }) {
 
   return (
     <section className="mt-8">
-      <h2 className="disp text-lg font-extrabold text-ink">Saved restaurants</h2>
+      <h2 className="disp text-lg font-extrabold text-ink">{t("profilePage.savedRestaurants")}</h2>
       {error ? (
         <ErrorState className="mt-4" message={error} onRetry={load} />
       ) : saved === null ? (
@@ -134,9 +138,9 @@ function SavedRestaurantsSection({ token }: { token: string }) {
         <EmptyState
           className="mt-4"
           icon={ChefHatIcon}
-          title="No saved restaurants yet"
-          message="Tap the heart on a restaurant to save it here."
-          actionLabel="Browse restaurants"
+          title={t("profilePage.emptySavedTitle")}
+          message={t("profilePage.emptySavedMessage")}
+          actionLabel={t("profilePage.browseRestaurants")}
           actionHref="/search"
         />
       ) : (
@@ -162,7 +166,7 @@ function SavedRestaurantsSection({ token }: { token: string }) {
                 }
                 className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg"
               >
-                Remove
+                {t("profilePage.remove")}
               </button>
             </div>
           ))}
@@ -175,6 +179,7 @@ function SavedRestaurantsSection({ token }: { token: string }) {
 const BRAND_OPTIONS: PaymentMethodBrand[] = ["ABA", "WING", "BAKONG", "ACLEDA"];
 
 function PaymentMethodsSection({ token }: { token: string }) {
+  const { t } = useLanguage();
   const [methods, setMethods] = useState<PaymentMethod[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -183,8 +188,8 @@ function PaymentMethodsSection({ token }: { token: string }) {
     setError(null);
     listPaymentMethods(token)
       .then((res) => setMethods(res.paymentMethods))
-      .catch(() => setError("Couldn't load payment methods."));
-  }, [token]);
+      .catch(() => setError(t("profilePage.loadPaymentError")));
+  }, [token, t]);
 
   useEffect(load, [load]);
 
@@ -193,20 +198,20 @@ function PaymentMethodsSection({ token }: { token: string }) {
       await deletePaymentMethod(id, token);
       setMethods((prev) => prev?.filter((m) => m.id !== id) ?? prev);
     } catch {
-      setError("Couldn't remove this payment method.");
+      setError(t("profilePage.removePaymentError"));
     }
   }
 
   return (
     <section className="mt-8">
       <div className="flex items-center justify-between">
-        <h2 className="disp text-lg font-extrabold text-ink">Payment methods</h2>
+        <h2 className="disp text-lg font-extrabold text-ink">{t("profilePage.paymentMethods")}</h2>
         <button
           type="button"
           onClick={() => setShowAdd(true)}
           className="rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white"
         >
-          + Add
+          {t("profilePage.addShort")}
         </button>
       </div>
       {error ? (
@@ -219,8 +224,8 @@ function PaymentMethodsSection({ token }: { token: string }) {
         <EmptyState
           className="mt-4"
           icon={ChefHatIcon}
-          title="No payment methods saved"
-          message="Add a mobile payment account to check out faster."
+          title={t("profilePage.emptyPaymentTitle")}
+          message={t("profilePage.emptyPaymentMessage")}
         />
       ) : (
         <div className="mt-4 space-y-3">
@@ -234,7 +239,7 @@ function PaymentMethodsSection({ token }: { token: string }) {
                   {m.brand} · {m.label}
                   {m.isDefault && (
                     <span className="ml-2 rounded-full bg-secondary/10 px-2 py-0.5 text-[11px] font-bold text-secondary">
-                      Default
+                      {t("profilePage.default")}
                     </span>
                   )}
                 </p>
@@ -245,7 +250,7 @@ function PaymentMethodsSection({ token }: { token: string }) {
                 onClick={() => handleDelete(m.id)}
                 className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg"
               >
-                Remove
+                {t("profilePage.remove")}
               </button>
             </div>
           ))}
@@ -273,6 +278,7 @@ interface AddPaymentMethodModalProps {
 }
 
 function AddPaymentMethodModal({ open, onClose, token, onCreated }: AddPaymentMethodModalProps) {
+  const { t } = useLanguage();
   const [brand, setBrand] = useState<PaymentMethodBrand>("ABA");
   const [label, setLabel] = useState("");
   const [detail, setDetail] = useState("");
@@ -299,16 +305,16 @@ function AddPaymentMethodModal({ open, onClose, token, onCreated }: AddPaymentMe
       const { paymentMethod } = await createPaymentMethod(input, token);
       onCreated(paymentMethod);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("auth.somethingWentWrong"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add a payment method">
+    <Modal open={open} onClose={onClose} title={t("profilePage.addPaymentMethod")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <FormField label="Provider" htmlFor="pm-brand">
+        <FormField label={t("profilePage.provider")} htmlFor="pm-brand">
           <select
             id="pm-brand"
             value={brand}
@@ -323,15 +329,15 @@ function AddPaymentMethodModal({ open, onClose, token, onCreated }: AddPaymentMe
           </select>
         </FormField>
         <TextField
-          label="Label"
+          label={t("profilePage.label")}
           required
-          placeholder="e.g. Personal ABA"
+          placeholder={t("profilePage.labelPlaceholder")}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
         <TextField
-          label="Detail (optional)"
-          placeholder="Account number or note"
+          label={t("profilePage.detailOptional")}
+          placeholder={t("profilePage.detailPlaceholder")}
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
         />
@@ -342,7 +348,7 @@ function AddPaymentMethodModal({ open, onClose, token, onCreated }: AddPaymentMe
             onChange={(e) => setIsDefault(e.target.checked)}
             className="h-4 w-4 rounded border-border accent-accent"
           />
-          Set as default
+          {t("profilePage.setAsDefault")}
         </label>
         {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
         <button
@@ -350,7 +356,7 @@ function AddPaymentMethodModal({ open, onClose, token, onCreated }: AddPaymentMe
           disabled={submitting}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {submitting ? "Adding…" : "Add payment method"}
+          {submitting ? t("profilePage.adding") : t("profilePage.addPaymentMethodButton")}
         </button>
       </form>
     </Modal>
