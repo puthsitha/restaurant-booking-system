@@ -4,19 +4,15 @@ import { motion } from "framer-motion";
 
 import { HeroReveal } from "@/components/home/HeroReveal";
 import { SearchIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 
-const FLOATING_CARDS = [
-  { emoji: "🍜", label: "Khmer", top: "6%", left: "58%", duration: 5 },
-  { emoji: "🦐", label: "Seafood", top: "46%", left: "84%", duration: 6.5 },
-  { emoji: "☕", label: "Café", top: "70%", left: "56%", duration: 5.5 },
-  { emoji: "🔥", label: "BBQ & Grill", top: "18%", left: "88%", duration: 7 },
-];
-
-const STATS = [
-  { value: "150+", label: "Restaurants" },
-  { value: "12", label: "Provinces" },
-  { value: "KHQR", label: "Ready" },
+const FLOATING_CARDS: { emoji: string; labelKey: TranslationKey; top: string; left: string; duration: number }[] = [
+  { emoji: "🍜", labelKey: "cuisines.khmer", top: "6%", left: "58%", duration: 5 },
+  { emoji: "🦐", labelKey: "cuisines.seafood", top: "46%", left: "84%", duration: 6.5 },
+  { emoji: "☕", labelKey: "cuisines.cafe", top: "70%", left: "56%", duration: 5.5 },
+  { emoji: "🔥", labelKey: "cuisines.bbqGrill", top: "18%", left: "88%", duration: 7 },
 ];
 
 // Hero section for the customer homepage — a client component so it can
@@ -26,6 +22,13 @@ const STATS = [
 // the visual interest comes entirely from animated gradients/shapes/SVG
 // scenes rather than a photo.
 export function HomeHero() {
+  const { t } = useLanguage();
+  const STATS = [
+    { value: "150+", label: t("home.statRestaurants") },
+    { value: "12", label: t("home.statProvinces") },
+    { value: "KHQR", label: t("home.statReady") },
+  ];
+
   return (
     <HeroReveal className="relative overflow-hidden px-8 py-24 text-white sm:py-32">
       {/* Slow-drifting glow blobs give the hero a sense of life without a
@@ -45,7 +48,7 @@ export function HomeHero() {
       <div className="pointer-events-none absolute inset-0 hidden lg:block">
         {FLOATING_CARDS.map((card, i) => (
           <motion.div
-            key={card.label}
+            key={card.labelKey}
             className="absolute rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center shadow-[0_12px_30px_rgba(0,0,0,.25)] backdrop-blur"
             style={{ top: card.top, left: card.left }}
             initial={{ opacity: 0, y: 24, scale: 0.9 }}
@@ -57,7 +60,7 @@ export function HomeHero() {
             }}
           >
             <span className="text-2xl">{card.emoji}</span>
-            <p className="mt-1 whitespace-nowrap text-[11px] font-bold">{card.label}</p>
+            <p className="mt-1 whitespace-nowrap text-[11px] font-bold">{t(card.labelKey)}</p>
           </motion.div>
         ))}
       </div>
@@ -72,23 +75,23 @@ export function HomeHero() {
           variants={fadeUp}
           className="km inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wide backdrop-blur"
         >
-          TableSite · Cambodia
+          {t("home.heroTagline")}
         </motion.span>
 
         <motion.h1
           variants={fadeUp}
           className="disp mt-4 max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl"
         >
-          Find your table across{" "}
+          {t("home.heroTitlePrefix")}{" "}
           <span
             className="bg-gradient-to-r from-[#F4A261] to-[#FFD9B8] bg-clip-text text-transparent"
           >
-            Cambodia
+            {t("home.heroTitleHighlight")}
           </span>
         </motion.h1>
 
         <motion.p variants={fadeUp} className="mt-4 max-w-lg text-base leading-relaxed text-white/80">
-          Reserve Cambodia&apos;s best tables — bilingual, dual-currency, KHQR-ready.
+          {t("home.heroSubtitle")}
         </motion.p>
 
         <motion.form
@@ -100,7 +103,7 @@ export function HomeHero() {
             <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               name="search"
-              placeholder="Search by restaurant name…"
+              placeholder={t("home.searchPlaceholder")}
               className="w-full rounded-xl py-3 pl-10 pr-4 text-sm text-ink outline-none"
             />
           </div>
@@ -108,7 +111,7 @@ export function HomeHero() {
             type="submit"
             className="rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white shadow-[0_8px_18px_rgba(194,65,12,.28)] transition hover:brightness-110"
           >
-            Search
+            {t("home.search")}
           </button>
         </motion.form>
 

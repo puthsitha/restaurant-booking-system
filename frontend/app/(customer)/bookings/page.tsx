@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { cancelMyReservation, listMyReservations } from "@/lib/reservations/api";
 import type { ListReservationsResponse, Reservation, ReservationStatus } from "@/lib/reservations/types";
@@ -32,6 +33,7 @@ const PAST_STATUSES: ReservationStatus[] = ["COMPLETED", "CANCELLED", "NO_SHOW"]
 
 export default function MyBookingsPage() {
   const { token, status: authStatus } = useCustomerAuth();
+  const { t } = useLanguage();
   const [result, setResult] = useState<ListReservationsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toCancel, setToCancel] = useState<Reservation | null>(null);
@@ -48,8 +50,8 @@ export default function MyBookingsPage() {
     setError(null);
     listMyReservations({ page, pageSize: 8 }, token)
       .then((res) => setResult(res))
-      .catch(() => setError("Couldn't load your bookings."));
-  }, [token, page]);
+      .catch(() => setError(t("bookingsPage.loadError")));
+  }, [token, page, t]);
 
   useEffect(load, [load]);
 
@@ -69,7 +71,7 @@ export default function MyBookingsPage() {
       setToCancel(null);
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't cancel this booking.");
+      setError(err instanceof ApiError ? err.message : t("bookingsPage.cancelError"));
     } finally {
       setCancelling(false);
     }
@@ -88,8 +90,8 @@ export default function MyBookingsPage() {
       <main className="mx-auto max-w-[720px] px-8 py-12">
         <EmptyState
           icon={CalendarIcon}
-          title="Sign in to see your bookings"
-          message="Log in from the header to view and manage your reservations."
+          title={t("bookingsPage.signInTitle")}
+          message={t("bookingsPage.signInMessage")}
         />
       </main>
     );
@@ -98,13 +100,13 @@ export default function MyBookingsPage() {
   return (
     <main className="mx-auto max-w-[720px] px-8 py-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="disp text-2xl font-extrabold text-ink">My bookings</h1>
+        <h1 className="disp text-2xl font-extrabold text-ink">{t("bookingsPage.title")}</h1>
         <SegmentedControl
           value={tab}
           onChange={setTab}
           options={[
-            { value: "upcoming", label: "Upcoming" },
-            { value: "past", label: "Past" },
+            { value: "upcoming", label: t("bookingsPage.tabUpcoming") },
+            { value: "past", label: t("bookingsPage.tabPast") },
           ]}
         />
       </div>
@@ -119,9 +121,9 @@ export default function MyBookingsPage() {
         <EmptyState
           className="mt-8"
           icon={CalendarIcon}
-          title={tab === "past" ? "No past bookings" : "No upcoming bookings"}
-          message="Find a restaurant you love and reserve a table — it only takes a minute."
-          actionLabel="Browse restaurants"
+          title={tab === "past" ? t("bookingsPage.emptyPastTitle") : t("bookingsPage.emptyUpcomingTitle")}
+          message={t("bookingsPage.emptyMessage")}
+          actionLabel={t("bookingsPage.browseRestaurants")}
           actionHref="/search"
         />
       ) : (
@@ -142,9 +144,11 @@ export default function MyBookingsPage() {
                   <div>
                     <p className="font-bold text-ink">{r.restaurant.name}</p>
                     <p className="mt-1 text-sm text-muted">
-                      {r.date.slice(0, 10)} at {r.time} · {r.partySize} guests
+                      {r.date.slice(0, 10)} {t("bookingsPage.at")} {r.time} · {t("bookingsPage.guestsCount", { count: r.partySize })}
                     </p>
-                    <p className="mt-1 text-xs text-muted">Confirmation {r.confirmationCode}</p>
+                    <p className="mt-1 text-xs text-muted">
+                      {t("bookingsPage.confirmation", { code: r.confirmationCode })}
+                    </p>
                   </div>
                   <StatusBadge tone={STATUS_TONE[r.status]} className="shrink-0">
                     {r.status}
@@ -156,7 +160,7 @@ export default function MyBookingsPage() {
                     onClick={() => setToCancel(r)}
                     className="mt-3 rounded-lg border border-border px-4 py-2 text-xs font-bold text-ink transition hover:bg-bg"
                   >
-                    Cancel booking
+                    {t("bookingsPage.cancelBooking")}
                   </button>
                 )}
               </div>
@@ -165,11 +169,11 @@ export default function MyBookingsPage() {
                   <QrCodeViewer
                     value={r.confirmationCode}
                     size={72}
-                    label="Check-in code"
+                    label={t("bookingsPage.checkInCode")}
                     downloadName={`check-in-${r.confirmationCode}`}
                   />
                   <span className="text-[10px] font-bold uppercase tracking-wide text-muted">
-                    Check-in
+                    {t("bookingsPage.checkIn")}
                   </span>
                 </div>
               )}
@@ -186,37 +190,35 @@ export default function MyBookingsPage() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
           >
-            Previous
+            {t("bookingsPage.previous")}
           </button>
-          <span className="text-sm text-muted">
-            Page {page} of {totalPages}
-          </span>
+          <span className="text-sm text-muted">{t("bookingsPage.pageOf", { page, total: totalPages })}</span>
           <button
             type="button"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
           >
-            Next
+            {t("bookingsPage.next")}
           </button>
         </div>
       )}
 
-      <Modal open={toCancel !== null} onClose={() => setToCancel(null)} title="Cancel this booking?">
+      <Modal open={toCancel !== null} onClose={() => setToCancel(null)} title={t("bookingsPage.cancelModalTitle")}>
         {toCancel && (
           <div>
             <p className="text-sm text-ink">
-              {toCancel.restaurant.name} on {toCancel.date.slice(0, 10)} at {toCancel.time} for{" "}
-              {toCancel.partySize} guests.
+              {toCancel.restaurant.name} · {toCancel.date.slice(0, 10)} {t("bookingsPage.at")} {toCancel.time} ·{" "}
+              {t("bookingsPage.guestsCount", { count: toCancel.partySize })}
             </p>
-            <p className="mt-2 text-sm text-muted">This can&apos;t be undone.</p>
+            <p className="mt-2 text-sm text-muted">{t("bookingsPage.cancelModalBody")}</p>
             <div className="mt-5 flex gap-3">
               <button
                 type="button"
                 onClick={() => setToCancel(null)}
                 className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
               >
-                Keep booking
+                {t("bookingsPage.keepBooking")}
               </button>
               <button
                 type="button"
@@ -224,7 +226,7 @@ export default function MyBookingsPage() {
                 disabled={cancelling}
                 className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-60"
               >
-                {cancelling ? "Cancelling…" : "Cancel booking"}
+                {cancelling ? t("bookingsPage.cancelling") : t("bookingsPage.cancelBooking")}
               </button>
             </div>
           </div>

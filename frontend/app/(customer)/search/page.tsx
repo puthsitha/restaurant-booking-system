@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SearchOffIcon } from "@/components/ui/icons";
 import { RestaurantGridSkeleton } from "@/components/ui/skeletons";
+import { useLanguage } from "@/lib/i18n/context";
 import { staggerContainer, fadeUp } from "@/lib/motion";
 import { listRestaurants, listTags } from "@/lib/restaurants/api";
 import type {
@@ -19,12 +20,8 @@ import type {
 } from "@/lib/restaurants/types";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
-const PRICE_OPTIONS: { value: PriceRange | ""; label: string }[] = [
-  { value: "", label: "Any" },
-  { value: "LOW", label: "$" },
-  { value: "MEDIUM", label: "$$" },
-  { value: "HIGH", label: "$$$" },
-];
+const PRICE_VALUES: (PriceRange | "")[] = ["", "LOW", "MEDIUM", "HIGH"];
+const PRICE_SYMBOL: Record<PriceRange, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$" };
 
 export default function SearchPage() {
   return (
@@ -35,6 +32,7 @@ export default function SearchPage() {
 }
 
 function SearchPageContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
@@ -84,7 +82,7 @@ function SearchPageContent() {
       pageSize: 12,
     })
       .then(setResult)
-      .catch(() => setError("Couldn't load restaurants. Try again."))
+      .catch(() => setError(t("searchPage.loadError")))
       .finally(() => setIsLoading(false));
   }, [
     debouncedSearch,
@@ -93,6 +91,7 @@ function SearchPageContent() {
     tag,
     priceRange,
     page,
+    t,
   ]);
 
   useEffect(() => {
@@ -120,7 +119,7 @@ function SearchPageContent() {
   return (
     <main className="mx-auto max-w-[1280px] px-8 py-12">
       <h1 className="disp text-2xl font-extrabold text-ink">
-        Search restaurants
+        {t("searchPage.title")}
       </h1>
 
       <div className="mt-6 flex flex-col gap-8 lg:flex-row">
@@ -130,40 +129,40 @@ function SearchPageContent() {
         >
           <div>
             <label className="mb-1.5 block text-xs font-bold text-label">
-              Restaurant name
+              {t("searchPage.restaurantName")}
             </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="e.g. Malis"
+              placeholder={t("searchPage.restaurantNamePlaceholder")}
               className="w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
             />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-bold text-label">
-              City
+              {t("searchPage.city")}
             </label>
             <input
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              placeholder="e.g. Phnom Penh"
+              placeholder={t("searchPage.cityPlaceholder")}
               className="w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
             />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-bold text-label">
-              Cuisine
+              {t("searchPage.cuisine")}
             </label>
             <input
               value={cuisineType}
               onChange={(e) => setCuisineType(e.target.value)}
-              placeholder="e.g. Khmer"
+              placeholder={t("searchPage.cuisinePlaceholder")}
               className="w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
             />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-bold text-label">
-              Tag
+              {t("searchPage.tag")}
             </label>
             <select
               value={tag}
@@ -173,34 +172,34 @@ function SearchPageContent() {
               }}
               className="w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none"
             >
-              <option value="">Any tag</option>
-              {tags.map((t) => (
-                <option key={t.id} value={t.name}>
-                  {t.name}
+              <option value="">{t("searchPage.anyTag")}</option>
+              {tags.map((tagOption) => (
+                <option key={tagOption.id} value={tagOption.name}>
+                  {tagOption.name}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-bold text-label">
-              Price
+              {t("searchPage.price")}
             </label>
             <div className="flex gap-1.5">
-              {PRICE_OPTIONS.map((opt) => (
+              {PRICE_VALUES.map((value) => (
                 <button
-                  key={opt.value}
+                  key={value}
                   type="button"
                   onClick={() => {
-                    setPriceRange(opt.value);
+                    setPriceRange(value);
                     setPage(1);
                   }}
                   className={`flex-1 rounded-lg border py-2 text-sm font-bold transition ${
-                    priceRange === opt.value
+                    priceRange === value
                       ? "border-accent bg-accent text-white"
                       : "border-border text-ink hover:bg-bg"
                   }`}
                 >
-                  {opt.label}
+                  {value === "" ? t("searchPage.any") : PRICE_SYMBOL[value]}
                 </button>
               ))}
             </div>
@@ -210,14 +209,14 @@ function SearchPageContent() {
               type="submit"
               className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-bold text-white"
             >
-              Search
+              {t("searchPage.search")}
             </button>
             <button
               type="button"
               onClick={clearFilters}
               className="rounded-xl border border-border px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-bg"
             >
-              Clear
+              {t("searchPage.clear")}
             </button>
           </div>
         </form>
@@ -230,7 +229,7 @@ function SearchPageContent() {
           ) : result && result.items.length > 0 ? (
             <>
               <p className="text-sm text-muted">
-                {result.total} restaurants found
+                {t("searchPage.resultsFound", { count: result.total })}
               </p>
               <motion.div
                 className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
@@ -252,10 +251,10 @@ function SearchPageContent() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
                   >
-                    Previous
+                    {t("searchPage.previous")}
                   </button>
                   <span className="text-sm text-muted">
-                    Page {page} of {totalPages}
+                    {t("searchPage.pageOf", { page, total: totalPages })}
                   </span>
                   <button
                     type="button"
@@ -263,7 +262,7 @@ function SearchPageContent() {
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
                   >
-                    Next
+                    {t("searchPage.next")}
                   </button>
                 </div>
               )}
@@ -271,9 +270,9 @@ function SearchPageContent() {
           ) : (
             <EmptyState
               icon={SearchOffIcon}
-              title="No tables match that search"
-              message="Try a different city, cuisine, or clear a filter — your next favorite spot is still out there."
-              actionLabel="Clear filters"
+              title={t("searchPage.emptyTitle")}
+              message={t("searchPage.emptyMessage")}
+              actionLabel={t("searchPage.clearFilters")}
               onAction={clearFilters}
             />
           )}

@@ -7,14 +7,14 @@ import { theme } from "@/lib/theme";
 import type { Locale } from "@/lib/theme";
 
 import { dictionaries, getMessage } from "./translations";
-import type { TranslationKey } from "./translations";
+import type { TranslationKey, TranslationParams } from "./translations";
 
 export const LOCALE_STORAGE_KEY = "tablesite-locale";
 
 interface LanguageContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, params?: TranslationParams) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -38,7 +38,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
   }, []);
 
-  const t = useCallback((key: TranslationKey) => getMessage(dictionaries[locale], key), [locale]);
+  const t = useCallback(
+    (key: TranslationKey, params?: TranslationParams) => getMessage(dictionaries[locale], key, params),
+    [locale]
+  );
 
   const value = useMemo<LanguageContextValue>(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
 
