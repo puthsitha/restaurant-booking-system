@@ -152,7 +152,7 @@ export function LoginModal() {
             </div>
 
             <div className="flex justify-center">
-              <GoogleButton onCredential={handleGoogleCredential} />
+              <GoogleButton onCredential={handleGoogleCredential} onUnavailable={setError} />
             </div>
           </>
         ) : (

@@ -66,7 +66,9 @@ const en = {
     signIn: "Sign in",
     signingIn: "Signing in…",
     somethingWentWrong: "Something went wrong",
-    continueWithGoogle: "Continue with Google"
+    continueWithGoogle: "Continue with Google",
+    googleUnavailable:
+      "Google sign-in isn't available in this browser right now — please sign in with your phone number instead."
   },
   home: {
     heroTagline: "TableSite · Cambodia",
@@ -299,7 +301,9 @@ const km = {
     signIn: "ចូល",
     signingIn: "កំពុងចូល…",
     somethingWentWrong: "មានបញ្ហាមួយបានកើតឡើង",
-    continueWithGoogle: "បន្តជាមួយ Google"
+    continueWithGoogle: "បន្តជាមួយ Google",
+    googleUnavailable:
+      "ការចូលដោយ Google មិនអាចប្រើបានទេនៅក្នុងកម្មវិធីរុករកនេះ សូមប្រើលេខទូរស័ព្ទរបស់អ្នកជំនួសវិញ។"
   },
   home: {
     heroTagline: "TableSite · កម្ពុជា",
