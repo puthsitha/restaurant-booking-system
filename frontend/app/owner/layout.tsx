@@ -7,7 +7,7 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import type { DashboardNotifications } from "@/components/dashboard/DashboardShell";
 import { CalendarIcon, ChefHatIcon, DashboardIcon, InboxIcon } from "@/components/ui/icons";
 import { OwnerAuthProvider, useOwnerAuth } from "@/lib/auth/ownerAuth";
-import { useLanguage } from "@/lib/i18n/context";
+import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { listOwnerReservations } from "@/lib/reservations/api";
 
 // Login lives inside this tree for shared styling but must not be gated by
@@ -21,9 +21,11 @@ const POLL_MS = 45_000;
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   return (
-    <OwnerAuthProvider>
-      <OwnerShell>{children}</OwnerShell>
-    </OwnerAuthProvider>
+    <LanguageProvider scope="owner">
+      <OwnerAuthProvider>
+        <OwnerShell>{children}</OwnerShell>
+      </OwnerAuthProvider>
+    </LanguageProvider>
   );
 }
 

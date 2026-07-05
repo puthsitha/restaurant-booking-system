@@ -16,7 +16,7 @@ import {
   UsersIcon,
 } from "@/components/ui/icons";
 import { AdminAuthProvider, useAdminAuth } from "@/lib/auth/adminAuth";
-import { useLanguage } from "@/lib/i18n/context";
+import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { listAllRestaurantRequests } from "@/lib/requests/api";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
 
@@ -38,9 +38,11 @@ interface PendingCounts {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminAuthProvider>
-      <AdminShell>{children}</AdminShell>
-    </AdminAuthProvider>
+    <LanguageProvider scope="admin">
+      <AdminAuthProvider>
+        <AdminShell>{children}</AdminShell>
+      </AdminAuthProvider>
+    </LanguageProvider>
   );
 }
 
