@@ -71,15 +71,12 @@ export default function AdminBookingsPage() {
         />
         <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as ReservationStatus | "")}
-        >
-          <option value="">All statuses</option>
-          {RESERVATION_STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </Select>
+          onChange={setStatusFilter}
+          options={[
+            { value: "", label: "All statuses" },
+            ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))
+          ]}
+        />
         <DateField value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
       </div>
 

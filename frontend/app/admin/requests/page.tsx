@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { TextAreaField } from "@/components/ui/FormField";
 import { InboxIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
+import { Select } from "@/components/ui/Select";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
@@ -43,16 +44,16 @@ export default function AdminRequestsPage() {
       <p className="mt-1 text-sm text-muted">Approve or deny an owner&apos;s request for more restaurants.</p>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <select
+        <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as RequestStatus | "")}
-          className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none"
-        >
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="DENIED">Denied</option>
-        </select>
+          onChange={setStatusFilter}
+          options={[
+            { value: "", label: "All statuses" },
+            { value: "PENDING", label: "Pending" },
+            { value: "APPROVED", label: "Approved" },
+            { value: "DENIED", label: "Denied" }
+          ]}
+        />
       </div>
 
       {error ? (

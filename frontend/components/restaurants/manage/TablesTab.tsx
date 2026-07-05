@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { TextField } from "@/components/ui/FormField";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Select } from "@/components/ui/Select";
 import { ApiError } from "@/lib/api";
 import { createTable, deleteTable, updateTable } from "@/lib/restaurants/api";
 import type { TableStatus } from "@/lib/restaurants/types";
@@ -162,15 +163,16 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <select
+                    <Select
                       value={table.status}
-                      onChange={(e) => handleStatusChange(table.id, e.target.value as TableStatus)}
-                      className="rounded-lg border border-border px-2 py-1.5 text-sm text-ink"
-                    >
-                      <option value="AVAILABLE">Available</option>
-                      <option value="SEATED">Seated</option>
-                      <option value="RESERVED">Reserved</option>
-                    </select>
+                      onChange={(status) => handleStatusChange(table.id, status)}
+                      options={[
+                        { value: "AVAILABLE", label: "Available" },
+                        { value: "SEATED", label: "Seated" },
+                        { value: "RESERVED", label: "Reserved" }
+                      ]}
+                      className="min-w-[130px] py-1.5 text-xs"
+                    />
                     <button
                       onClick={() => handleDelete(table.id)}
                       className="text-sm font-semibold text-red-600"

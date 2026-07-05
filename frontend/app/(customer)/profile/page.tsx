@@ -12,6 +12,7 @@ import { FormField, TextField } from "@/components/ui/FormField";
 import { ChefHatIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Select } from "@/components/ui/Select";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
@@ -315,18 +316,12 @@ function AddPaymentMethodModal({ open, onClose, token, onCreated }: AddPaymentMe
     <Modal open={open} onClose={onClose} title={t("profilePage.addPaymentMethod")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField label={t("profilePage.provider")} htmlFor="pm-brand">
-          <select
+          <Select
             id="pm-brand"
             value={brand}
-            onChange={(e) => setBrand(e.target.value as PaymentMethodBrand)}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
-          >
-            {BRAND_OPTIONS.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
+            onChange={setBrand}
+            options={BRAND_OPTIONS.map((b) => ({ value: b, label: b }))}
+          />
         </FormField>
         <TextField
           label={t("profilePage.label")}

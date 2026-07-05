@@ -4,6 +4,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import type { FormEvent } from "react";
 
 import { SavedToast } from "@/components/ui/SavedToast";
+import { Select } from "@/components/ui/Select";
 import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
 import { updateRestaurant } from "@/lib/restaurants/api";
@@ -184,18 +185,16 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           className={FIELD_CLASS}
         />
       </div>
-      <div>
-        <label className={LABEL_CLASS}>Price range</label>
-        <select
-          value={draft.priceRange}
-          onChange={(e) => set("priceRange", e.target.value as PriceRange)}
-          className={FIELD_CLASS}
-        >
-          <option value="LOW">$ — Low</option>
-          <option value="MEDIUM">$$ — Medium</option>
-          <option value="HIGH">$$$ — High</option>
-        </select>
-      </div>
+      <Select
+        label="Price range"
+        value={draft.priceRange}
+        onChange={(value) => set("priceRange", value)}
+        options={[
+          { value: "LOW", label: "$ — Low" },
+          { value: "MEDIUM", label: "$$ — Medium" },
+          { value: "HIGH", label: "$$$ — High" }
+        ]}
+      />
       <div className="flex items-center gap-3">
         <input
           id="depositRequired"

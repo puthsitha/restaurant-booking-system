@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SearchOffIcon } from "@/components/ui/icons";
+import { Select } from "@/components/ui/Select";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
@@ -62,16 +63,16 @@ export default function AdminRestaurantsPage() {
           placeholder="Search by name"
           className="min-w-[220px] rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink outline-none"
         />
-        <select
+        <Select
           value={status}
-          onChange={(e) => setStatus(e.target.value as RestaurantStatus | "")}
-          className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none"
-        >
-          <option value="">Any status</option>
-          <option value="PENDING">Pending review</option>
-          <option value="ACTIVE">Active</option>
-          <option value="DISABLED">Disabled</option>
-        </select>
+          onChange={setStatus}
+          options={[
+            { value: "", label: "Any status" },
+            { value: "PENDING", label: "Pending review" },
+            { value: "ACTIVE", label: "Active" },
+            { value: "DISABLED", label: "Disabled" }
+          ]}
+        />
       </div>
 
       {error ? (
