@@ -15,7 +15,7 @@ interface SessionEndedModalProps {
 export function SessionEndedModal({ message, onDismiss }: SessionEndedModalProps) {
   const { t } = useLanguage();
   return (
-    <Modal open={message !== null} onClose={onDismiss} className="text-center">
+    <Modal open={message !== null} onClose={onDismiss} className="text-center" dismissible={false}>
       {message && (
         <div className="flex flex-col items-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl">
