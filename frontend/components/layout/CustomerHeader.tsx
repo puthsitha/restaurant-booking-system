@@ -18,7 +18,10 @@ export function CustomerHeader() {
   const [confirmingLogout, setConfirmingLogout] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur-md">
+    <>
+      {/* Rendered outside the header: its backdrop-blur creates a containing
+          block for fixed-position descendants, which would center the modal
+          inside the (short) header bar instead of the full viewport. */}
       <SessionEndedModal message={sessionMessage} onDismiss={clearSessionMessage} />
       <ConfirmLogoutModal
         open={confirmingLogout}
@@ -28,44 +31,46 @@ export function CustomerHeader() {
           logout();
         }}
       />
-      <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8 py-4">
-        <Link href="/" className="disp text-lg font-extrabold text-ink">
-          Table<span className="text-accent">Site</span>
-        </Link>
+      <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8 py-4">
+          <Link href="/" className="disp text-lg font-extrabold text-ink">
+            Table<span className="text-accent">Site</span>
+          </Link>
 
-        <div className="flex items-center gap-2">
-          <LanguageToggle />
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
 
-          {status === "authenticated" && user ? (
-            <div className="ml-3 flex items-center gap-5">
-              <Link href="/bookings" className="text-sm font-semibold text-ink hover:text-accent">
-                {t("customerHeader.myBookings")}
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 text-sm font-semibold text-ink hover:text-accent"
-              >
-                <Avatar name={user.name} imageUrl={user.avatarUrl} size="sm" />
-                <span className="hidden sm:inline">{user.name}</span>
-              </Link>
+            {status === "authenticated" && user ? (
+              <div className="ml-3 flex items-center gap-5">
+                <Link href="/bookings" className="text-sm font-semibold text-ink hover:text-accent">
+                  {t("customerHeader.myBookings")}
+                </Link>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 text-sm font-semibold text-ink hover:text-accent"
+                >
+                  <Avatar name={user.name} imageUrl={user.avatarUrl} size="sm" />
+                  <span className="hidden sm:inline">{user.name}</span>
+                </Link>
+                <button
+                  onClick={() => setConfirmingLogout(true)}
+                  className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface"
+                >
+                  {t("common.logOut")}
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={() => setConfirmingLogout(true)}
-                className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-surface"
+                onClick={open}
+                disabled={status === "loading"}
+                className="ml-3 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(194,65,12,.28)] disabled:opacity-60"
               >
-                {t("common.logOut")}
+                {t("customerHeader.logIn")}
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={open}
-              disabled={status === "loading"}
-              className="ml-3 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(194,65,12,.28)] disabled:opacity-60"
-            >
-              {t("customerHeader.logIn")}
-            </button>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

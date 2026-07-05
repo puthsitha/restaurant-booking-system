@@ -12,20 +12,34 @@ interface ModalProps {
   title?: string;
   children: ReactNode;
   className?: string;
+  // False for alerts the person must acknowledge (e.g. the account-suspended
+  // notice) — backdrop click and Escape no longer close it, only an explicit
+  // in-dialog action can.
+  dismissible?: boolean;
 }
 
 // A single shared modal shell (backdrop blur + spring pop-in) so every
 // confirm/approve/deny/edit dialog across the owner and admin sites feels
 // the same rather than each screen rolling its own popup.
-export function Modal({ open, onClose, title, children, className }: ModalProps) {
+export function Modal({ open, onClose, title, children, className, dismissible = true }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent): void {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && dismissible) onClose();
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  }, [open, onClose, dismissible]);
+
+  // Block background scrolling/interaction behind the dialog while it's open.
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   return (
     <AnimatePresence>
@@ -38,7 +52,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         >
           <motion.div
             className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={dismissible ? onClose : undefined}
             aria-hidden="true"
           />
           <motion.div
