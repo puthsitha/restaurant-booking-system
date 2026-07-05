@@ -177,20 +177,22 @@ function SidebarContent({
 
   return (
     <>
-      <div className="flex items-center gap-2.5 px-6 py-6">
-        <div
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-extrabold text-white"
-          style={{ background: style.accent }}
-        >
-          T
+      <div className="px-6 py-6">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-extrabold text-white"
+            style={{ background: style.accent }}
+          >
+            T
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="disp text-base font-extrabold text-white">TableSite</span>
+            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-sidebarMuted">
+              {brand} panel
+            </p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <span className="disp text-base font-extrabold text-white">TableSite</span>
-          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-sidebarMuted">
-            {brand} panel
-          </p>
-        </div>
-        <div className="flex items-center gap-1">
+        <div className="mt-4 flex items-center justify-between gap-2 border-t border-sidebarBorder pt-4">
           <LanguageToggle variant="dark" />
           {notifications && (
             <NotificationBell

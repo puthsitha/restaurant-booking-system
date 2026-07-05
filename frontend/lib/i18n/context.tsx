@@ -11,6 +11,14 @@ import type { TranslationKey, TranslationParams } from "./translations";
 
 export const LOCALE_STORAGE_KEY = "tablesite-locale";
 
+// Each surface (customer, owner, admin) keeps its own locale so switching
+// language on one never affects the others.
+export type LanguageScope = "customer" | "owner" | "admin";
+
+function storageKeyFor(scope: LanguageScope): string {
+  return scope === "customer" ? LOCALE_STORAGE_KEY : `${LOCALE_STORAGE_KEY}-${scope}`;
+}
+
 interface LanguageContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
@@ -19,24 +27,34 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({
+  children,
+  scope = "customer"
+}: {
+  children: ReactNode;
+  scope?: LanguageScope;
+}) {
   const [locale, setLocaleState] = useState<Locale>(theme.defaultLocale);
+  const storageKey = storageKeyFor(scope);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    const stored = window.localStorage.getItem(storageKey);
     if (stored && (theme.locales as readonly string[]).includes(stored)) {
       setLocaleState(stored as Locale);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
-  const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next);
-    window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
-  }, []);
+  const setLocale = useCallback(
+    (next: Locale) => {
+      setLocaleState(next);
+      window.localStorage.setItem(storageKey, next);
+    },
+    [storageKey]
+  );
 
   const t = useCallback(
     (key: TranslationKey, params?: TranslationParams) => getMessage(dictionaries[locale], key, params),
