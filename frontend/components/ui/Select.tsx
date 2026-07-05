@@ -1,40 +1,168 @@
-import { useId } from "react";
-import type { SelectHTMLAttributes } from "react";
+"use client";
 
-import { ChevronDownIcon } from "@/components/ui/icons";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useId, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
+import { CheckIcon, ChevronDownIcon } from "@/components/ui/icons";
+
+export interface SelectOption<T extends string> {
+  value: T;
+  label: string;
+  disabled?: boolean;
 }
 
-// Styled dropdown: a native <select> (for accessibility/mobile-native
-// pickers) dressed up with a custom chevron and the app's focus/hover
-// treatment, since the browser default look can't be restyled directly.
-export function Select({ label, id, className, children, ...rest }: SelectProps) {
+interface SelectProps<T extends string> {
+  value: T;
+  onChange: (value: T) => void;
+  options: SelectOption<T>[];
+  label?: string;
+  placeholder?: string;
+  id?: string;
+  disabled?: boolean;
+  required?: boolean;
+  className?: string;
+}
+
+// Custom listbox dropdown — a trigger button + animated floating panel —
+// replacing the browser's native <select> look, which can't be restyled
+// directly. Keeps listbox aria semantics and arrow-key/enter/escape
+// navigation since we give up the native picker behavior.
+export function Select<T extends string>({
+  value,
+  onChange,
+  options,
+  label,
+  placeholder = "Select…",
+  id,
+  disabled,
+  required,
+  className
+}: SelectProps<T>) {
   const generatedId = useId();
   const selectId = id ?? generatedId;
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  const select = (
-    <div className="relative">
-      <select
+  const selectedIndex = options.findIndex((o) => o.value === value);
+  const selected = selectedIndex >= 0 ? options[selectedIndex] : undefined;
+
+  useEffect(() => {
+    if (!open) return;
+    setHighlighted(selectedIndex >= 0 ? selectedIndex : 0);
+    function handleClick(e: MouseEvent): void {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open, selectedIndex]);
+
+  function commit(index: number): void {
+    const option = options[index];
+    if (!option || option.disabled) return;
+    onChange(option.value);
+    setOpen(false);
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>): void {
+    if (disabled) return;
+    if (!open) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlighted((i) => Math.min(options.length - 1, i + 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlighted((i) => Math.max(0, i - 1));
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      commit(highlighted);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+    }
+  }
+
+  const trigger = (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
         id={selectId}
-        {...rest}
-        className={`w-full appearance-none rounded-xl border border-border bg-surface px-4 py-2.5 pr-10 text-sm font-semibold text-ink outline-none transition hover:border-ink/20 focus:border-accent focus:ring-2 focus:ring-accent/15 ${className ?? ""}`}
+        disabled={disabled}
+        data-required={required || undefined}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={handleKeyDown}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`flex w-full items-center justify-between gap-2 rounded-xl border bg-surface px-4 py-2.5 text-left text-sm font-semibold outline-none transition disabled:cursor-not-allowed disabled:opacity-50 ${
+          open ? "border-accent ring-2 ring-accent/15" : "border-border hover:border-ink/20"
+        } ${className ?? ""}`}
       >
-        {children}
-      </select>
-      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+        <span className={`truncate ${selected ? "text-ink" : "text-muted"}`}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <ChevronDownIcon
+          className={`h-4 w-4 shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            role="listbox"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 top-full z-50 mt-2 max-h-64 w-full min-w-max overflow-auto rounded-2xl border border-border bg-surface p-1.5 shadow-lg"
+          >
+            {options.map((option, index) => {
+              const isSelected = option.value === value;
+              const isHighlighted = index === highlighted;
+              return (
+                <li
+                  key={option.value}
+                  role="option"
+                  aria-selected={isSelected}
+                  onMouseEnter={() => setHighlighted(index)}
+                  onClick={() => commit(index)}
+                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
+                    option.disabled
+                      ? "cursor-not-allowed opacity-40"
+                      : isSelected
+                        ? "bg-accent/10 text-accent"
+                        : isHighlighted
+                          ? "bg-bg text-ink"
+                          : "text-ink"
+                  }`}
+                >
+                  <span className="truncate">{option.label}</span>
+                  {isSelected && <CheckIcon className="h-4 w-4 shrink-0 text-accent" />}
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
     </div>
   );
 
-  if (!label) return select;
+  if (!label) return trigger;
 
   return (
     <div>
-      <label htmlFor={selectId} className="mb-2 block text-xs font-bold text-label">
+      <label htmlFor={selectId} className="mb-1.5 block text-xs font-bold text-label">
         {label}
       </label>
-      {select}
+      {trigger}
     </div>
   );
 }

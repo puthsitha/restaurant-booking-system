@@ -9,6 +9,7 @@ import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SearchOffIcon } from "@/components/ui/icons";
+import { Select } from "@/components/ui/Select";
 import { RestaurantGridSkeleton } from "@/components/ui/skeletons";
 import { useLanguage } from "@/lib/i18n/context";
 import { staggerContainer, fadeUp } from "@/lib/motion";
@@ -164,21 +165,18 @@ function SearchPageContent() {
             <label className="mb-1.5 block text-xs font-bold text-label">
               {t("searchPage.tag")}
             </label>
-            <select
+            <Select
               value={tag}
-              onChange={(e) => {
-                setTag(e.target.value);
+              onChange={(value) => {
+                setTag(value);
                 setPage(1);
               }}
-              className="w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none"
-            >
-              <option value="">{t("searchPage.anyTag")}</option>
-              {tags.map((tagOption) => (
-                <option key={tagOption.id} value={tagOption.name}>
-                  {tagOption.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: t("searchPage.anyTag") },
+                ...tags.map((tagOption) => ({ value: tagOption.name, label: tagOption.name }))
+              ]}
+              className="bg-bg"
+            />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-bold text-label">

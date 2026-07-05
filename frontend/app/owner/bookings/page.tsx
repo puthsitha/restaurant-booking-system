@@ -121,26 +121,20 @@ export default function OwnerBookingsPage() {
         />
         <Select
           value={restaurantFilter}
-          onChange={(e) => setRestaurantFilter(e.target.value)}
-        >
-          <option value="">All restaurants</option>
-          {restaurants.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </Select>
+          onChange={setRestaurantFilter}
+          options={[
+            { value: "", label: "All restaurants" },
+            ...restaurants.map((r) => ({ value: r.id, label: r.name }))
+          ]}
+        />
         <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as ReservationStatus | "")}
-        >
-          <option value="">All statuses</option>
-          {RESERVATION_STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </Select>
+          onChange={setStatusFilter}
+          options={[
+            { value: "", label: "All statuses" },
+            ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))
+          ]}
+        />
         <DateField value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
       </div>
 
@@ -181,15 +175,10 @@ export default function OwnerBookingsPage() {
                   <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
                   <Select
                     value={r.status}
-                    onChange={(e) => handleStatusChange(r.id, e.target.value as ReservationStatus)}
+                    onChange={(status) => handleStatusChange(r.id, status)}
+                    options={RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
                     className="min-w-[130px] py-1.5 text-xs"
-                  >
-                    {RESERVATION_STATUS_OPTIONS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </Select>
+                  />
                 </div>
               </div>
             ))}
@@ -300,14 +289,9 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
           label="Restaurant"
           required
           value={restaurantId}
-          onChange={(e) => setRestaurantId(e.target.value)}
-        >
-          {restaurants.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </Select>
+          onChange={setRestaurantId}
+          options={restaurants.map((r) => ({ value: r.id, label: r.name }))}
+        />
         <TextField
           label="Guest name"
           required
@@ -343,14 +327,9 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
           <Select
             label="Seating"
             value={seatingPreference}
-            onChange={(e) => setSeatingPreference(e.target.value as SeatingPreference)}
-          >
-            {SEATING_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </Select>
+            onChange={setSeatingPreference}
+            options={SEATING_OPTIONS.map((s) => ({ value: s, label: s }))}
+          />
         </div>
         <TextAreaField
           label="Special requests (optional)"

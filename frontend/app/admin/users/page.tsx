@@ -10,6 +10,7 @@ import { FormField, TextAreaField, TextField } from "@/components/ui/FormField";
 import { SearchOffIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Select } from "@/components/ui/Select";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
@@ -64,15 +65,15 @@ export default function AdminUsersPage() {
           placeholder="Search by name or phone"
           className="min-w-[240px] rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
         />
-        <select
+        <Select
           value={role}
-          onChange={(e) => setRole(e.target.value as ManageableRole | "")}
-          className="rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none"
-        >
-          <option value="">All roles</option>
-          <option value="DINER">Customer</option>
-          <option value="OWNER">Owner</option>
-        </select>
+          onChange={setRole}
+          options={[
+            { value: "", label: "All roles" },
+            { value: "DINER", label: "Customer" },
+            { value: "OWNER", label: "Owner" }
+          ]}
+        />
       </div>
 
       {error ? (
