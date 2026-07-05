@@ -65,7 +65,8 @@ const en = {
     password: "Password",
     signIn: "Sign in",
     signingIn: "Signing in…",
-    somethingWentWrong: "Something went wrong"
+    somethingWentWrong: "Something went wrong",
+    continueWithGoogle: "Continue with Google"
   },
   home: {
     heroTagline: "TableSite · Cambodia",
@@ -297,7 +298,8 @@ const km = {
     password: "ពាក្យសម្ងាត់",
     signIn: "ចូល",
     signingIn: "កំពុងចូល…",
-    somethingWentWrong: "មានបញ្ហាមួយបានកើតឡើង"
+    somethingWentWrong: "មានបញ្ហាមួយបានកើតឡើង",
+    continueWithGoogle: "បន្តជាមួយ Google"
   },
   home: {
     heroTagline: "TableSite · កម្ពុជា",

@@ -3,6 +3,9 @@
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 
+import { GoogleIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
+
 interface GoogleCredentialResponse {
   credential: string;
 }
@@ -12,7 +15,7 @@ interface GoogleAccountsId {
     client_id: string;
     callback: (response: GoogleCredentialResponse) => void;
   }) => void;
-  renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
+  prompt: () => void;
 }
 
 declare global {
@@ -25,11 +28,13 @@ interface GoogleButtonProps {
   onCredential: (idToken: string) => void;
 }
 
-// Renders Google's own Sign-In button (via Google Identity Services) rather
-// than a custom-styled button that calls their API directly, since GSI
-// requires the official rendered button for its one-tap/consent UX.
+// A custom-styled button (our own icon + translated label) that drives
+// Google Identity Services' One Tap prompt, rather than Google's own
+// server-rendered button — that widget's language follows the browser's
+// locale instead of this app's, and its async render meant the button could
+// take a moment (or occasionally fail) to appear at all.
 export function GoogleButton({ onCredential }: GoogleButtonProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { locale, t } = useLanguage();
   const onCredentialRef = useRef(onCredential);
   onCredentialRef.current = onCredential;
 
@@ -37,23 +42,13 @@ export function GoogleButton({ onCredential }: GoogleButtonProps) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    if (!scriptLoaded || !clientId || !containerRef.current || !window.google) {
-      return;
-    }
+    if (!scriptLoaded || !clientId || !window.google) return;
 
     window.google.accounts.id.initialize({
       client_id: clientId,
       // Read via a ref so this effect doesn't need onCredential in its
-      // dependency array and re-render the button on every parent render.
+      // dependency array and re-initialize on every parent render.
       callback: (response) => onCredentialRef.current(response.credential),
-    });
-
-    containerRef.current.innerHTML = "";
-    window.google.accounts.id.renderButton(containerRef.current, {
-      theme: "outline",
-      size: "large",
-      width: 320,
-      text: "continue_with",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptLoaded, clientId]);
@@ -62,14 +57,26 @@ export function GoogleButton({ onCredential }: GoogleButtonProps) {
     return null;
   }
 
+  const ready = scriptLoaded;
+
   return (
     <>
       <Script
-        src="https://accounts.google.com/gsi/client"
+        // hl matches Google's own dialog text to this app's language rather
+        // than the browser's.
+        src={`https://accounts.google.com/gsi/client?hl=${locale}`}
         strategy="afterInteractive"
         onLoad={() => setScriptLoaded(true)}
       />
-      <div ref={containerRef} />
+      <button
+        type="button"
+        disabled={!ready}
+        onClick={() => window.google?.accounts.id.prompt()}
+        className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-border py-3 text-[15px] font-semibold text-ink transition hover:bg-bg disabled:opacity-60"
+      >
+        <GoogleIcon className="h-[18px] w-[18px]" />
+        {t("auth.continueWithGoogle")}
+      </button>
     </>
   );
 }
