@@ -11,6 +11,8 @@ import { Modal } from "@/components/ui/Modal";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { formatAbsoluteDate } from "@/lib/dateFormat";
+import { useLanguage } from "@/lib/i18n/context";
 import { createRestaurantRequest, listMyRestaurantRequests } from "@/lib/requests/api";
 import type { RequestStatus, RestaurantRequest } from "@/lib/requests/types";
 
@@ -22,6 +24,7 @@ const STATUS_STYLE: Record<RequestStatus, string> = {
 
 export default function OwnerRequestsPage() {
   const { user, token } = useOwnerAuth();
+  const { locale, t } = useLanguage();
   const [requests, setRequests] = useState<RestaurantRequest[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -31,8 +34,8 @@ export default function OwnerRequestsPage() {
     setError(null);
     listMyRestaurantRequests(token)
       .then((res) => setRequests(res.requests))
-      .catch(() => setError("Couldn't load your requests."));
-  }, [token]);
+      .catch(() => setError(t("ownerRequests.loadError")));
+  }, [token, t]);
 
   useEffect(load, [load]);
 
@@ -42,10 +45,9 @@ export default function OwnerRequestsPage() {
     <main className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="disp text-2xl font-extrabold text-ink">Restaurant limit requests</h1>
+          <h1 className="disp text-2xl font-extrabold text-ink">{t("ownerRequests.title")}</h1>
           <p className="mt-1 text-sm text-muted">
-            Currently allowed: {user?.restaurantLimit ?? 0} restaurant
-            {(user?.restaurantLimit ?? 0) === 1 ? "" : "s"}.
+            {t("ownerRequests.currentlyAllowed", { count: user?.restaurantLimit ?? 0 })}
           </p>
         </div>
         <button
@@ -54,7 +56,7 @@ export default function OwnerRequestsPage() {
           disabled={hasPending}
           className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
         >
-          {hasPending ? "Request pending review" : "+ Request more restaurants"}
+          {hasPending ? t("ownerRequests.requestPending") : t("ownerRequests.requestMore")}
         </button>
       </div>
 
@@ -68,9 +70,9 @@ export default function OwnerRequestsPage() {
         <EmptyState
           className="mt-8"
           icon={InboxIcon}
-          title="No requests yet"
-          message="Need more than your current limit? Ask an admin to raise it."
-          actionLabel="+ Request more restaurants"
+          title={t("ownerRequests.emptyTitle")}
+          message={t("ownerRequests.emptyMessage")}
+          actionLabel={t("ownerRequests.requestMore")}
           onAction={() => setShowModal(true)}
         />
       ) : (
@@ -80,11 +82,11 @@ export default function OwnerRequestsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-bold text-ink">
-                    {r.currentCount} → {r.requestedCount} restaurants
+                    {t("ownerRequests.toArrow", { from: r.currentCount, to: r.requestedCount })}
                   </p>
                   <p className="mt-1 text-sm text-ink">{r.reason}</p>
                   <p className="mt-1 text-xs text-muted">
-                    Submitted {new Date(r.createdAt).toLocaleDateString()}
+                    {t("ownerRequests.submitted", { date: formatAbsoluteDate(new Date(r.createdAt), locale, t) })}
                   </p>
                 </div>
                 <span
@@ -95,7 +97,7 @@ export default function OwnerRequestsPage() {
               </div>
               {r.reviewNote && (
                 <div className="mt-3 rounded-xl bg-bg px-4 py-3 text-sm text-ink">
-                  <span className="font-semibold">Admin note: </span>
+                  <span className="font-semibold">{t("ownerRequests.adminNotePrefix")}</span>
                   {r.reviewNote}
                 </div>
               )}
@@ -127,6 +129,7 @@ interface NewRequestModalProps {
 }
 
 function NewRequestModal({ open, onClose, currentLimit, token, onCreated }: NewRequestModalProps) {
+  const { t } = useLanguage();
   const [requestedCount, setRequestedCount] = useState(currentLimit + 1);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -146,29 +149,29 @@ function NewRequestModal({ open, onClose, currentLimit, token, onCreated }: NewR
       setReason("");
       onCreated();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("common.somethingWentWrong"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Request more restaurants">
+    <Modal open={open} onClose={onClose} title={t("ownerRequests.modalTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField
-          label="How many restaurants total?"
+          label={t("ownerRequests.howMany")}
           type="number"
           min={currentLimit + 1}
           required
           value={requestedCount}
           onChange={(e) => setRequestedCount(Number(e.target.value))}
-          hint={`You're currently allowed ${currentLimit}.`}
+          hint={t("ownerRequests.currentlyAllowedHint", { count: currentLimit })}
         />
         <TextAreaField
-          label="Reason"
+          label={t("ownerRequests.reason")}
           required
           rows={3}
-          placeholder="Tell the admin why you need more restaurants…"
+          placeholder={t("ownerRequests.reasonPlaceholder")}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
         />
@@ -178,7 +181,7 @@ function NewRequestModal({ open, onClose, currentLimit, token, onCreated }: NewR
           disabled={submitting}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {submitting ? "Submitting…" : "Submit request"}
+          {submitting ? t("common.submitting") : t("ownerRequests.submitRequest")}
         </button>
       </form>
     </Modal>

@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { listAllRestaurantsAdmin } from "@/lib/restaurants/api";
 import type { ListRestaurantsResponse, RestaurantStatus } from "@/lib/restaurants/types";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
@@ -24,6 +25,7 @@ const STATUS_TONE: Record<RestaurantStatus, StatusTone> = {
 
 export default function AdminRestaurantsPage() {
   const { token } = useAdminAuth();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState<RestaurantStatus | "">("");
@@ -44,9 +46,9 @@ export default function AdminRestaurantsPage() {
     )
       .then((res) => setResult(res))
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Couldn't load restaurants.");
+        setError(err instanceof ApiError ? err.message : t("adminRestaurants.loadError"));
       });
-  }, [token, debouncedSearch, status, page]);
+  }, [token, debouncedSearch, status, page, t]);
 
   useEffect(load, [load]);
 
@@ -54,23 +56,23 @@ export default function AdminRestaurantsPage() {
 
   return (
     <main className="p-8">
-      <h1 className="disp text-2xl font-extrabold text-ink">All restaurants</h1>
+      <h1 className="disp text-2xl font-extrabold text-ink">{t("adminRestaurants.title")}</h1>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name"
+          placeholder={t("adminRestaurants.searchPlaceholder")}
           className="min-w-[220px] rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink outline-none"
         />
         <Select
           value={status}
           onChange={setStatus}
           options={[
-            { value: "", label: "Any status" },
-            { value: "PENDING", label: "Pending review" },
-            { value: "ACTIVE", label: "Active" },
-            { value: "DISABLED", label: "Disabled" }
+            { value: "", label: t("adminRestaurants.anyStatus") },
+            { value: "PENDING", label: t("adminRestaurants.pendingReview") },
+            { value: "ACTIVE", label: t("adminRestaurants.active") },
+            { value: "DISABLED", label: t("adminRestaurants.disabled") }
           ]}
         />
       </div>
@@ -85,9 +87,9 @@ export default function AdminRestaurantsPage() {
         <EmptyState
           className="mt-8"
           icon={SearchOffIcon}
-          title="No restaurants match those filters"
-          message="Try clearing the search or status filter to see the full list."
-          actionLabel="Clear filters"
+          title={t("adminRestaurants.emptyTitle")}
+          message={t("adminRestaurants.emptyMessage")}
+          actionLabel={t("common.clearFilters")}
           onAction={() => {
             setSearch("");
             setStatus("");
@@ -123,18 +125,16 @@ export default function AdminRestaurantsPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Previous
+                {t("common.previous")}
               </button>
-              <span className="text-sm text-muted">
-                Page {page} of {totalPages}
-              </span>
+              <span className="text-sm text-muted">{t("common.pageOf", { page, total: totalPages })}</span>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Next
+                {t("common.next")}
               </button>
             </div>
           )}

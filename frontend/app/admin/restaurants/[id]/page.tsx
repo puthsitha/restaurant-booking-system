@@ -11,6 +11,7 @@ import type { StatusTone } from "@/components/ui/StatusBadge";
 import { TextAreaField } from "@/components/ui/FormField";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { getRestaurant, updateRestaurantStatus } from "@/lib/restaurants/api";
 import type { RestaurantManagementDetail, RestaurantStatus } from "@/lib/restaurants/types";
 import { theme } from "@/lib/theme";
@@ -37,6 +38,7 @@ function money(amount: string): string {
 // menu/etc. stays owner-only by design.
 export default function AdminRestaurantDetailPage({ params }: { params: { id: string } }) {
   const { token } = useAdminAuth();
+  const { t } = useLanguage();
   const [restaurant, setRestaurant] = useState<RestaurantManagementDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [statusAction, setStatusAction] = useState<RestaurantStatus | null>(null);
@@ -47,9 +49,9 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
       const res = await getRestaurant(params.id, token);
       setRestaurant(res.restaurant);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't load this restaurant.");
+      setError(err instanceof ApiError ? err.message : t("adminRestaurantDetail.loadError"));
     }
-  }, [params.id, token]);
+  }, [params.id, token, t]);
 
   useEffect(() => {
     void reload();
@@ -66,7 +68,7 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
   if (!restaurant) {
     return (
       <main className="p-8">
-        <LoadingSpinner label="Pulling up the file…" size="lg" />
+        <LoadingSpinner label={t("adminRestaurantDetail.loadingLabel")} size="lg" />
       </main>
     );
   }
@@ -94,7 +96,7 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
 
       {restaurant.statusReason && (
         <div className="mt-4 rounded-2xl border border-border bg-bg p-4 text-sm text-ink">
-          <span className="font-bold">Latest admin note: </span>
+          <span className="font-bold">{t("adminRestaurantDetail.latestAdminNotePrefix")}</span>
           {restaurant.statusReason}
         </div>
       )}
@@ -106,13 +108,13 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
               onClick={() => setStatusAction("ACTIVE")}
               className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white"
             >
-              Approve restaurant
+              {t("adminRestaurantDetail.approveRestaurant")}
             </button>
             <button
               onClick={() => setStatusAction("DISABLED")}
               className="rounded-xl border border-border px-5 py-2.5 text-sm font-bold text-ink transition hover:bg-bg"
             >
-              Reject restaurant
+              {t("adminRestaurantDetail.rejectRestaurant")}
             </button>
           </>
         ) : (
@@ -120,82 +122,120 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
             onClick={() => setStatusAction(restaurant.status === "ACTIVE" ? "DISABLED" : "ACTIVE")}
             className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white"
           >
-            {restaurant.status === "ACTIVE" ? "Disable restaurant" : "Reactivate restaurant"}
+            {restaurant.status === "ACTIVE"
+              ? t("adminRestaurantDetail.disableRestaurant")
+              : t("adminRestaurantDetail.reactivateRestaurant")}
           </button>
         )}
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         <section className="rounded-2xl border border-border bg-surface p-5">
-          <h2 className="disp text-sm font-bold text-ink">Owner</h2>
+          <h2 className="disp text-sm font-bold text-ink">{t("adminRestaurantDetail.ownerSection")}</h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <Row label="Name" value={restaurant.owner.name} />
-            <Row label="Email" value={restaurant.owner.email ?? "—"} />
-            <Row label="Phone" value={restaurant.owner.phone ?? "—"} />
+            <Row label={t("adminRestaurantDetail.name")} value={restaurant.owner.name} />
+            <Row label={t("adminRestaurantDetail.email")} value={restaurant.owner.email ?? "—"} />
+            <Row label={t("adminRestaurantDetail.phone")} value={restaurant.owner.phone ?? "—"} />
           </dl>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface p-5">
-          <h2 className="disp text-sm font-bold text-ink">Contact & location</h2>
+          <h2 className="disp text-sm font-bold text-ink">
+            {t("adminRestaurantDetail.contactLocation")}
+          </h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <Row label="Phone" value={restaurant.phone ?? "—"} />
-            <Row label="Email" value={restaurant.email ?? "—"} />
-            <Row label="Website" value={restaurant.website ?? "—"} />
-            <Row label="Address" value={`${restaurant.address}, ${restaurant.city}`} />
+            <Row label={t("adminRestaurantDetail.phone")} value={restaurant.phone ?? "—"} />
+            <Row label={t("adminRestaurantDetail.email")} value={restaurant.email ?? "—"} />
+            <Row label={t("adminRestaurantDetail.website")} value={restaurant.website ?? "—"} />
+            <Row
+              label={t("adminRestaurantDetail.address")}
+              value={`${restaurant.address}, ${restaurant.city}`}
+            />
           </dl>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface p-5 md:col-span-2">
-          <h2 className="disp text-sm font-bold text-ink">Description</h2>
+          <h2 className="disp text-sm font-bold text-ink">{t("adminRestaurantDetail.description")}</h2>
           <p className="mt-2 text-sm text-muted">
-            {restaurant.description || "No description provided."}
+            {restaurant.description || t("adminRestaurantDetail.noDescription")}
           </p>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface p-5">
-          <h2 className="disp text-sm font-bold text-ink">Booking policy</h2>
+          <h2 className="disp text-sm font-bold text-ink">{t("adminRestaurantDetail.bookingPolicy")}</h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <Row label="Min booking notice" value={`${restaurant.minBookingNotice} min`} />
-            <Row label="Max booking days ahead" value={`${restaurant.maxBookingDays} days`} />
-            <Row label="Cancellation window" value={`${restaurant.cancellationHours} hrs`} />
             <Row
-              label="Deposit"
-              value={restaurant.depositRequired ? money(restaurant.depositAmount) : "Not required"}
+              label={t("adminRestaurantDetail.minBookingNotice")}
+              value={`${restaurant.minBookingNotice} min`}
+            />
+            <Row
+              label={t("adminRestaurantDetail.maxBookingDays")}
+              value={`${restaurant.maxBookingDays} days`}
+            />
+            <Row
+              label={t("adminRestaurantDetail.cancellationWindow")}
+              value={`${restaurant.cancellationHours} hrs`}
+            />
+            <Row
+              label={t("adminRestaurantDetail.depositLabel")}
+              value={
+                restaurant.depositRequired
+                  ? money(restaurant.depositAmount)
+                  : t("adminRestaurantDetail.notRequired")
+              }
             />
           </dl>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface p-5">
-          <h2 className="disp text-sm font-bold text-ink">Capacity & amenities</h2>
+          <h2 className="disp text-sm font-bold text-ink">
+            {t("adminRestaurantDetail.capacityAmenities")}
+          </h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <Row label="Capacity" value={`${restaurant.minCapacity}–${restaurant.maxCapacity} guests`} />
-            <Row label="Parking" value={restaurant.parkingAvailable ? "Available" : "Not available"} />
-            <Row label="Dress code" value={restaurant.dressCode ?? "—"} />
+            <Row
+              label={t("adminRestaurantDetail.capacity")}
+              value={`${restaurant.minCapacity}–${restaurant.maxCapacity} guests`}
+            />
+            <Row
+              label={t("adminRestaurantDetail.parking")}
+              value={
+                restaurant.parkingAvailable
+                  ? t("adminRestaurantDetail.available")
+                  : t("adminRestaurantDetail.notAvailable")
+              }
+            />
+            <Row label={t("adminRestaurantDetail.dressCode")} value={restaurant.dressCode ?? "—"} />
           </dl>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface p-5">
-          <h2 className="disp text-sm font-bold text-ink">Content</h2>
+          <h2 className="disp text-sm font-bold text-ink">{t("adminRestaurantDetail.contentSection")}</h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <Row label="Menus" value={String(restaurant.menus.length)} />
-            <Row label="Tables" value={String(restaurant.tables.length)} />
-            <Row label="Gallery images" value={String(restaurant.galleryImages.length)} />
-            <Row label="Operating hours set" value={String(restaurant.operatingHours.length)} />
+            <Row label={t("adminRestaurantDetail.menus")} value={String(restaurant.menus.length)} />
+            <Row label={t("adminRestaurantDetail.tables")} value={String(restaurant.tables.length)} />
+            <Row
+              label={t("adminRestaurantDetail.galleryImages")}
+              value={String(restaurant.galleryImages.length)}
+            />
+            <Row
+              label={t("adminRestaurantDetail.hoursSet")}
+              value={String(restaurant.operatingHours.length)}
+            />
           </dl>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface p-5">
-          <h2 className="disp text-sm font-bold text-ink">Tags</h2>
+          <h2 className="disp text-sm font-bold text-ink">{t("adminRestaurantDetail.tagsSection")}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {restaurant.tags.length === 0 ? (
-              <p className="text-sm text-muted">No tags.</p>
+              <p className="text-sm text-muted">{t("adminRestaurantDetail.noTags")}</p>
             ) : (
-              restaurant.tags.map((t) => (
+              restaurant.tags.map((tag) => (
                 <span
-                  key={t.id}
+                  key={tag.id}
                   className="rounded-full bg-bg px-3 py-1 text-xs font-semibold text-ink"
                 >
-                  {t.name}
+                  {tag.name}
                 </span>
               ))
             )}
@@ -235,6 +275,7 @@ interface StatusModalProps {
 }
 
 function StatusModal({ restaurant, nextStatus, onClose, token, onUpdated }: StatusModalProps) {
+  const { t } = useLanguage();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -251,11 +292,11 @@ function StatusModal({ restaurant, nextStatus, onClose, token, onUpdated }: Stat
 
   const title = isPendingReview
     ? isApprove
-      ? "Approve restaurant"
-      : "Reject restaurant"
+      ? t("adminRestaurantDetail.approveRestaurant")
+      : t("adminRestaurantDetail.rejectRestaurant")
     : isApprove
-      ? "Reactivate restaurant"
-      : "Disable restaurant";
+      ? t("adminRestaurantDetail.reactivateRestaurant")
+      : t("adminRestaurantDetail.disableRestaurant");
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -271,7 +312,7 @@ function StatusModal({ restaurant, nextStatus, onClose, token, onUpdated }: Stat
       );
       onUpdated({ status: updated.status, statusReason: updated.statusReason });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update this restaurant.");
+      setError(err instanceof ApiError ? err.message : t("adminRestaurantDetail.updateError"));
     } finally {
       setSubmitting(false);
     }
@@ -284,17 +325,17 @@ function StatusModal({ restaurant, nextStatus, onClose, token, onUpdated }: Stat
           <p className="text-sm text-ink">
             {isPendingReview
               ? isApprove
-                ? `${restaurant.name} will become active and visible to diners.`
-                : `${restaurant.name} will stay hidden from diners until re-submitted and approved.`
+                ? t("adminRestaurantDetail.becomeActive", { name: restaurant.name })
+                : t("adminRestaurantDetail.stayHidden", { name: restaurant.name })
               : isApprove
-                ? `${restaurant.name} will become active and visible to diners again.`
-                : `${restaurant.name} will be hidden from diners immediately.`}
+                ? t("adminRestaurantDetail.becomeActiveAgain", { name: restaurant.name })
+                : t("adminRestaurantDetail.hiddenImmediately", { name: restaurant.name })}
           </p>
           <TextAreaField
-            label="Reason"
+            label={t("adminRestaurantDetail.reason")}
             required
             rows={3}
-            placeholder="Explain the reason for this decision — the owner will see it…"
+            placeholder={t("adminRestaurantDetail.reasonPlaceholder")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
@@ -304,7 +345,9 @@ function StatusModal({ restaurant, nextStatus, onClose, token, onUpdated }: Stat
             disabled={submitting}
             className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Saving…" : `Confirm ${title.toLowerCase()}`}
+            {submitting
+              ? t("common.saving")
+              : t("adminRestaurantDetail.confirmAction", { action: title.toLowerCase() })}
           </button>
         </form>
       )}

@@ -5,20 +5,22 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { SavedToast } from "@/components/ui/SavedToast";
 import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { setOperatingHours } from "@/lib/restaurants/api";
 import type { DayOfWeek } from "@/lib/restaurants/types";
 
 import type { DirtyTabHandle, ManageTabProps } from "./types";
 
-const DAYS: { key: DayOfWeek; label: string }[] = [
-  { key: "MONDAY", label: "Monday" },
-  { key: "TUESDAY", label: "Tuesday" },
-  { key: "WEDNESDAY", label: "Wednesday" },
-  { key: "THURSDAY", label: "Thursday" },
-  { key: "FRIDAY", label: "Friday" },
-  { key: "SATURDAY", label: "Saturday" },
-  { key: "SUNDAY", label: "Sunday" },
-];
+const DAYS = [
+  { key: "MONDAY", labelKey: "ownerManage.hours.monday" },
+  { key: "TUESDAY", labelKey: "ownerManage.hours.tuesday" },
+  { key: "WEDNESDAY", labelKey: "ownerManage.hours.wednesday" },
+  { key: "THURSDAY", labelKey: "ownerManage.hours.thursday" },
+  { key: "FRIDAY", labelKey: "ownerManage.hours.friday" },
+  { key: "SATURDAY", labelKey: "ownerManage.hours.saturday" },
+  { key: "SUNDAY", labelKey: "ownerManage.hours.sunday" },
+] as const satisfies { key: DayOfWeek; labelKey: TranslationKey }[];
 
 interface DayState {
   openTime: string;
@@ -44,6 +46,7 @@ export const HoursTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Hour
   { restaurant, token, onSaved, onDirtyChange },
   ref,
 ) {
+  const { t } = useLanguage();
   const baseline = useRef(draftFromRestaurant(restaurant));
   const [hours, setHours] = useState(baseline.current);
   const [isSaving, setIsSaving] = useState(false);
@@ -75,12 +78,12 @@ export const HoursTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Hour
       setTimeout(() => setJustSaved(false), 2000);
       return true;
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't save hours");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.hours.loadError"));
       return false;
     } finally {
       setIsSaving(false);
     }
-  }, [restaurant.id, token, hours, onSaved]);
+  }, [restaurant.id, token, hours, onSaved, t]);
 
   useImperativeHandle(ref, () => ({ save }), [save]);
 
@@ -91,18 +94,18 @@ export const HoursTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Hour
 
   return (
     <div className="max-w-xl space-y-3 pb-2">
-      {DAYS.map(({ key, label }) => {
+      {DAYS.map(({ key, labelKey }) => {
         const day = hours[key];
         return (
           <div key={key} className="flex items-center gap-4 rounded-xl border border-border p-3">
-            <span className="w-28 shrink-0 text-sm font-semibold text-ink">{label}</span>
+            <span className="w-28 shrink-0 text-sm font-semibold text-ink">{t(labelKey)}</span>
             <label className="flex items-center gap-2 text-xs text-muted">
               <input
                 type="checkbox"
                 checked={day.isClosed}
                 onChange={(e) => updateDay(key, { isClosed: e.target.checked })}
               />
-              Closed
+              {t("ownerManage.hours.closed")}
             </label>
             {!day.isClosed && (
               <>
@@ -131,7 +134,7 @@ export const HoursTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Hour
         error={error}
         onSave={save}
         onDiscard={discard}
-        saveLabel="Save hours"
+        saveLabel={t("ownerManage.hours.saveHours")}
       />
       <SavedToast visible={justSaved && !isDirty} />
     </div>

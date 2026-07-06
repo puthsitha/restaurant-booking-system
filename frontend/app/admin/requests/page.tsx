@@ -12,6 +12,8 @@ import { Select } from "@/components/ui/Select";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { formatAbsoluteDate } from "@/lib/dateFormat";
+import { useLanguage } from "@/lib/i18n/context";
 import { listAllRestaurantRequests, reviewRestaurantRequest } from "@/lib/requests/api";
 import type { RequestStatus, RestaurantRequest } from "@/lib/requests/types";
 
@@ -23,6 +25,7 @@ const STATUS_STYLE: Record<RequestStatus, string> = {
 
 export default function AdminRequestsPage() {
   const { token } = useAdminAuth();
+  const { locale, t } = useLanguage();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | "">("PENDING");
   const [requests, setRequests] = useState<RestaurantRequest[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,25 +36,25 @@ export default function AdminRequestsPage() {
     setError(null);
     listAllRestaurantRequests({ status: statusFilter || undefined, pageSize: 50 }, token)
       .then((res) => setRequests(res.items))
-      .catch(() => setError("Couldn't load requests."));
-  }, [token, statusFilter]);
+      .catch(() => setError(t("adminRequests.loadError")));
+  }, [token, statusFilter, t]);
 
   useEffect(load, [load]);
 
   return (
     <main className="p-8">
-      <h1 className="disp text-2xl font-extrabold text-ink">Restaurant limit requests</h1>
-      <p className="mt-1 text-sm text-muted">Approve or deny an owner&apos;s request for more restaurants.</p>
+      <h1 className="disp text-2xl font-extrabold text-ink">{t("adminRequests.title")}</h1>
+      <p className="mt-1 text-sm text-muted">{t("adminRequests.subtitle")}</p>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Select
           value={statusFilter}
           onChange={setStatusFilter}
           options={[
-            { value: "", label: "All statuses" },
-            { value: "PENDING", label: "Pending" },
-            { value: "APPROVED", label: "Approved" },
-            { value: "DENIED", label: "Denied" }
+            { value: "", label: t("adminRequests.allStatuses") },
+            { value: "PENDING", label: t("adminRequests.pending") },
+            { value: "APPROVED", label: t("adminRequests.approved") },
+            { value: "DENIED", label: t("adminRequests.denied") }
           ]}
         />
       </div>
@@ -63,7 +66,7 @@ export default function AdminRequestsPage() {
           <ListSkeleton rows={3} />
         </div>
       ) : requests.length === 0 ? (
-        <EmptyState className="mt-8" icon={InboxIcon} title="No requests match those filters" />
+        <EmptyState className="mt-8" icon={InboxIcon} title={t("adminRequests.emptyTitle")} />
       ) : (
         <div className="mt-8 space-y-3">
           {requests.map((r) => (
@@ -72,11 +75,11 @@ export default function AdminRequestsPage() {
                 <div>
                   <p className="font-bold text-ink">{r.owner.name}</p>
                   <p className="mt-0.5 text-sm text-muted">
-                    {r.currentCount} → {r.requestedCount} restaurants
+                    {t("ownerRequests.toArrow", { from: r.currentCount, to: r.requestedCount })}
                   </p>
                   <p className="mt-2 text-sm text-ink">{r.reason}</p>
                   <p className="mt-1 text-xs text-muted">
-                    Submitted {new Date(r.createdAt).toLocaleDateString()}
+                    {t("adminRequests.submitted", { date: formatAbsoluteDate(new Date(r.createdAt), locale, t) })}
                   </p>
                 </div>
                 <span
@@ -87,7 +90,7 @@ export default function AdminRequestsPage() {
               </div>
               {r.reviewNote && (
                 <div className="mt-3 rounded-xl bg-bg px-4 py-3 text-sm text-ink">
-                  <span className="font-semibold">Your note: </span>
+                  <span className="font-semibold">{t("adminRequests.yourNotePrefix")}</span>
                   {r.reviewNote}
                 </div>
               )}
@@ -97,7 +100,7 @@ export default function AdminRequestsPage() {
                   onClick={() => setReviewing(r)}
                   className="mt-3 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white"
                 >
-                  Review
+                  {t("adminRequests.review")}
                 </button>
               )}
             </div>
@@ -129,6 +132,7 @@ interface ReviewModalProps {
 }
 
 function ReviewModal({ request, onClose, token, onReviewed }: ReviewModalProps) {
+  const { t } = useLanguage();
   const [decision, setDecision] = useState<"APPROVED" | "DENIED">("APPROVED");
   const [reviewNote, setReviewNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -155,19 +159,22 @@ function ReviewModal({ request, onClose, token, onReviewed }: ReviewModalProps) 
       );
       onReviewed(updated);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("common.somethingWentWrong"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={request !== null} onClose={onClose} title="Review request">
+    <Modal open={request !== null} onClose={onClose} title={t("adminRequests.modalTitle")}>
       {request && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <p className="text-sm text-ink">
-            {request.owner.name} wants to go from {request.currentCount} to {request.requestedCount}{" "}
-            restaurants.
+            {t("adminRequests.wantsToGo", {
+              name: request.owner.name,
+              from: request.currentCount,
+              to: request.requestedCount
+            })}
           </p>
           <div className="flex gap-2">
             <button
@@ -179,7 +186,7 @@ function ReviewModal({ request, onClose, token, onReviewed }: ReviewModalProps) 
                   : "border-border text-ink"
               }`}
             >
-              Approve
+              {t("adminRequests.approve")}
             </button>
             <button
               type="button"
@@ -188,14 +195,14 @@ function ReviewModal({ request, onClose, token, onReviewed }: ReviewModalProps) 
                 decision === "DENIED" ? "border-red-400 bg-red-50 text-red-700" : "border-border text-ink"
               }`}
             >
-              Deny
+              {t("adminRequests.deny")}
             </button>
           </div>
           <TextAreaField
-            label="Reason"
+            label={t("adminRequests.reason")}
             required
             rows={3}
-            placeholder="Explain your decision to the owner…"
+            placeholder={t("adminRequests.reasonPlaceholder")}
             value={reviewNote}
             onChange={(e) => setReviewNote(e.target.value)}
           />
@@ -205,7 +212,11 @@ function ReviewModal({ request, onClose, token, onReviewed }: ReviewModalProps) 
             disabled={submitting}
             className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Submitting…" : `Confirm ${decision === "APPROVED" ? "approval" : "denial"}`}
+            {submitting
+              ? t("common.submitting")
+              : decision === "APPROVED"
+                ? t("adminRequests.confirmApproval")
+                : t("adminRequests.confirmDenial")}
           </button>
         </form>
       )}

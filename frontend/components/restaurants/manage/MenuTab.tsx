@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { TextAreaField, TextField } from "@/components/ui/FormField";
 import { ChefHatIcon, UtensilsIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/context";
 import {
   createMenu,
   createMenuItem,
@@ -29,6 +30,7 @@ function Badge({ children }: { children: ReactNode }) {
 }
 
 export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
+  const { t } = useLanguage();
   const [newMenuName, setNewMenuName] = useState("");
   const [newMenuDescription, setNewMenuDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
       setNewMenuDescription("");
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't add menu");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.menu.addMenuError"));
     } finally {
       setIsSaving(false);
     }
@@ -59,7 +61,7 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
       await deleteMenu(restaurant.id, menuId, token);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't delete menu");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.menu.deleteMenuError"));
     }
   }
 
@@ -67,18 +69,18 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
     <div className="max-w-3xl">
       <form onSubmit={handleAddMenu} className="flex flex-wrap items-end gap-3">
         <TextField
-          label="New menu name"
+          label={t("ownerManage.menu.newMenuName")}
           required
           value={newMenuName}
           onChange={(e) => setNewMenuName(e.target.value)}
-          placeholder="Lunch Menu"
+          placeholder={t("ownerManage.menu.newMenuPlaceholder")}
           className="w-56"
         />
         <TextField
-          label="Description (optional)"
+          label={t("ownerManage.menu.descriptionOptional")}
           value={newMenuDescription}
           onChange={(e) => setNewMenuDescription(e.target.value)}
-          placeholder="Served 11:00 AM – 3:00 PM"
+          placeholder={t("ownerManage.menu.descriptionPlaceholder")}
           className="min-w-[220px] flex-1"
         />
         <button
@@ -86,7 +88,7 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
           disabled={isSaving}
           className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-60"
         >
-          Add menu
+          {t("ownerManage.menu.addMenu")}
         </button>
       </form>
 
@@ -96,8 +98,8 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
         {restaurant.menus.length === 0 ? (
           <EmptyState
             icon={ChefHatIcon}
-            title="No menus yet"
-            message="Add a menu above, then start listing dishes diners will love."
+            title={t("ownerManage.menu.emptyTitle")}
+            message={t("ownerManage.menu.emptyMessage")}
             compact
           />
         ) : (
@@ -114,7 +116,7 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
                   onClick={() => handleDeleteMenu(menu.id)}
                   className="shrink-0 text-sm font-semibold text-red-600"
                 >
-                  Delete menu
+                  {t("ownerManage.menu.deleteMenu")}
                 </button>
               </div>
 
@@ -158,6 +160,7 @@ function MenuItemRow({
   token: string;
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
 
   async function toggleAvailable(isAvailable: boolean): Promise<void> {
@@ -165,7 +168,7 @@ function MenuItemRow({
       await updateMenuItem(restaurantId, menuId, item.id, { isAvailable }, token);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update item");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.menu.updateItemError"));
     }
   }
 
@@ -174,7 +177,7 @@ function MenuItemRow({
       await deleteMenuItem(restaurantId, menuId, item.id, token);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't delete item");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.menu.deleteItemError"));
     }
   }
 
@@ -207,9 +210,9 @@ function MenuItemRow({
         )}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {item.isVegan && <Badge>Vegan</Badge>}
-          {item.isVegetarian && !item.isVegan && <Badge>Vegetarian</Badge>}
-          {item.isGlutenFree && <Badge>Gluten-free</Badge>}
+          {item.isVegan && <Badge>{t("ownerManage.menu.vegan")}</Badge>}
+          {item.isVegetarian && !item.isVegan && <Badge>{t("ownerManage.menu.vegetarian")}</Badge>}
+          {item.isGlutenFree && <Badge>{t("ownerManage.menu.glutenFree")}</Badge>}
 
           <label className="ml-auto flex items-center gap-1.5 text-xs text-muted">
             <input
@@ -217,10 +220,10 @@ function MenuItemRow({
               checked={item.isAvailable}
               onChange={(e) => toggleAvailable(e.target.checked)}
             />
-            Available
+            {t("ownerManage.menu.available")}
           </label>
           <button onClick={handleDelete} className="text-xs font-semibold text-red-600">
-            Delete
+            {t("common.delete")}
           </button>
         </div>
         {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
@@ -240,6 +243,7 @@ function AddItemForm({
   token: string;
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -287,7 +291,7 @@ function AddItemForm({
       setExpanded(false);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't add item");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.menu.addItemError"));
     } finally {
       setIsSaving(false);
     }
@@ -300,22 +304,22 @@ function AddItemForm({
     >
       <div className="flex flex-wrap items-end gap-2">
         <TextField
-          label="Item name"
+          label={t("ownerManage.menu.itemName")}
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Fish Amok"
+          placeholder={t("ownerManage.menu.itemNamePlaceholder")}
           className="min-w-[160px] flex-1"
         />
         <TextField
-          label="Price (USD)"
+          label={t("ownerManage.menu.priceUsd")}
           required
           type="number"
           min={0}
           step="0.01"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          placeholder="9.99"
+          placeholder={t("ownerManage.menu.pricePlaceholder")}
           className="w-28"
         />
         <button
@@ -323,34 +327,34 @@ function AddItemForm({
           onClick={() => setExpanded((v) => !v)}
           className="rounded-lg border border-border px-4 py-3 text-xs font-bold text-ink transition hover:bg-bg"
         >
-          {expanded ? "Fewer details" : "More details"}
+          {expanded ? t("ownerManage.menu.fewerDetails") : t("ownerManage.menu.moreDetails")}
         </button>
         <button
           type="submit"
           disabled={isSaving}
           className="rounded-lg bg-accent px-5 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-60"
         >
-          {isSaving ? "Adding…" : "Add item"}
+          {isSaving ? t("common.adding") : t("ownerManage.menu.addItem")}
         </button>
       </div>
 
       {expanded && (
         <div className="space-y-3 rounded-xl bg-bg p-4">
           <TextAreaField
-            label="Description"
+            label={t("ownerManage.menu.description")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            placeholder="Steamed fish in coconut cream curry with kaffir lime leaves"
+            placeholder={t("ownerManage.menu.descriptionItemPlaceholder")}
           />
           <div className="flex flex-wrap gap-3">
             <div className="min-w-[160px] flex-1">
               <TextField
-                label="Category"
+                label={t("ownerManage.menu.category")}
                 list="menu-item-categories"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Main"
+                placeholder={t("ownerManage.menu.categoryPlaceholder")}
               />
               <datalist id="menu-item-categories">
                 {CATEGORY_SUGGESTIONS.map((c) => (
@@ -359,17 +363,17 @@ function AddItemForm({
               </datalist>
             </div>
             <TextField
-              label="Image URL"
+              label={t("ownerManage.menu.imageUrl")}
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://…"
+              placeholder={t("ownerManage.menu.urlPlaceholder")}
               className="min-w-[220px] flex-[2]"
             />
           </div>
           <div className="flex flex-wrap gap-4 pt-1">
             <label className="flex items-center gap-2 text-sm text-ink">
               <input type="checkbox" checked={isVegan} onChange={(e) => setIsVegan(e.target.checked)} />
-              Vegan
+              {t("ownerManage.menu.vegan")}
             </label>
             <label className="flex items-center gap-2 text-sm text-ink">
               <input
@@ -377,7 +381,7 @@ function AddItemForm({
                 checked={isVegetarian}
                 onChange={(e) => setIsVegetarian(e.target.checked)}
               />
-              Vegetarian
+              {t("ownerManage.menu.vegetarian")}
             </label>
             <label className="flex items-center gap-2 text-sm text-ink">
               <input
@@ -385,7 +389,7 @@ function AddItemForm({
                 checked={isGlutenFree}
                 onChange={(e) => setIsGlutenFree(e.target.checked)}
               />
-              Gluten-free
+              {t("ownerManage.menu.glutenFree")}
             </label>
           </div>
         </div>

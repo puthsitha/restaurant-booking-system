@@ -9,6 +9,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { CalendarIcon, ChefHatIcon, InboxIcon, UsersIcon } from "@/components/ui/icons";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { getAdminBookingStats } from "@/lib/reservations/api";
 import type { DailyBookingCount } from "@/lib/reservations/api";
 import { listAllRestaurantRequests } from "@/lib/requests/api";
@@ -25,6 +26,7 @@ interface DashboardStats {
 
 export default function AdminDashboardPage() {
   const { user, token } = useAdminAuth();
+  const { t } = useLanguage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [chartData, setChartData] = useState<DailyBookingCount[] | null>(null);
 
@@ -68,14 +70,14 @@ export default function AdminDashboardPage() {
   return (
     <main className="p-8">
       <DashboardHeaderBar
-        title={`Welcome back, ${user?.name.split(" ")[0] ?? ""}`}
-        subtitle="Platform health at a glance."
+        title={t("adminDashboard.welcomeBack", { name: user?.name.split(" ")[0] ?? "" })}
+        subtitle={t("adminDashboard.subtitle")}
         actions={
           <Link
             href="/admin/users"
             className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(194,65,12,.28)]"
           >
-            + Create owner
+            {t("adminDashboard.createOwner")}
           </Link>
         }
       />
@@ -86,30 +88,30 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             icon={UsersIcon}
-            label="Total users"
+            label={t("adminDashboard.statTotalUsers")}
             value={stats.totalUsers}
-            trend={{ label: `${stats.totalOwners} owners`, tone: "neutral" }}
+            trend={{ label: t("adminDashboard.ownersCount", { count: stats.totalOwners }), tone: "neutral" }}
           />
           <StatCard
             icon={ChefHatIcon}
-            label="Owners"
+            label={t("adminDashboard.statOwners")}
             value={stats.totalOwners}
             tone="secondary"
           />
           <StatCard
             icon={CalendarIcon}
-            label="Restaurants"
+            label={t("adminDashboard.statRestaurants")}
             value={`${stats.activeRestaurants} / ${stats.totalRestaurants}`}
-            trend={{ label: "active", tone: "neutral" }}
+            trend={{ label: t("adminDashboard.activeCount"), tone: "neutral" }}
           />
           <StatCard
             icon={InboxIcon}
-            label="Pending requests"
+            label={t("adminDashboard.statPendingRequests")}
             value={stats.pendingRequests}
             trend={
               stats.pendingRequests > 0
-                ? { label: "needs review", tone: "positive" }
-                : { label: "all clear", tone: "neutral" }
+                ? { label: t("adminDashboard.needsReview"), tone: "positive" }
+                : { label: t("adminDashboard.allClear"), tone: "neutral" }
             }
             tone="secondary"
           />
@@ -118,8 +120,8 @@ export default function AdminDashboardPage() {
 
       {chartData && chartData.some((d) => d.count > 0) && (
         <div className="mt-8 rounded-2xl border border-border bg-surface p-5">
-          <h2 className="disp text-sm font-bold text-ink">Platform bookings</h2>
-          <p className="text-xs text-muted">Last 14 days</p>
+          <h2 className="disp text-sm font-bold text-ink">{t("adminDashboard.platformBookings")}</h2>
+          <p className="text-xs text-muted">{t("adminDashboard.last14Days")}</p>
           <BarChart data={chartData} className="mt-4" />
         </div>
       )}
@@ -129,31 +131,31 @@ export default function AdminDashboardPage() {
           href="/admin/restaurants"
           className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-ink transition hover:bg-bg"
         >
-          All restaurants
+          {t("adminDashboard.allRestaurants")}
         </Link>
         <Link
           href="/admin/requests"
           className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-ink transition hover:bg-bg"
         >
-          Review requests
+          {t("adminDashboard.reviewRequests")}
         </Link>
         <Link
           href="/admin/users"
           className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-ink transition hover:bg-bg"
         >
-          Manage users
+          {t("adminDashboard.manageUsers")}
         </Link>
         <Link
           href="/admin/tags"
           className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-ink transition hover:bg-bg"
         >
-          Manage tags
+          {t("adminDashboard.manageTags")}
         </Link>
         <Link
           href="/admin/settings"
           className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-ink transition hover:bg-bg"
         >
-          Platform settings
+          {t("adminDashboard.platformSettings")}
         </Link>
       </div>
     </main>

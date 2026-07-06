@@ -9,6 +9,7 @@ import { EmptyPlateIcon } from "@/components/ui/icons";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Select } from "@/components/ui/Select";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/context";
 import { createTable, deleteTable, updateTable } from "@/lib/restaurants/api";
 import type { TableStatus } from "@/lib/restaurants/types";
 
@@ -16,6 +17,7 @@ import { FloorPlanView } from "./FloorPlanView";
 import type { ManageTabProps } from "./types";
 
 export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
+  const { t } = useLanguage();
   const [view, setView] = useState<"list" | "floorplan">("list");
   const [tableNumber, setTableNumber] = useState("");
   const [capacity, setCapacity] = useState(2);
@@ -47,7 +49,7 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
       setDescription("");
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't add table");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.tables.addError"));
     } finally {
       setIsSaving(false);
     }
@@ -58,7 +60,7 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
       await updateTable(restaurant.id, tableId, { status }, token);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update table");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.tables.updateError"));
     }
   }
 
@@ -67,7 +69,7 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
       await deleteTable(restaurant.id, tableId, token);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't delete table");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.tables.deleteError"));
     }
   }
 
@@ -76,15 +78,15 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
       <form onSubmit={handleAdd} className="space-y-3">
         <div className="flex flex-wrap items-end gap-3">
           <TextField
-            label="Table number"
+            label={t("ownerManage.tables.tableNumber")}
             required
             value={tableNumber}
             onChange={(e) => setTableNumber(e.target.value)}
-            placeholder="T1"
+            placeholder={t("ownerManage.tables.tableNumberPlaceholder")}
             className="w-28"
           />
           <TextField
-            label="Capacity"
+            label={t("ownerManage.tables.capacity")}
             required
             type="number"
             min={1}
@@ -93,26 +95,26 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
             className="w-24"
           />
           <TextField
-            label="Floor"
+            label={t("ownerManage.tables.floor")}
             value={floor}
             onChange={(e) => setFloor(e.target.value)}
-            placeholder="Ground"
+            placeholder={t("ownerManage.tables.floorPlaceholder")}
             className="w-32"
           />
           <TextField
-            label="Zone"
+            label={t("ownerManage.tables.zone")}
             value={zone}
             onChange={(e) => setZone(e.target.value)}
-            placeholder="Garden, VIP…"
+            placeholder={t("ownerManage.tables.zonePlaceholder")}
             className="w-36"
           />
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <TextField
-            label="Description (optional)"
+            label={t("ownerManage.tables.descriptionOptional")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Intimate table in garden area"
+            placeholder={t("ownerManage.tables.descriptionPlaceholder")}
             className="min-w-[240px] flex-1"
           />
           <button
@@ -120,7 +122,7 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
             disabled={isSaving}
             className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-60"
           >
-            Add table
+            {t("ownerManage.tables.addTable")}
           </button>
         </div>
       </form>
@@ -131,8 +133,8 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
         <EmptyState
           className="mt-6"
           icon={EmptyPlateIcon}
-          title="No tables yet"
-          message="Add your first table above so diners have somewhere to sit."
+          title={t("ownerManage.tables.emptyTitle")}
+          message={t("ownerManage.tables.emptyMessage")}
           compact
         />
       ) : (
@@ -141,8 +143,8 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
             value={view}
             onChange={setView}
             options={[
-              { value: "list", label: "List" },
-              { value: "floorplan", label: "Floor plan" },
+              { value: "list", label: t("ownerManage.tables.viewList") },
+              { value: "floorplan", label: t("ownerManage.tables.viewFloorPlan") },
             ]}
             className="mt-6"
           />
@@ -153,7 +155,10 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
                 <div key={table.id} className="flex items-center justify-between gap-4 p-4">
                   <div>
                     <p className="font-semibold text-ink">
-                      {table.tableNumber} · {table.capacity} seats
+                      {t("ownerManage.floorPlan.seatsSuffix", {
+                        number: table.tableNumber,
+                        capacity: table.capacity
+                      })}
                     </p>
                     <p className="text-sm text-muted">
                       {[table.floor, table.zone].filter(Boolean).join(" · ")}
@@ -167,9 +172,9 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
                       value={table.status}
                       onChange={(status) => handleStatusChange(table.id, status)}
                       options={[
-                        { value: "AVAILABLE", label: "Available" },
-                        { value: "SEATED", label: "Seated" },
-                        { value: "RESERVED", label: "Reserved" }
+                        { value: "AVAILABLE", label: t("ownerManage.tables.statusAvailable") },
+                        { value: "SEATED", label: t("ownerManage.tables.statusSeated") },
+                        { value: "RESERVED", label: t("ownerManage.tables.statusReserved") }
                       ]}
                       className="min-w-[130px] py-1.5 text-xs"
                     />
@@ -177,7 +182,7 @@ export function TablesTab({ restaurant, token, onSaved }: ManageTabProps) {
                       onClick={() => handleDelete(table.id)}
                       className="text-sm font-semibold text-red-600"
                     >
-                      Delete
+                      {t("common.delete")}
                     </button>
                   </div>
                 </div>

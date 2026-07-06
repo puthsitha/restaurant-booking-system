@@ -16,6 +16,8 @@ import { ListSkeleton } from "@/components/ui/skeletons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { formatRelativeDate, formatTimeLabel, parseIsoDate } from "@/lib/dateFormat";
+import { useLanguage } from "@/lib/i18n/context";
 import {
   createManualReservation,
   listOwnerReservations,
@@ -40,6 +42,7 @@ function todayIso(): string {
 
 export default function OwnerBookingsPage() {
   const { token } = useOwnerAuth();
+  const { locale, t } = useLanguage();
   const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([]);
   const [result, setResult] = useState<ListReservationsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,9 +75,9 @@ export default function OwnerBookingsPage() {
     )
       .then((res) => setResult(res))
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Couldn't load bookings.");
+        setError(err instanceof ApiError ? err.message : t("ownerBookings.loadError"));
       });
-  }, [token, restaurantFilter, statusFilter, dateFilter, debouncedSearch, page]);
+  }, [token, restaurantFilter, statusFilter, dateFilter, debouncedSearch, page, t]);
 
   useEffect(load, [load]);
 
@@ -91,7 +94,7 @@ export default function OwnerBookingsPage() {
       await updateReservationStatus(id, status, token);
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update this booking.");
+      setError(err instanceof ApiError ? err.message : t("ownerBookings.updateError"));
     }
   }
 
@@ -101,15 +104,15 @@ export default function OwnerBookingsPage() {
     <main className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="disp text-2xl font-extrabold text-ink">Bookings</h1>
-          <p className="mt-1 text-sm text-muted">Manage reservations across your restaurants.</p>
+          <h1 className="disp text-2xl font-extrabold text-ink">{t("ownerBookings.title")}</h1>
+          <p className="mt-1 text-sm text-muted">{t("ownerBookings.subtitle")}</p>
         </div>
         <button
           type="button"
           onClick={() => setShowManualModal(true)}
           className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white"
         >
-          + Walk-in / phone booking
+          {t("ownerBookings.addWalkIn")}
         </button>
       </div>
 
@@ -117,13 +120,13 @@ export default function OwnerBookingsPage() {
         <SearchField
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by guest name or phone"
+          placeholder={t("ownerBookings.searchPlaceholder")}
         />
         <Select
           value={restaurantFilter}
           onChange={setRestaurantFilter}
           options={[
-            { value: "", label: "All restaurants" },
+            { value: "", label: t("ownerBookings.allRestaurants") },
             ...restaurants.map((r) => ({ value: r.id, label: r.name }))
           ]}
         />
@@ -131,7 +134,7 @@ export default function OwnerBookingsPage() {
           value={statusFilter}
           onChange={setStatusFilter}
           options={[
-            { value: "", label: "All statuses" },
+            { value: "", label: t("ownerBookings.allStatuses") },
             ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))
           ]}
         />
@@ -148,40 +151,45 @@ export default function OwnerBookingsPage() {
         <EmptyState
           className="mt-8"
           icon={CalendarIcon}
-          title="No bookings match those filters"
-          message="Reservations from diners — and any walk-ins you add — will show up here."
+          title={t("ownerBookings.emptyTitle")}
+          message={t("ownerBookings.emptyMessage")}
         />
       ) : (
         <>
           <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
-            {result.items.map((r) => (
-              <div key={r.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-                <button
-                  type="button"
-                  onClick={() => setDetailTarget(r)}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <p className="font-bold text-ink hover:text-accent">
-                    {r.user.name} · {r.partySize} guests
-                  </p>
-                  <p className="mt-0.5 text-sm text-muted">
-                    {r.restaurant.name} · {r.date.slice(0, 10)} at {r.time}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {r.user.phone ?? r.user.email ?? ""} · {r.confirmationCode}
-                  </p>
-                </button>
-                <div className="flex items-center gap-2">
-                  <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
-                  <Select
-                    value={r.status}
-                    onChange={(status) => handleStatusChange(r.id, status)}
-                    options={RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
-                    className="min-w-[130px] py-1.5 text-xs"
-                  />
+            {result.items.map((r) => {
+              const parsedDate = parseIsoDate(r.date.slice(0, 10));
+              return (
+                <div key={r.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setDetailTarget(r)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <p className="font-bold text-ink hover:text-accent">
+                      {r.user.name} · {t("bookingWidget.guestsCount", { count: r.partySize })}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted">
+                      {r.restaurant.name} ·{" "}
+                      {parsedDate ? formatRelativeDate(parsedDate, locale, t) : r.date.slice(0, 10)}{" "}
+                      {t("bookingsPage.at")} {formatTimeLabel(r.time, locale, t)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {r.user.phone ?? r.user.email ?? ""} · {r.confirmationCode}
+                    </p>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
+                    <Select
+                      value={r.status}
+                      onChange={(status) => handleStatusChange(r.id, status)}
+                      options={RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+                      className="min-w-[130px] py-1.5 text-xs"
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
@@ -192,18 +200,16 @@ export default function OwnerBookingsPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Previous
+                {t("common.previous")}
               </button>
-              <span className="text-sm text-muted">
-                Page {page} of {totalPages}
-              </span>
+              <span className="text-sm text-muted">{t("common.pageOf", { page, total: totalPages })}</span>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Next
+                {t("common.next")}
               </button>
             </div>
           )}
@@ -235,6 +241,7 @@ interface ManualBookingModalProps {
 }
 
 function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: ManualBookingModalProps) {
+  const { t } = useLanguage();
   const [restaurantId, setRestaurantId] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -276,39 +283,44 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
       setSpecialRequests("");
       onCreated();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("common.somethingWentWrong"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add a walk-in / phone booking">
+    <Modal open={open} onClose={onClose} title={t("ownerBookings.modalTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Select
-          label="Restaurant"
+          label={t("ownerBookings.restaurantLabel")}
           required
           value={restaurantId}
           onChange={setRestaurantId}
           options={restaurants.map((r) => ({ value: r.id, label: r.name }))}
         />
         <TextField
-          label="Guest name"
+          label={t("ownerBookings.guestName")}
           required
           value={guestName}
           onChange={(e) => setGuestName(e.target.value)}
         />
         <TextField
-          label="Guest phone"
+          label={t("ownerBookings.guestPhone")}
           required
-          placeholder="+85512345678"
+          placeholder={t("ownerBookings.guestPhonePlaceholder")}
           value={guestPhone}
           onChange={(e) => setGuestPhone(e.target.value)}
         />
         <div className="grid grid-cols-2 gap-3">
-          <DateField label="Date" required value={date} onChange={(e) => setDate(e.target.value)} />
+          <DateField
+            label={t("ownerBookings.date")}
+            required
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
           <TextField
-            label="Time"
+            label={t("ownerBookings.time")}
             type="time"
             required
             value={time}
@@ -317,7 +329,7 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
         </div>
         <div className="grid grid-cols-2 gap-3">
           <TextField
-            label="Party size"
+            label={t("ownerBookings.partySize")}
             type="number"
             min={1}
             required
@@ -325,14 +337,14 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
             onChange={(e) => setPartySize(Number(e.target.value))}
           />
           <Select
-            label="Seating"
+            label={t("ownerBookings.seating")}
             value={seatingPreference}
             onChange={setSeatingPreference}
             options={SEATING_OPTIONS.map((s) => ({ value: s, label: s }))}
           />
         </div>
         <TextAreaField
-          label="Special requests (optional)"
+          label={t("ownerBookings.specialRequestsOptional")}
           rows={2}
           value={specialRequests}
           onChange={(e) => setSpecialRequests(e.target.value)}
@@ -343,7 +355,7 @@ function ManualBookingModal({ open, onClose, restaurants, token, onCreated }: Ma
           disabled={submitting || !restaurantId}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {submitting ? "Booking…" : "Add booking"}
+          {submitting ? t("bookingWidget.booking") : t("ownerBookings.addBooking")}
         </button>
       </form>
     </Modal>

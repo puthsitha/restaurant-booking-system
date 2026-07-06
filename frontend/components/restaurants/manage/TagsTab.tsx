@@ -5,6 +5,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { SavedToast } from "@/components/ui/SavedToast";
 import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/context";
 import { listTags, setRestaurantTags } from "@/lib/restaurants/api";
 import type { Tag } from "@/lib/restaurants/types";
 
@@ -18,8 +19,9 @@ export const TagsTab = forwardRef<DirtyTabHandle, ManageTabProps>(function TagsT
   { restaurant, token, onSaved, onDirtyChange },
   ref,
 ) {
+  const { t } = useLanguage();
   const [allTags, setAllTags] = useState<Tag[]>([]);
-  const baseline = useRef(new Set(restaurant.tags.map((t) => t.id)));
+  const baseline = useRef(new Set(restaurant.tags.map((tag) => tag.id)));
   const [selected, setSelected] = useState<Set<string>>(baseline.current);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -57,12 +59,12 @@ export const TagsTab = forwardRef<DirtyTabHandle, ManageTabProps>(function TagsT
       setTimeout(() => setJustSaved(false), 2000);
       return true;
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't save tags");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.tags.saveError"));
       return false;
     } finally {
       setIsSaving(false);
     }
-  }, [restaurant.id, token, selected, onSaved]);
+  }, [restaurant.id, token, selected, onSaved, t]);
 
   useImperativeHandle(ref, () => ({ save }), [save]);
 
@@ -74,7 +76,7 @@ export const TagsTab = forwardRef<DirtyTabHandle, ManageTabProps>(function TagsT
   return (
     <div className="max-w-xl pb-2">
       {allTags.length === 0 ? (
-        <p className="text-sm text-muted">No tags exist yet — an admin needs to create some.</p>
+        <p className="text-sm text-muted">{t("ownerManage.tags.emptyMessage")}</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {allTags.map((tag) => {
@@ -101,7 +103,7 @@ export const TagsTab = forwardRef<DirtyTabHandle, ManageTabProps>(function TagsT
         error={error}
         onSave={save}
         onDiscard={discard}
-        saveLabel="Save tags"
+        saveLabel={t("ownerManage.tags.saveTags")}
       />
       <SavedToast visible={justSaved && !isDirty} />
     </div>
