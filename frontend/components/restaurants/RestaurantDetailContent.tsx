@@ -1,6 +1,7 @@
 "use client";
 
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { GalleryViewer } from "@/components/restaurants/GalleryViewer";
 import { ReviewsSection } from "@/components/restaurants/ReviewsSection";
 import { SaveRestaurantButton } from "@/components/restaurants/SaveRestaurantButton";
 import { FadeIn } from "@/components/ui/FadeIn";
@@ -184,16 +185,8 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
           {restaurant.galleryImages.length > 0 && (
             <section className="mt-10">
               <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.gallery")}</h2>
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {restaurant.galleryImages.map((image) => (
-                  <div key={image.id} className="h-32 w-full overflow-hidden rounded-xl">
-                    <ZoomableImage
-                      src={image.url}
-                      alt={image.caption ?? restaurant.name}
-                      className="h-32 w-full object-cover transition hover:opacity-90"
-                    />
-                  </div>
-                ))}
+              <div className="mt-3">
+                <GalleryViewer images={restaurant.galleryImages} fallbackAlt={restaurant.name} />
               </div>
             </section>
           )}
