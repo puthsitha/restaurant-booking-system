@@ -237,35 +237,16 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         />
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.partySize")}</label>
-          <input
-            type="number"
-            min={restaurant.minCapacity}
-            max={restaurant.maxCapacity > 0 ? restaurant.maxCapacity : 50}
-            value={partySize}
-            onChange={(e) => setPartySize(Number(e.target.value))}
-            className="w-full rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.seating")}</label>
-          <div className="flex flex-wrap gap-1.5">
-            {SEATING_VALUES.map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setSeatingPreference(value)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                  seatingPreference === value ? "bg-accent text-white" : "bg-bg text-ink hover:bg-border/60"
-                }`}
-              >
-                {t(SEATING_LABEL_KEY[value])}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="mt-3">
+        <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.partySize")}</label>
+        <input
+          type="number"
+          min={restaurant.minCapacity}
+          max={restaurant.maxCapacity > 0 ? restaurant.maxCapacity : 50}
+          value={partySize}
+          onChange={(e) => setPartySize(Number(e.target.value))}
+          className="w-full rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
+        />
       </div>
 
       <div className="mt-3">
@@ -290,6 +271,24 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="mt-3">
+        <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.seating")}</label>
+        <div className="flex flex-wrap gap-1.5">
+          {SEATING_VALUES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSeatingPreference(value)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                seatingPreference === value ? "bg-accent text-white" : "bg-bg text-ink hover:bg-border/60"
+              }`}
+            >
+              {t(SEATING_LABEL_KEY[value])}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="mt-3">
