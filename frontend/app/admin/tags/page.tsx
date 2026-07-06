@@ -9,11 +9,13 @@ import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { createTag, deleteTag, listTags } from "@/lib/restaurants/api";
 import type { Tag } from "@/lib/restaurants/types";
 
 export default function AdminTagsPage() {
   const { token } = useAdminAuth();
+  const { t } = useLanguage();
   const [tags, setTags] = useState<Tag[] | null>(null);
   const [name, setName] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -24,10 +26,10 @@ export default function AdminTagsPage() {
     setLoadError(null);
     listTags()
       .then((res) => setTags(res.tags))
-      .catch(() => setLoadError("Couldn't load tags."));
+      .catch(() => setLoadError(t("adminTags.loadError")));
   }
 
-  useEffect(reload, []);
+  useEffect(reload, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleAdd(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -39,7 +41,7 @@ export default function AdminTagsPage() {
       setName("");
       reload();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Couldn't create tag");
+      setFormError(err instanceof ApiError ? err.message : t("adminTags.createError"));
     } finally {
       setIsSaving(false);
     }
@@ -52,25 +54,25 @@ export default function AdminTagsPage() {
       await deleteTag(id, token);
       reload();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Couldn't delete tag");
+      setFormError(err instanceof ApiError ? err.message : t("adminTags.deleteError"));
     }
   }
 
   return (
     <main className="p-8">
-      <h1 className="disp text-2xl font-extrabold text-ink">Tags</h1>
-      <p className="mt-2 text-sm text-muted">
-        Owners assign these to their restaurants; diners filter search by them.
-      </p>
+      <h1 className="disp text-2xl font-extrabold text-ink">{t("adminTags.title")}</h1>
+      <p className="mt-2 text-sm text-muted">{t("adminTags.subtitle")}</p>
 
       <form onSubmit={handleAdd} className="mt-6 flex max-w-[560px] items-end gap-3">
         <div className="flex-1">
-          <label className="mb-1.5 block text-xs font-bold text-label">New tag</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">
+            {t("adminTags.newTagLabel")}
+          </label>
           <input
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Vegan, Family-friendly…"
+            placeholder={t("adminTags.newTagPlaceholder")}
             className="w-full rounded-xl border border-border px-4 py-2.5 text-sm text-ink outline-none"
           />
         </div>
@@ -79,7 +81,7 @@ export default function AdminTagsPage() {
           disabled={isSaving}
           className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          Add tag
+          {t("adminTags.addTag")}
         </button>
       </form>
 
@@ -95,8 +97,8 @@ export default function AdminTagsPage() {
         <EmptyState
           className="mt-8"
           icon={EmptyPlateIcon}
-          title="No tags yet"
-          message="Tags help diners filter by vibe or diet — add a few to get owners tagging their restaurants."
+          title={t("adminTags.emptyTitle")}
+          message={t("adminTags.emptyMessage")}
           compact
         />
       ) : (
@@ -110,7 +112,7 @@ export default function AdminTagsPage() {
               <button
                 onClick={() => handleDelete(tag.id)}
                 className="font-bold text-red-600"
-                aria-label={`Delete ${tag.name}`}
+                aria-label={t("adminTags.deleteAria", { name: tag.name })}
               >
                 ×
               </button>

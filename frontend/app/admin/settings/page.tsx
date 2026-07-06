@@ -7,11 +7,13 @@ import { Switch } from "@/components/ui/Switch";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { getSettings, updateSettings } from "@/lib/platformSettings/api";
 import type { PlatformSettings } from "@/lib/platformSettings/types";
 
 export default function AdminSettingsPage() {
   const { token } = useAdminAuth();
+  const { t } = useLanguage();
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSaved, setShowSaved] = useState(false);
@@ -21,8 +23,8 @@ export default function AdminSettingsPage() {
     setError(null);
     getSettings(token)
       .then((res) => setSettings(res.settings))
-      .catch(() => setError("Couldn't load platform settings."));
-  }, [token]);
+      .catch(() => setError(t("adminSettings.loadError")));
+  }, [token, t]);
 
   useEffect(load, [load]);
 
@@ -37,14 +39,14 @@ export default function AdminSettingsPage() {
       setTimeout(() => setShowSaved(false), 1800);
     } catch (err) {
       setSettings(previous);
-      setError(err instanceof ApiError ? err.message : "Couldn't save this setting.");
+      setError(err instanceof ApiError ? err.message : t("adminSettings.saveError"));
     }
   }
 
   return (
     <main className="p-8">
-      <h1 className="disp text-2xl font-extrabold text-ink">Platform settings</h1>
-      <p className="mt-1 text-sm text-muted">Policies and defaults for the whole platform.</p>
+      <h1 className="disp text-2xl font-extrabold text-ink">{t("adminSettings.title")}</h1>
+      <p className="mt-1 text-sm text-muted">{t("adminSettings.subtitle")}</p>
 
       {error && <p className="mt-4 text-sm font-semibold text-red-600">{error}</p>}
 
@@ -56,10 +58,8 @@ export default function AdminSettingsPage() {
         <div className="mt-8 max-w-xl divide-y divide-border rounded-2xl border border-border bg-surface">
           <div className="flex items-center justify-between gap-4 p-5">
             <div>
-              <p className="font-bold text-ink">Default restaurant limit</p>
-              <p className="text-sm text-muted">
-                How many restaurants a newly created owner account may have.
-              </p>
+              <p className="font-bold text-ink">{t("adminSettings.defaultLimitTitle")}</p>
+              <p className="text-sm text-muted">{t("adminSettings.defaultLimitDesc")}</p>
             </div>
             <input
               type="number"
@@ -73,36 +73,32 @@ export default function AdminSettingsPage() {
 
           <div className="flex items-center justify-between gap-4 p-5">
             <div>
-              <p className="font-bold text-ink">Auto-approve restaurant-limit requests</p>
-              <p className="text-sm text-muted">
-                Skip admin review and approve owner requests for more restaurants automatically.
-              </p>
+              <p className="font-bold text-ink">{t("adminSettings.autoApproveTitle")}</p>
+              <p className="text-sm text-muted">{t("adminSettings.autoApproveDesc")}</p>
             </div>
             <Switch
               checked={settings.autoApproveOwners}
               onChange={(checked) => save({ autoApproveOwners: checked })}
-              label="Auto-approve restaurant-limit requests"
+              label={t("adminSettings.autoApproveTitle")}
             />
           </div>
 
           <div className="flex items-center justify-between gap-4 p-5">
             <div>
-              <p className="font-bold text-ink">Require KHQR deposits</p>
-              <p className="text-sm text-muted">
-                Require every restaurant to collect a KHQR deposit to confirm a booking.
-              </p>
+              <p className="font-bold text-ink">{t("adminSettings.requireDepositsTitle")}</p>
+              <p className="text-sm text-muted">{t("adminSettings.requireDepositsDesc")}</p>
             </div>
             <Switch
               checked={settings.requireKhqrDeposits}
               onChange={(checked) => save({ requireKhqrDeposits: checked })}
-              label="Require KHQR deposits"
+              label={t("adminSettings.requireDepositsTitle")}
             />
           </div>
 
           <div className="flex items-center justify-between gap-4 p-5">
             <div>
-              <p className="font-bold text-ink">Platform fee per booking</p>
-              <p className="text-sm text-muted">USD charged to the restaurant per confirmed booking.</p>
+              <p className="font-bold text-ink">{t("adminSettings.platformFeeTitle")}</p>
+              <p className="text-sm text-muted">{t("adminSettings.platformFeeDesc")}</p>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-muted">$</span>

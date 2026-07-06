@@ -6,11 +6,13 @@ import type { FormEvent } from "react";
 
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { createRestaurant } from "@/lib/restaurants/api";
 import { slugify } from "@/lib/restaurants/slugify";
 
 export default function NewRestaurantPage() {
   const { token } = useOwnerAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -39,7 +41,7 @@ export default function NewRestaurantPage() {
       );
       router.replace(`/owner/restaurants/${restaurant.id}`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("common.somethingWentWrong"));
     } finally {
       setIsSubmitting(false);
     }
@@ -47,14 +49,12 @@ export default function NewRestaurantPage() {
 
   return (
     <main className="mx-auto max-w-[560px] p-8">
-      <h1 className="disp text-2xl font-extrabold text-ink">New restaurant</h1>
-      <p className="mt-2 text-sm text-muted">
-        You can add hours, tables, and a menu after creating it.
-      </p>
+      <h1 className="disp text-2xl font-extrabold text-ink">{t("ownerRestaurantNew.pageTitle")}</h1>
+      <p className="mt-2 text-sm text-muted">{t("ownerRestaurantNew.subtitle")}</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label className="mb-2 block text-xs font-bold text-label">Name</label>
+          <label className="mb-2 block text-xs font-bold text-label">{t("ownerRestaurantNew.name")}</label>
           <input
             required
             value={name}
@@ -64,7 +64,7 @@ export default function NewRestaurantPage() {
         </div>
         <div>
           <label className="mb-2 block text-xs font-bold text-label">
-            URL slug (tablesite.com/restaurants/…)
+            {t("ownerRestaurantNew.slugLabel")}
           </label>
           <input
             required
@@ -77,17 +77,19 @@ export default function NewRestaurantPage() {
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold text-label">Cuisine type</label>
+          <label className="mb-2 block text-xs font-bold text-label">
+            {t("ownerRestaurantNew.cuisineType")}
+          </label>
           <input
             required
             value={cuisineType}
             onChange={(e) => setCuisineType(e.target.value)}
-            placeholder="Khmer, Vietnamese, Italian…"
+            placeholder={t("ownerRestaurantNew.cuisinePlaceholder")}
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold text-label">Address</label>
+          <label className="mb-2 block text-xs font-bold text-label">{t("ownerRestaurantNew.address")}</label>
           <input
             required
             value={address}
@@ -96,7 +98,7 @@ export default function NewRestaurantPage() {
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold text-label">City</label>
+          <label className="mb-2 block text-xs font-bold text-label">{t("ownerRestaurantNew.city")}</label>
           <input
             required
             value={city}
@@ -110,7 +112,7 @@ export default function NewRestaurantPage() {
           disabled={isSubmitting}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {isSubmitting ? "Creating…" : "Create restaurant"}
+          {isSubmitting ? t("common.creating") : t("ownerRestaurantNew.createRestaurant")}
         </button>
       </form>
     </main>

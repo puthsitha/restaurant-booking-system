@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/context";
 import { updateTable } from "@/lib/restaurants/api";
 import type { RestaurantTable, TableStatus } from "@/lib/restaurants/types";
 
@@ -26,14 +27,15 @@ interface FloorPlanViewProps {
 // grid cell to seat it there. Simpler than pixel drag-and-drop but gives the
 // same "see your floor at a glance" outcome the reference design shows.
 export function FloorPlanView({ restaurantId, tables, token, onSaved }: FloorPlanViewProps) {
+  const { t } = useLanguage();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const unplaced = tables.filter((t) => t.positionX === null || t.positionY === null);
+  const unplaced = tables.filter((table) => table.positionX === null || table.positionY === null);
   const placedByCell = new Map(
     tables
-      .filter((t) => t.positionX !== null && t.positionY !== null)
-      .map((t) => [`${t.positionX},${t.positionY}`, t]),
+      .filter((table) => table.positionX !== null && table.positionY !== null)
+      .map((table) => [`${table.positionX},${table.positionY}`, table]),
   );
 
   async function placeAt(x: number, y: number): Promise<void> {
@@ -44,7 +46,7 @@ export function FloorPlanView({ restaurantId, tables, token, onSaved }: FloorPla
       setSelectedId(null);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't place this table");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.floorPlan.placeError"));
     }
   }
 
@@ -54,7 +56,7 @@ export function FloorPlanView({ restaurantId, tables, token, onSaved }: FloorPla
       await updateTable(restaurantId, tableId, { positionX: null, positionY: null }, token);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update this table");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.floorPlan.updateError"));
     }
   }
 
@@ -63,21 +65,23 @@ export function FloorPlanView({ restaurantId, tables, token, onSaved }: FloorPla
       {unplaced.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-xs font-bold text-label">
-            {selectedId ? "Click an empty cell to place the selected table" : "Unplaced tables"}
+            {selectedId
+              ? t("ownerManage.floorPlan.instruction")
+              : t("ownerManage.floorPlan.unplacedTables")}
           </p>
           <div className="flex flex-wrap gap-2">
-            {unplaced.map((t) => (
+            {unplaced.map((table) => (
               <button
-                key={t.id}
+                key={table.id}
                 type="button"
-                onClick={() => setSelectedId(t.id === selectedId ? null : t.id)}
+                onClick={() => setSelectedId(table.id === selectedId ? null : table.id)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
-                  selectedId === t.id
+                  selectedId === table.id
                     ? "border-accent bg-accent text-white"
                     : "border-border text-ink hover:bg-bg"
                 }`}
               >
-                {t.tableNumber} · {t.capacity} seats
+                {t("ownerManage.floorPlan.seatsSuffix", { number: table.tableNumber, capacity: table.capacity })}
               </button>
             ))}
           </div>
@@ -99,7 +103,10 @@ export function FloorPlanView({ restaurantId, tables, token, onSaved }: FloorPla
                   key={`${x}-${y}`}
                   type="button"
                   onClick={() => unplace(table.id)}
-                  title={`${table.tableNumber} · ${table.capacity} seats — click to unplace`}
+                  title={t("ownerManage.floorPlan.seatsUnplaceTitle", {
+                    number: table.tableNumber,
+                    capacity: table.capacity
+                  })}
                   className={`flex aspect-square items-center justify-center rounded-lg border text-[10px] font-bold ${STATUS_TILE[table.status]}`}
                 >
                   {table.tableNumber}
@@ -120,13 +127,15 @@ export function FloorPlanView({ restaurantId, tables, token, onSaved }: FloorPla
       </div>
       <div className="mt-3 flex gap-4 text-xs text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded border border-secondary bg-secondary/15" /> Available
+          <span className="h-3 w-3 rounded border border-secondary bg-secondary/15" />{" "}
+          {t("ownerManage.floorPlan.available")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded border border-accent bg-accent/15" /> Seated
+          <span className="h-3 w-3 rounded border border-accent bg-accent/15" /> {t("ownerManage.floorPlan.seated")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded border border-amber-500 bg-amber-100" /> Reserved
+          <span className="h-3 w-3 rounded border border-amber-500 bg-amber-100" />{" "}
+          {t("ownerManage.floorPlan.reserved")}
         </span>
       </div>
     </div>

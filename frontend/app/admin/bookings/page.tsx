@@ -13,6 +13,8 @@ import { ListSkeleton } from "@/components/ui/skeletons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { formatRelativeDate, formatTimeLabel, parseIsoDate } from "@/lib/dateFormat";
+import { useLanguage } from "@/lib/i18n/context";
 import { listAllReservationsAdmin } from "@/lib/reservations/api";
 import { RESERVATION_STATUS_OPTIONS, RESERVATION_STATUS_TONE } from "@/lib/reservations/statusTone";
 import type { ListReservationsResponse, Reservation, ReservationStatus } from "@/lib/reservations/types";
@@ -20,6 +22,7 @@ import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 export default function AdminBookingsPage() {
   const { token } = useAdminAuth();
+  const { locale, t } = useLanguage();
   const [result, setResult] = useState<ListReservationsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -48,9 +51,9 @@ export default function AdminBookingsPage() {
     )
       .then((res) => setResult(res))
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Couldn't load bookings.");
+        setError(err instanceof ApiError ? err.message : t("adminBookings.loadError"));
       });
-  }, [token, statusFilter, dateFilter, debouncedSearch, page]);
+  }, [token, statusFilter, dateFilter, debouncedSearch, page, t]);
 
   useEffect(load, [load]);
 
@@ -58,22 +61,20 @@ export default function AdminBookingsPage() {
 
   return (
     <main className="p-8">
-      <h1 className="disp text-2xl font-extrabold text-ink">Bookings</h1>
-      <p className="mt-1 text-sm text-muted">
-        Platform-wide oversight, read-only — owners manage their own bookings.
-      </p>
+      <h1 className="disp text-2xl font-extrabold text-ink">{t("adminBookings.title")}</h1>
+      <p className="mt-1 text-sm text-muted">{t("adminBookings.subtitle")}</p>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <SearchField
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by restaurant, customer, or phone"
+          placeholder={t("adminBookings.searchPlaceholder")}
         />
         <Select
           value={statusFilter}
           onChange={setStatusFilter}
           options={[
-            { value: "", label: "All statuses" },
+            { value: "", label: t("adminBookings.allStatuses") },
             ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))
           ]}
         />
@@ -87,31 +88,36 @@ export default function AdminBookingsPage() {
           <ListSkeleton rows={4} />
         </div>
       ) : result.items.length === 0 ? (
-        <EmptyState className="mt-8" icon={CalendarIcon} title="No bookings match those filters" />
+        <EmptyState className="mt-8" icon={CalendarIcon} title={t("adminBookings.emptyTitle")} />
       ) : (
         <>
           <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-surface">
-            {result.items.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setDetailTarget(r)}
-                className="flex w-full flex-wrap items-center justify-between gap-4 px-5 py-4 text-left hover:bg-bg"
-              >
-                <div>
-                  <p className="font-bold text-ink">
-                    {r.user.name} · {r.partySize} guests
-                  </p>
-                  <p className="mt-0.5 text-sm text-muted">
-                    {r.restaurant.name} · {r.date.slice(0, 10)} at {r.time}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {r.user.phone ?? r.user.email ?? ""} · {r.confirmationCode}
-                  </p>
-                </div>
-                <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
-              </button>
-            ))}
+            {result.items.map((r) => {
+              const parsedDate = parseIsoDate(r.date.slice(0, 10));
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setDetailTarget(r)}
+                  className="flex w-full flex-wrap items-center justify-between gap-4 px-5 py-4 text-left hover:bg-bg"
+                >
+                  <div>
+                    <p className="font-bold text-ink">
+                      {r.user.name} · {t("bookingWidget.guestsCount", { count: r.partySize })}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted">
+                      {r.restaurant.name} ·{" "}
+                      {parsedDate ? formatRelativeDate(parsedDate, locale, t) : r.date.slice(0, 10)}{" "}
+                      {t("bookingsPage.at")} {formatTimeLabel(r.time, locale, t)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {r.user.phone ?? r.user.email ?? ""} · {r.confirmationCode}
+                    </p>
+                  </div>
+                  <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
+                </button>
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
@@ -122,18 +128,16 @@ export default function AdminBookingsPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Previous
+                {t("common.previous")}
               </button>
-              <span className="text-sm text-muted">
-                Page {page} of {totalPages}
-              </span>
+              <span className="text-sm text-muted">{t("common.pageOf", { page, total: totalPages })}</span>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Next
+                {t("common.next")}
               </button>
             </div>
           )}

@@ -7,12 +7,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/context";
 import { listReviews, replyToReview } from "@/lib/reviews/api";
 import type { ListReviewsResponse } from "@/lib/reviews/types";
 
 import type { ManageTabProps } from "./types";
 
 export function ReviewsTab({ restaurant, token }: ManageTabProps) {
+  const { t } = useLanguage();
   const [data, setData] = useState<ListReviewsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
@@ -22,8 +24,8 @@ export function ReviewsTab({ restaurant, token }: ManageTabProps) {
     setError(null);
     listReviews(restaurant.id)
       .then(setData)
-      .catch(() => setError("Couldn't load reviews."));
-  }, [restaurant.id]);
+      .catch(() => setError(t("ownerManage.reviews.loadError")));
+  }, [restaurant.id, t]);
 
   useEffect(load, [load]);
 
@@ -36,7 +38,7 @@ export function ReviewsTab({ restaurant, token }: ManageTabProps) {
       setReplyDrafts((prev) => ({ ...prev, [reviewId]: "" }));
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't save your reply.");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.reviews.replyError"));
     } finally {
       setSubmittingId(null);
     }
@@ -52,7 +54,7 @@ export function ReviewsTab({ restaurant, token }: ManageTabProps) {
             <p className="disp text-3xl font-extrabold text-ink">{data.average.toFixed(1)}</p>
             <RatingStars rating={data.average} size="md" className="mt-1 justify-center" />
           </div>
-          <p className="text-sm text-muted">Based on {data.total} reviews</p>
+          <p className="text-sm text-muted">{t("ownerManage.reviews.basedOn", { count: data.total })}</p>
         </div>
       )}
 
@@ -62,8 +64,8 @@ export function ReviewsTab({ restaurant, token }: ManageTabProps) {
         <EmptyState
           className="mt-6"
           icon={EmptyPlateIcon}
-          title="No reviews yet"
-          message="Reviews from diners will show up here once they start booking."
+          title={t("ownerManage.reviews.emptyTitle")}
+          message={t("ownerManage.reviews.emptyMessage")}
           compact
         />
       ) : (
@@ -81,7 +83,7 @@ export function ReviewsTab({ restaurant, token }: ManageTabProps) {
 
               {review.ownerReply ? (
                 <div className="mt-3 rounded-xl bg-bg px-4 py-3 text-sm text-ink">
-                  <span className="font-semibold">Your reply: </span>
+                  <span className="font-semibold">{t("ownerManage.reviews.yourReplyPrefix")}</span>
                   {review.ownerReply}
                 </div>
               ) : (
@@ -91,7 +93,7 @@ export function ReviewsTab({ restaurant, token }: ManageTabProps) {
                     onChange={(e) =>
                       setReplyDrafts((prev) => ({ ...prev, [review.id]: e.target.value }))
                     }
-                    placeholder="Reply to this review…"
+                    placeholder={t("ownerManage.reviews.replyPlaceholder")}
                     className="flex-1 rounded-xl border border-border px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
                   />
                   <button
@@ -100,7 +102,7 @@ export function ReviewsTab({ restaurant, token }: ManageTabProps) {
                     disabled={submittingId === review.id || !replyDrafts[review.id]?.trim()}
                     className="rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
                   >
-                    Reply
+                    {t("ownerManage.reviews.reply")}
                   </button>
                 </div>
               )}

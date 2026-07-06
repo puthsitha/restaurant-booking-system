@@ -7,6 +7,7 @@ import { SavedToast } from "@/components/ui/SavedToast";
 import { Select } from "@/components/ui/Select";
 import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/context";
 import { updateRestaurant } from "@/lib/restaurants/api";
 import type { PriceRange } from "@/lib/restaurants/types";
 
@@ -50,6 +51,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
   { restaurant, token, onSaved, onDirtyChange },
   ref,
 ) {
+  const { t } = useLanguage();
   const baseline = useRef(draftFromRestaurant(restaurant));
   const [draft, setDraft] = useState(baseline.current);
   const [isSaving, setIsSaving] = useState(false);
@@ -94,13 +96,13 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
       setTimeout(() => setJustSaved(false), 2000);
       return true;
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't save changes");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.profile.loadError"));
       return false;
     } finally {
       setIsSaving(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurant.id, restaurant.slug, token, draft, onSaved]);
+  }, [restaurant.id, restaurant.slug, token, draft, onSaved, t]);
 
   useImperativeHandle(ref, () => ({ save }), [save]);
 
@@ -117,7 +119,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
   return (
     <form onSubmit={handleSubmit} className="max-w-xl space-y-4 pb-2">
       <div>
-        <label className={LABEL_CLASS}>Name</label>
+        <label className={LABEL_CLASS}>{t("ownerManage.profile.name")}</label>
         <input
           value={draft.name}
           onChange={(e) => set("name", e.target.value)}
@@ -125,7 +127,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         />
       </div>
       <div>
-        <label className={LABEL_CLASS}>Description</label>
+        <label className={LABEL_CLASS}>{t("ownerManage.profile.description")}</label>
         <textarea
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
@@ -135,7 +137,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={LABEL_CLASS}>Cuisine type</label>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.cuisineType")}</label>
           <input
             value={draft.cuisineType}
             onChange={(e) => set("cuisineType", e.target.value)}
@@ -143,7 +145,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           />
         </div>
         <div>
-          <label className={LABEL_CLASS}>City</label>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.city")}</label>
           <input
             value={draft.city}
             onChange={(e) => set("city", e.target.value)}
@@ -152,7 +154,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         </div>
       </div>
       <div>
-        <label className={LABEL_CLASS}>Address</label>
+        <label className={LABEL_CLASS}>{t("ownerManage.profile.address")}</label>
         <input
           value={draft.address}
           onChange={(e) => set("address", e.target.value)}
@@ -161,7 +163,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={LABEL_CLASS}>Phone</label>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.phone")}</label>
           <input
             value={draft.phone}
             onChange={(e) => set("phone", e.target.value)}
@@ -169,7 +171,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           />
         </div>
         <div>
-          <label className={LABEL_CLASS}>Website</label>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.website")}</label>
           <input
             value={draft.website}
             onChange={(e) => set("website", e.target.value)}
@@ -178,7 +180,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         </div>
       </div>
       <div>
-        <label className={LABEL_CLASS}>Cover image URL</label>
+        <label className={LABEL_CLASS}>{t("ownerManage.profile.coverImageUrl")}</label>
         <input
           value={draft.coverImageUrl}
           onChange={(e) => set("coverImageUrl", e.target.value)}
@@ -186,13 +188,13 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         />
       </div>
       <Select
-        label="Price range"
+        label={t("ownerManage.profile.priceRange")}
         value={draft.priceRange}
         onChange={(value) => set("priceRange", value)}
         options={[
-          { value: "LOW", label: "$ — Low" },
-          { value: "MEDIUM", label: "$$ — Medium" },
-          { value: "HIGH", label: "$$$ — High" }
+          { value: "LOW", label: t("ownerManage.profile.priceLow") },
+          { value: "MEDIUM", label: t("ownerManage.profile.priceMedium") },
+          { value: "HIGH", label: t("ownerManage.profile.priceHigh") }
         ]}
       />
       <div className="flex items-center gap-3">
@@ -203,12 +205,12 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           onChange={(e) => set("depositRequired", e.target.checked)}
         />
         <label htmlFor="depositRequired" className="text-sm text-ink">
-          Require a deposit to book
+          {t("ownerManage.profile.requireDeposit")}
         </label>
       </div>
       {draft.depositRequired && (
         <div>
-          <label className={LABEL_CLASS}>Deposit amount (USD)</label>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.depositAmount")}</label>
           <input
             type="number"
             min={0}

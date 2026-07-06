@@ -14,6 +14,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
 import { trendFrom } from "@/lib/dashboardTrend";
+import { formatRelativeDate, formatTimeLabel, parseIsoDate } from "@/lib/dateFormat";
+import { useLanguage } from "@/lib/i18n/context";
 import { getOwnerBookingStats, listOwnerReservations } from "@/lib/reservations/api";
 import type { DailyBookingCount } from "@/lib/reservations/api";
 import type { Reservation, ReservationStatus } from "@/lib/reservations/types";
@@ -55,6 +57,7 @@ function summarize(reservations: Reservation[]): { bookings: number; covers: num
 
 export default function OwnerDashboardPage() {
   const { user, token } = useOwnerAuth();
+  const { locale, t } = useLanguage();
   const [today, setToday] = useState<TodaySnapshot | null>(null);
   const [bookingsTrend, setBookingsTrend] = useState<ReturnType<typeof trendFrom>>(undefined);
   const [coversTrend, setCoversTrend] = useState<ReturnType<typeof trendFrom>>(undefined);
@@ -121,14 +124,14 @@ export default function OwnerDashboardPage() {
   return (
     <main className="p-8">
       <DashboardHeaderBar
-        title={`Welcome back, ${user?.name.split(" ")[0] ?? ""}`}
-        subtitle="Here's how today looks across your restaurants."
+        title={t("ownerDashboard.welcomeBack", { name: user?.name.split(" ")[0] ?? "" })}
+        subtitle={t("ownerDashboard.subtitle")}
         actions={
           <Link
             href="/owner/bookings"
             className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(194,65,12,.28)]"
           >
-            + New reservation
+            {t("ownerDashboard.newReservation")}
           </Link>
         }
       />
@@ -139,24 +142,33 @@ export default function OwnerDashboardPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             icon={CalendarIcon}
-            label="Today's bookings"
+            label={t("ownerDashboard.statTodayBookings")}
             value={today.bookings}
             trend={bookingsTrend}
           />
-          <StatCard icon={UsersIcon} label="Covers" value={today.covers} trend={coversTrend} tone="secondary" />
+          <StatCard
+            icon={UsersIcon}
+            label={t("ownerDashboard.statCovers")}
+            value={today.covers}
+            trend={coversTrend}
+            tone="secondary"
+          />
           <StatCard
             icon={ChairIcon}
-            label="Occupancy"
+            label={t("ownerDashboard.statOccupancy")}
             value={`${occupancyPct}%`}
             trend={
               today.totalTables > 0
-                ? { label: `${today.seatedTables}/${today.totalTables} seated`, tone: "neutral" }
+                ? {
+                    label: t("ownerDashboard.seatedOf", { seated: today.seatedTables, total: today.totalTables }),
+                    tone: "neutral"
+                  }
                 : undefined
             }
           />
           <StatCard
             icon={CashIcon}
-            label="Deposit revenue"
+            label={t("ownerDashboard.statDepositRevenue")}
             value={`$${today.depositRevenue.toFixed(2)}`}
             trend={{
               label: `៛${Math.round(today.depositRevenue * theme.currency.usdToKhrRate).toLocaleString()}`,
@@ -170,30 +182,30 @@ export default function OwnerDashboardPage() {
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1.7fr_1fr]">
         {chartData && chartData.some((d) => d.count > 0) && (
           <div className="rounded-2xl border border-border bg-surface p-5">
-            <h2 className="disp text-sm font-bold text-ink">Bookings over time</h2>
-            <p className="text-xs text-muted">Last 14 days</p>
+            <h2 className="disp text-sm font-bold text-ink">{t("ownerDashboard.bookingsOverTime")}</h2>
+            <p className="text-xs text-muted">{t("ownerDashboard.last14Days")}</p>
             <BarChart data={chartData} className="mt-4" />
           </div>
         )}
 
         {today && (
           <div className="rounded-2xl border border-border bg-surface p-5">
-            <h2 className="disp text-sm font-bold text-ink">Today at a glance</h2>
+            <h2 className="disp text-sm font-bold text-ink">{t("ownerDashboard.todayAtGlance")}</h2>
             <div className="mt-4 flex items-center gap-5">
-              <Donut percent={occupancyPct} sublabel="occupied" />
+              <Donut percent={occupancyPct} sublabel={t("ownerDashboard.occupied")} />
               <div className="flex-1 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted">Tables seated</span>
+                  <span className="text-muted">{t("ownerDashboard.tablesSeated")}</span>
                   <span className="font-bold text-ink">
                     {today.seatedTables} / {today.totalTables}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted">Total covers</span>
+                  <span className="text-muted">{t("ownerDashboard.totalCovers")}</span>
                   <span className="font-bold text-ink">{today.covers}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted">Pending</span>
+                  <span className="text-muted">{t("ownerDashboard.pending")}</span>
                   <span className="font-bold text-accent">{today.pending}</span>
                 </div>
               </div>
@@ -202,7 +214,7 @@ export default function OwnerDashboardPage() {
               href="/owner/bookings"
               className="mt-4 block rounded-xl border border-border py-2.5 text-center text-sm font-bold text-ink transition hover:bg-bg"
             >
-              View all reservations →
+              {t("ownerDashboard.viewAllReservations")}
             </Link>
           </div>
         )}
@@ -210,9 +222,9 @@ export default function OwnerDashboardPage() {
 
       <div className="mt-8 rounded-2xl border border-border bg-surface p-5">
         <div className="flex items-center justify-between">
-          <h2 className="disp text-sm font-bold text-ink">Recent reservations</h2>
+          <h2 className="disp text-sm font-bold text-ink">{t("ownerDashboard.recentReservations")}</h2>
           <Link href="/owner/bookings" className="text-xs font-bold text-accent">
-            See all
+            {t("ownerDashboard.seeAll")}
           </Link>
         </div>
 
@@ -221,24 +233,29 @@ export default function OwnerDashboardPage() {
             <ListSkeleton rows={3} />
           </div>
         ) : recent.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">No reservations yet.</p>
+          <p className="mt-4 text-sm text-muted">{t("ownerDashboard.noReservationsYet")}</p>
         ) : (
           <div className="mt-4 divide-y divide-border">
-            {recent.map((r) => (
-              <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Avatar name={r.user.name} size="sm" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-ink">{r.user.name}</p>
-                    <p className="text-xs text-muted">
-                      {r.partySize} guests · {r.date.slice(0, 10)} at {r.time}
-                      {r.table && ` · ${r.table.tableNumber}`}
-                    </p>
+            {recent.map((r) => {
+              const parsedDate = parseIsoDate(r.date.slice(0, 10));
+              return (
+                <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar name={r.user.name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-ink">{r.user.name}</p>
+                      <p className="text-xs text-muted">
+                        {t("bookingWidget.guestsCount", { count: r.partySize })} ·{" "}
+                        {parsedDate ? formatRelativeDate(parsedDate, locale, t) : r.date.slice(0, 10)}{" "}
+                        {t("bookingsPage.at")} {formatTimeLabel(r.time, locale, t)}
+                        {r.table && ` · ${r.table.tableNumber}`}
+                      </p>
+                    </div>
                   </div>
+                  <StatusBadge tone={STATUS_TONE[r.status]}>{r.status}</StatusBadge>
                 </div>
-                <StatusBadge tone={STATUS_TONE[r.status]}>{r.status}</StatusBadge>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

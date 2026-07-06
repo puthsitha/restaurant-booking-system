@@ -14,6 +14,7 @@ import { ApiError } from "@/lib/api";
 import { listMyRestaurants } from "@/lib/restaurants/api";
 import type { ListRestaurantsResponse, RestaurantStatus } from "@/lib/restaurants/types";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 const STATUS_TONE: Record<RestaurantStatus, StatusTone> = {
@@ -24,6 +25,7 @@ const STATUS_TONE: Record<RestaurantStatus, StatusTone> = {
 
 export default function OwnerRestaurantsPage() {
   const { user, token } = useOwnerAuth();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState<RestaurantStatus | "">("");
@@ -47,9 +49,9 @@ export default function OwnerRestaurantsPage() {
     )
       .then((res) => setResult(res))
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Couldn't load your restaurants.");
+        setError(err instanceof ApiError ? err.message : t("common.somethingWentWrong"));
       });
-  }, [token, debouncedSearch, status, page]);
+  }, [token, debouncedSearch, status, page, t]);
 
   useEffect(load, [load]);
 
@@ -69,22 +71,21 @@ export default function OwnerRestaurantsPage() {
     <main className="p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="disp text-2xl font-extrabold text-ink">My restaurants</h1>
+          <h1 className="disp text-2xl font-extrabold text-ink">{t("ownerRestaurants.title")}</h1>
           <p className="mt-1 text-sm text-muted">
-            {user?.restaurantLimit ?? 0} restaurant{(user?.restaurantLimit ?? 0) === 1 ? "" : "s"}{" "}
-            allowed on your account.
+            {t("ownerRestaurants.allowedCount", { count: user?.restaurantLimit ?? 0 })}
           </p>
         </div>
         {atLimit ? (
           <div className="max-w-[260px] rounded-xl border border-border bg-surface px-4 py-3 text-right text-xs text-muted">
-            You&apos;ve reached your restaurant limit. Contact an admin to request more.
+            {t("ownerRestaurants.limitReached")}
           </div>
         ) : (
           <Link
             href="/owner/restaurants/new"
             className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white"
           >
-            + New restaurant
+            {t("ownerRestaurants.newRestaurant")}
           </Link>
         )}
       </div>
@@ -93,17 +94,17 @@ export default function OwnerRestaurantsPage() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name"
+          placeholder={t("ownerRestaurants.searchByName")}
           className="min-w-[220px] rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
         />
         <Select
           value={status}
           onChange={setStatus}
           options={[
-            { value: "", label: "Any status" },
-            { value: "PENDING", label: "Pending review" },
-            { value: "ACTIVE", label: "Active" },
-            { value: "DISABLED", label: "Disabled" }
+            { value: "", label: t("ownerRestaurants.anyStatus") },
+            { value: "PENDING", label: t("ownerRestaurants.pendingReview") },
+            { value: "ACTIVE", label: t("ownerRestaurants.active") },
+            { value: "DISABLED", label: t("ownerRestaurants.disabled") }
           ]}
         />
       </div>
@@ -118,17 +119,17 @@ export default function OwnerRestaurantsPage() {
         <EmptyState
           className="mt-8"
           icon={ChefHatIcon}
-          title="Your first restaurant awaits"
-          message="Add your restaurant's profile, hours, and menu — diners are searching for a table right now."
-          actionLabel="+ New restaurant"
+          title={t("ownerRestaurants.emptyFirstTitle")}
+          message={t("ownerRestaurants.emptyFirstMessage")}
+          actionLabel={t("ownerRestaurants.newRestaurant")}
           actionHref="/owner/restaurants/new"
         />
       ) : result.items.length === 0 ? (
         <EmptyState
           className="mt-8"
           icon={SearchOffIcon}
-          title="No restaurants match those filters"
-          actionLabel="Clear filters"
+          title={t("ownerRestaurants.emptyFilteredTitle")}
+          actionLabel={t("common.clearFilters")}
           onAction={() => {
             setSearch("");
             setStatus("");
@@ -150,7 +151,7 @@ export default function OwnerRestaurantsPage() {
                   </p>
                   {restaurant.statusReason && (
                     <p className="mt-1 text-xs text-muted">
-                      <span className="font-semibold">Reason: </span>
+                      <span className="font-semibold">{t("common.reasonPrefix")}</span>
                       {restaurant.statusReason}
                     </p>
                   )}
@@ -170,18 +171,16 @@ export default function OwnerRestaurantsPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Previous
+                {t("common.previous")}
               </button>
-              <span className="text-sm text-muted">
-                Page {page} of {totalPages}
-              </span>
+              <span className="text-sm text-muted">{t("common.pageOf", { page, total: totalPages })}</span>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
-                Next
+                {t("common.next")}
               </button>
             </div>
           )}

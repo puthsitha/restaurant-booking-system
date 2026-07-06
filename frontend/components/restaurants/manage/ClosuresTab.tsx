@@ -6,11 +6,14 @@ import type { FormEvent } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
+import { formatAbsoluteDate } from "@/lib/dateFormat";
+import { useLanguage } from "@/lib/i18n/context";
 import { createSpecialClosure, deleteSpecialClosure } from "@/lib/restaurants/api";
 
 import type { ManageTabProps } from "./types";
 
 export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
+  const { locale, t } = useLanguage();
   const [date, setDate] = useState("");
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +29,7 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
       setReason("");
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't add closure");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.closures.addError"));
     } finally {
       setIsSaving(false);
     }
@@ -37,7 +40,7 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
       await deleteSpecialClosure(restaurant.id, closureId, token);
       await onSaved();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't delete closure");
+      setError(err instanceof ApiError ? err.message : t("ownerManage.closures.deleteError"));
     }
   }
 
@@ -45,7 +48,9 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
     <div className="max-w-xl">
       <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-label">Date</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">
+            {t("ownerManage.closures.date")}
+          </label>
           <input
             required
             type="date"
@@ -55,11 +60,13 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
           />
         </div>
         <div className="flex-1">
-          <label className="mb-1.5 block text-xs font-bold text-label">Reason</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">
+            {t("ownerManage.closures.reason")}
+          </label>
           <input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Public holiday, private event…"
+            placeholder={t("ownerManage.closures.reasonPlaceholder")}
             className="w-full rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none"
           />
         </div>
@@ -68,7 +75,7 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
           disabled={isSaving}
           className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          Add
+          {t("common.add")}
         </button>
       </form>
 
@@ -78,8 +85,8 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
         <EmptyState
           className="mt-6"
           icon={EmptyPlateIcon}
-          title="No closures on the books"
-          message="You're open as usual. Add a date above for holidays or private events."
+          title={t("ownerManage.closures.emptyTitle")}
+          message={t("ownerManage.closures.emptyMessage")}
           compact
         />
       ) : (
@@ -88,7 +95,7 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
             <div key={closure.id} className="flex items-center justify-between p-4">
               <div>
                 <p className="font-semibold text-ink">
-                  {new Date(closure.date).toLocaleDateString()}
+                  {formatAbsoluteDate(new Date(closure.date), locale, t)}
                 </p>
                 {closure.reason && <p className="text-sm text-muted">{closure.reason}</p>}
               </div>
@@ -96,7 +103,7 @@ export function ClosuresTab({ restaurant, token, onSaved }: ManageTabProps) {
                 onClick={() => handleDelete(closure.id)}
                 className="text-sm font-semibold text-red-600"
               >
-                Delete
+                {t("common.delete")}
               </button>
             </div>
           ))}

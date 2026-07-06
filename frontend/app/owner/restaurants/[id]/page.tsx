@@ -19,6 +19,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
+import { useLanguage } from "@/lib/i18n/context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { getRestaurant } from "@/lib/restaurants/api";
 import type { RestaurantManagementDetail, RestaurantStatus } from "@/lib/restaurants/types";
 
@@ -29,20 +31,20 @@ const STATUS_TONE: Record<RestaurantStatus, StatusTone> = {
 };
 
 const OWNER_TABS = [
-  { key: "profile", label: "Profile" },
-  { key: "hours", label: "Hours" },
-  { key: "tables", label: "Tables" },
-  { key: "menu", label: "Menu" },
-  { key: "gallery", label: "Gallery" },
-  { key: "closures", label: "Closures" },
-  { key: "reviews", label: "Reviews" },
-  { key: "tags", label: "Tags" },
-] as const;
+  { key: "profile", labelKey: "ownerRestaurantDetail.tabProfile" },
+  { key: "hours", labelKey: "ownerRestaurantDetail.tabHours" },
+  { key: "tables", labelKey: "ownerRestaurantDetail.tabTables" },
+  { key: "menu", labelKey: "ownerRestaurantDetail.tabMenu" },
+  { key: "gallery", labelKey: "ownerRestaurantDetail.tabGallery" },
+  { key: "closures", labelKey: "ownerRestaurantDetail.tabClosures" },
+  { key: "reviews", labelKey: "ownerRestaurantDetail.tabReviews" },
+  { key: "tags", labelKey: "ownerRestaurantDetail.tabTags" },
+] as const satisfies { key: string; labelKey: TranslationKey }[];
 
 type TabKey = (typeof OWNER_TABS)[number]["key"];
-const TAB_LABEL: Record<TabKey, string> = Object.fromEntries(
-  OWNER_TABS.map((t) => [t.key, t.label]),
-) as Record<TabKey, string>;
+const TAB_LABEL_KEY: Record<TabKey, TranslationKey> = Object.fromEntries(
+  OWNER_TABS.map((tab) => [tab.key, tab.labelKey]),
+) as Record<TabKey, TranslationKey>;
 
 // Only these tabs hold a draft the owner can lose — the others save each
 // action immediately (add/delete/toggle), so there's nothing to guard there.
@@ -52,6 +54,7 @@ type PendingNav = { type: "tab"; key: TabKey } | { type: "href"; href: string } 
 
 export default function ManageRestaurantPage({ params }: { params: { id: string } }) {
   const { token } = useOwnerAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [restaurant, setRestaurant] = useState<RestaurantManagementDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,9 +70,9 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
       const res = await getRestaurant(params.id, token);
       setRestaurant(res.restaurant);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't load this restaurant.");
+      setError(err instanceof ApiError ? err.message : t("ownerRestaurantDetail.loadError"));
     }
-  }, [params.id, token]);
+  }, [params.id, token, t]);
 
   useEffect(() => {
     void reload();
@@ -158,7 +161,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
   if (!restaurant) {
     return (
       <main className="p-8">
-        <LoadingSpinner label="Setting up the kitchen…" size="lg" />
+        <LoadingSpinner label={t("ownerRestaurantDetail.settingUpKitchen")} size="lg" />
       </main>
     );
   }
@@ -175,28 +178,28 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
 
       {restaurant.status === "PENDING" && (
         <p className="mt-3 rounded-xl border border-border bg-bg px-4 py-3 text-sm text-ink">
-          Your restaurant is pending admin review. It won&apos;t be visible to diners until approved.
+          {t("ownerRestaurantDetail.pendingReviewNote")}
         </p>
       )}
 
       {restaurant.statusReason && (
         <div className="mt-3 rounded-xl border border-border bg-bg px-4 py-3 text-sm text-ink">
-          <span className="font-bold">Admin note: </span>
+          <span className="font-bold">{t("ownerRestaurantDetail.adminNotePrefix")}</span>
           {restaurant.statusReason}
         </div>
       )}
 
       <div className="mt-6 flex flex-wrap gap-1 border-b border-border">
-        {OWNER_TABS.map((t) => (
+        {OWNER_TABS.map((ownerTab) => (
           <button
-            key={t.key}
-            onClick={() => requestTabChange(t.key)}
+            key={ownerTab.key}
+            onClick={() => requestTabChange(ownerTab.key)}
             className={`relative rounded-t-lg px-4 py-2.5 text-sm font-semibold transition ${
-              tab === t.key ? "border-b-2 border-accent text-accent" : "text-muted hover:text-ink"
+              tab === ownerTab.key ? "border-b-2 border-accent text-accent" : "text-muted hover:text-ink"
             }`}
           >
-            {t.label}
-            {tab === t.key && DRAFT_TABS.has(t.key) && isDirty && (
+            {t(ownerTab.labelKey)}
+            {tab === ownerTab.key && DRAFT_TABS.has(ownerTab.key) && isDirty && (
               <span
                 className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent"
                 aria-hidden="true"
@@ -252,13 +255,16 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
       <Modal
         open={pendingNav !== null}
         onClose={() => setPendingNav(null)}
-        title="You have unsaved changes"
+        title={t("ownerRestaurantDetail.unsavedTitle")}
       >
         <p className="text-sm text-ink">
           {pendingNav?.type === "tab"
-            ? `Save your changes to ${TAB_LABEL[tab]} before switching to ${TAB_LABEL[pendingNav.key]}?`
-            : "Save your changes before leaving this page?"}{" "}
-          Unsaved edits will be lost otherwise.
+            ? t("ownerRestaurantDetail.unsavedBodySwitch", {
+                tab: t(TAB_LABEL_KEY[tab]),
+                nextTab: t(TAB_LABEL_KEY[pendingNav.key])
+              })
+            : t("ownerRestaurantDetail.unsavedBodyLeave")}{" "}
+          {t("ownerRestaurantDetail.unsavedHint")}
         </p>
         <div className="mt-5 flex flex-col gap-2">
           <button
@@ -267,7 +273,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
             disabled={isSavingAndLeaving}
             className="w-full rounded-xl bg-accent py-3 text-sm font-bold text-white disabled:opacity-60"
           >
-            {isSavingAndLeaving ? "Saving…" : "Save & continue"}
+            {isSavingAndLeaving ? t("common.saving") : t("ownerRestaurantDetail.saveContinue")}
           </button>
           <button
             type="button"
@@ -275,7 +281,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
             disabled={isSavingAndLeaving}
             className="w-full rounded-xl border border-border py-3 text-sm font-bold text-ink disabled:opacity-60"
           >
-            Discard changes
+            {t("ownerRestaurantDetail.discardChanges")}
           </button>
           <button
             type="button"
@@ -283,7 +289,7 @@ export default function ManageRestaurantPage({ params }: { params: { id: string 
             disabled={isSavingAndLeaving}
             className="w-full py-2 text-sm font-semibold text-muted"
           >
-            Keep editing
+            {t("ownerRestaurantDetail.keepEditing")}
           </button>
         </div>
       </Modal>

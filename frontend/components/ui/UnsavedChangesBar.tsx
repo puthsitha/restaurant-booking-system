@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 
+import { useLanguage } from "@/lib/i18n/context";
+
 interface UnsavedChangesBarProps {
   visible: boolean;
   isSaving: boolean;
@@ -20,8 +22,9 @@ export function UnsavedChangesBar({
   error,
   onSave,
   onDiscard,
-  saveLabel = "Save changes",
+  saveLabel,
 }: UnsavedChangesBarProps) {
+  const { t } = useLanguage();
   return (
     <AnimatePresence>
       {visible && (
@@ -34,7 +37,7 @@ export function UnsavedChangesBar({
         >
           <div className="flex items-center gap-2 text-sm font-semibold text-ink">
             <span className="h-2 w-2 shrink-0 rounded-full bg-accent motion-safe:animate-pulse" />
-            You have unsaved changes
+            {t("common.unsavedChanges")}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -43,7 +46,7 @@ export function UnsavedChangesBar({
               disabled={isSaving}
               className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:bg-bg disabled:opacity-50"
             >
-              Discard
+              {t("common.discard")}
             </button>
             <button
               type="button"
@@ -51,7 +54,7 @@ export function UnsavedChangesBar({
               disabled={isSaving}
               className="rounded-lg bg-accent px-5 py-2 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-60"
             >
-              {isSaving ? "Saving…" : saveLabel}
+              {isSaving ? t("common.saving") : (saveLabel ?? t("common.saveChanges"))}
             </button>
           </div>
           {error && <p className="w-full text-xs font-semibold text-red-600">{error}</p>}
