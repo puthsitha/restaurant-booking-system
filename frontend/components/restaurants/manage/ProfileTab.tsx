@@ -123,6 +123,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         <input
           value={draft.name}
           onChange={(e) => set("name", e.target.value)}
+          placeholder={t("ownerManage.profile.namePlaceholder")}
           className={FIELD_CLASS}
         />
       </div>
@@ -132,6 +133,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
           rows={3}
+          placeholder={t("ownerManage.profile.descriptionPlaceholder")}
           className={FIELD_CLASS}
         />
       </div>
@@ -141,6 +143,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           <input
             value={draft.cuisineType}
             onChange={(e) => set("cuisineType", e.target.value)}
+            placeholder={t("ownerManage.profile.cuisineTypePlaceholder")}
             className={FIELD_CLASS}
           />
         </div>
@@ -149,6 +152,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           <input
             value={draft.city}
             onChange={(e) => set("city", e.target.value)}
+            placeholder={t("ownerManage.profile.cityPlaceholder")}
             className={FIELD_CLASS}
           />
         </div>
@@ -158,6 +162,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         <input
           value={draft.address}
           onChange={(e) => set("address", e.target.value)}
+          placeholder={t("ownerManage.profile.addressPlaceholder")}
           className={FIELD_CLASS}
         />
       </div>
@@ -167,6 +172,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           <input
             value={draft.phone}
             onChange={(e) => set("phone", e.target.value)}
+            placeholder={t("ownerManage.profile.phonePlaceholder")}
             className={FIELD_CLASS}
           />
         </div>
@@ -175,6 +181,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           <input
             value={draft.website}
             onChange={(e) => set("website", e.target.value)}
+            placeholder={t("ownerManage.profile.websitePlaceholder")}
             className={FIELD_CLASS}
           />
         </div>
@@ -184,6 +191,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         <input
           value={draft.coverImageUrl}
           onChange={(e) => set("coverImageUrl", e.target.value)}
+          placeholder={t("ownerManage.profile.coverImageUrlPlaceholder")}
           className={FIELD_CLASS}
         />
       </div>
@@ -217,6 +225,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
             step="0.01"
             value={draft.depositAmount}
             onChange={(e) => set("depositAmount", e.target.value)}
+            placeholder={t("ownerManage.profile.depositAmountPlaceholder")}
             className={FIELD_CLASS}
           />
         </div>

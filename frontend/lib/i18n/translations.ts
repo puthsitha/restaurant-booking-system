@@ -419,11 +419,15 @@ const en = {
     pageTitle: "New restaurant",
     subtitle: "You can add hours, tables, and a menu after creating it.",
     name: "Name",
+    namePlaceholder: "e.g. Malis Restaurant",
     slugLabel: "URL slug (tablesite.com/restaurants/…)",
+    slugPlaceholder: "malis-restaurant",
     cuisineType: "Cuisine type",
     cuisinePlaceholder: "Khmer, Vietnamese, Italian…",
     address: "Address",
+    addressPlaceholder: "House number, street, sangkat…",
     city: "City",
+    cityPlaceholder: "Phnom Penh, Siem Reap, Kampot…",
     createRestaurant: "Create restaurant"
   },
   ownerRestaurantDetail: {
@@ -452,19 +456,28 @@ const en = {
     profile: {
       loadError: "Couldn't save changes",
       name: "Name",
+      namePlaceholder: "e.g. Malis Restaurant",
       description: "Description",
+      descriptionPlaceholder: "Tell diners what makes this restaurant special…",
       cuisineType: "Cuisine type",
+      cuisineTypePlaceholder: "Khmer, Vietnamese, Italian…",
       city: "City",
+      cityPlaceholder: "Phnom Penh, Siem Reap, Kampot…",
       address: "Address",
+      addressPlaceholder: "House number, street, sangkat…",
       phone: "Phone",
+      phonePlaceholder: "012 345 678",
       website: "Website",
+      websitePlaceholder: "https://example.com",
       coverImageUrl: "Cover image URL",
+      coverImageUrlPlaceholder: "https://example.com/cover.jpg",
       priceRange: "Price range",
       priceLow: "$ — Low",
       priceMedium: "$$ — Medium",
       priceHigh: "$$$ — High",
       requireDeposit: "Require a deposit to book",
-      depositAmount: "Deposit amount (USD)"
+      depositAmount: "Deposit amount (USD)",
+      depositAmountPlaceholder: "0.00"
     },
     hours: {
       loadError: "Couldn't save hours",
@@ -538,6 +551,7 @@ const en = {
       imageUrl: "Image URL",
       urlPlaceholder: "https://…",
       caption: "Caption",
+      captionPlaceholder: "e.g. Dining room",
       emptyTitle: "No photos yet",
       emptyMessage:
         "A great photo is often the reason a diner picks your restaurant — add your first one above."
@@ -1224,11 +1238,15 @@ const km = {
     pageTitle: "ភោជនីយដ្ឋានថ្មី",
     subtitle: "អ្នកអាចបន្ថែមម៉ោងបើក តុ និងម៉ឺនុយបន្ទាប់ពីបង្កើតវា។",
     name: "ឈ្មោះ",
+    namePlaceholder: "ឧទាហរណ៍ ភោជនីយដ្ឋានម៉ាលី",
     slugLabel: "ស្លាក URL (tablesite.com/restaurants/…)",
+    slugPlaceholder: "malis-restaurant",
     cuisineType: "ប្រភេទម្ហូប",
     cuisinePlaceholder: "ខ្មែរ វៀតណាម អ៊ីតាលី…",
     address: "អាសយដ្ឋាន",
+    addressPlaceholder: "លេខផ្ទះ ផ្លូវ សង្កាត់…",
     city: "ទីក្រុង",
+    cityPlaceholder: "ភ្នំពេញ សៀមរាប កំពត…",
     createRestaurant: "បង្កើតភោជនីយដ្ឋាន"
   },
   ownerRestaurantDetail: {
@@ -1257,19 +1275,28 @@ const km = {
     profile: {
       loadError: "មិនអាចរក្សាទុកការផ្លាស់ប្តូរបានទេ",
       name: "ឈ្មោះ",
+      namePlaceholder: "ឧទាហរណ៍ ភោជនីយដ្ឋានម៉ាលី",
       description: "ការពិពណ៌នា",
+      descriptionPlaceholder: "ប្រាប់អតិថិជននូវអ្វីដែលធ្វើឱ្យភោជនីយដ្ឋាននេះពិសេស…",
       cuisineType: "ប្រភេទម្ហូប",
+      cuisineTypePlaceholder: "ខ្មែរ វៀតណាម អ៊ីតាលី…",
       city: "ទីក្រុង",
+      cityPlaceholder: "ភ្នំពេញ សៀមរាប កំពត…",
       address: "អាសយដ្ឋាន",
+      addressPlaceholder: "លេខផ្ទះ ផ្លូវ សង្កាត់…",
       phone: "ទូរស័ព្ទ",
+      phonePlaceholder: "០១២ ៣៤៥ ៦៧៨",
       website: "គេហទំព័រ",
+      websitePlaceholder: "https://example.com",
       coverImageUrl: "URL រូបភាពគម្រប",
+      coverImageUrlPlaceholder: "https://example.com/cover.jpg",
       priceRange: "កម្រិតតម្លៃ",
       priceLow: "$ — ទាប",
       priceMedium: "$$ — មធ្យម",
       priceHigh: "$$$ — ខ្ពស់",
       requireDeposit: "តម្រូវឱ្យបង់ប្រាក់កក់ដើម្បីកក់",
-      depositAmount: "ចំនួនប្រាក់កក់ (USD)"
+      depositAmount: "ចំនួនប្រាក់កក់ (USD)",
+      depositAmountPlaceholder: "0.00"
     },
     hours: {
       loadError: "មិនអាចរក្សាទុកម៉ោងបើកបានទេ",
@@ -1343,6 +1370,7 @@ const km = {
       imageUrl: "URL រូបភាព",
       urlPlaceholder: "https://…",
       caption: "ចំណងជើងរូបភាព",
+      captionPlaceholder: "ឧទាហរណ៍ បន្ទប់អាហារ",
       emptyTitle: "មិនទាន់មានរូបថតនៅឡើយទេ",
       emptyMessage:
         "រូបថតដ៏ស្រស់ស្អាតច្រើនតែជាមូលហេតុដែលអតិថិជនជ្រើសរើសភោជនីយដ្ឋានរបស់អ្នក — បន្ថែមរូបដំបូងរបស់អ្នកខាងលើ។"

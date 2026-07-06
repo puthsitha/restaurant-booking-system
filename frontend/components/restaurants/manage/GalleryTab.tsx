@@ -65,6 +65,7 @@ export function GalleryTab({ restaurant, token, onSaved }: ManageTabProps) {
           <input
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
+            placeholder={t("ownerManage.gallery.captionPlaceholder")}
             className="w-40 rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none"
           />
         </div>

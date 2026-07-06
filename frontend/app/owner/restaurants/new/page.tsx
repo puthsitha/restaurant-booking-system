@@ -59,6 +59,7 @@ export default function NewRestaurantPage() {
             required
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
+            placeholder={t("ownerRestaurantNew.namePlaceholder")}
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
           />
         </div>
@@ -73,6 +74,7 @@ export default function NewRestaurantPage() {
               setSlugTouched(true);
               setSlug(e.target.value);
             }}
+            placeholder={t("ownerRestaurantNew.slugPlaceholder")}
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
           />
         </div>
@@ -94,6 +96,7 @@ export default function NewRestaurantPage() {
             required
             value={address}
             onChange={(e) => setAddress(e.target.value)}
+            placeholder={t("ownerRestaurantNew.addressPlaceholder")}
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
           />
         </div>
@@ -103,6 +106,7 @@ export default function NewRestaurantPage() {
             required
             value={city}
             onChange={(e) => setCity(e.target.value)}
+            placeholder={t("ownerRestaurantNew.cityPlaceholder")}
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
           />
         </div>
