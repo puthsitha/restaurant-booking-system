@@ -21,6 +21,9 @@ const en = {
     discover: "Discover",
     account: "Account",
     fineDining: "Fine dining",
+    cityPhnomPenh: "Phnom Penh",
+    citySiemReap: "Siem Reap",
+    cityKampot: "Kampot",
     blurb:
       "Book the best tables across Cambodia — Phnom Penh, Siem Reap, Kampot and beyond.",
     poweredBy: "Powered by"
@@ -197,6 +200,27 @@ const en = {
       sunday: "Sunday"
     }
   },
+  reviewsSection: {
+    title: "Reviews",
+    writeReview: "Write a review",
+    editReview: "Edit your review",
+    delete: "Delete",
+    reviewsCount: "{count} reviews",
+    yourRating: "Your rating",
+    sharePlaceholder: "Share your experience…",
+    saving: "Saving…",
+    saveChanges: "Save changes",
+    submitReview: "Submit review",
+    you: "You",
+    ownerReply: "Owner reply: ",
+    deleteModalTitle: "Delete this review?",
+    cantUndo: "This can't be undone.",
+    keepReview: "Keep review",
+    deleteReview: "Delete review",
+    deleting: "Deleting…",
+    submitError: "Something went wrong, please try again.",
+    deleteError: "Couldn't delete this review."
+  },
   bookingWidget: {
     reserveTable: "Reserve a table",
     date: "Date",
@@ -257,6 +281,9 @@ const km = {
     discover: "ស្វែងរក",
     account: "គណនី",
     fineDining: "ភោជនីយដ្ឋានប្រណីត",
+    cityPhnomPenh: "ភ្នំពេញ",
+    citySiemReap: "សៀមរាប",
+    cityKampot: "កំពត",
     blurb: "កក់តុល្អបំផុតទូទាំងកម្ពុជា — ភ្នំពេញ សៀមរាប កំពត និងផ្សេងទៀត។",
     poweredBy: "ដំណើរការដោយ"
   },
@@ -431,6 +458,27 @@ const km = {
       saturday: "ថ្ងៃសៅរ៍",
       sunday: "ថ្ងៃអាទិត្យ"
     }
+  },
+  reviewsSection: {
+    title: "មតិវាយតម្លៃ",
+    writeReview: "សរសេរមតិវាយតម្លៃ",
+    editReview: "កែសម្រួលមតិរបស់អ្នក",
+    delete: "លុប",
+    reviewsCount: "មតិវាយតម្លៃ {count}",
+    yourRating: "ការវាយតម្លៃរបស់អ្នក",
+    sharePlaceholder: "ចែករំលែកបទពិសោធន៍របស់អ្នក…",
+    saving: "កំពុងរក្សាទុក…",
+    saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
+    submitReview: "ដាក់ស្នើមតិវាយតម្លៃ",
+    you: "អ្នក",
+    ownerReply: "ការឆ្លើយតបពីម្ចាស់ភោជនីយដ្ឋាន៖ ",
+    deleteModalTitle: "លុបមតិវាយតម្លៃនេះ?",
+    cantUndo: "សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+    keepReview: "រក្សាមតិវាយតម្លៃ",
+    deleteReview: "លុបមតិវាយតម្លៃ",
+    deleting: "កំពុងលុប…",
+    submitError: "មានបញ្ហាកើតឡើង សូមព្យាយាមម្តងទៀត។",
+    deleteError: "មិនអាចលុបមតិវាយតម្លៃនេះបានទេ។"
   },
   bookingWidget: {
     reserveTable: "កក់តុ",

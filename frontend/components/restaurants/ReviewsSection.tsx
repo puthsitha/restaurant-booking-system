@@ -13,12 +13,14 @@ import { useAuthModal } from "@/lib/auth/authModal";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { createReview, deleteReview, listReviews, updateReview } from "@/lib/reviews/api";
 import type { ListReviewsResponse } from "@/lib/reviews/types";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface ReviewsSectionProps {
   restaurantId: string;
 }
 
 export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
+  const { t } = useLanguage();
   const { token, status, user } = useCustomerAuth();
   const { open: openLogin } = useAuthModal();
   const [data, setData] = useState<ListReviewsResponse | null>(null);
@@ -70,7 +72,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong, please try again.");
+      setError(err instanceof ApiError ? err.message : t("reviewsSection.submitError"));
     } finally {
       setSubmitting(false);
     }
@@ -84,7 +86,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
       setConfirmDelete(false);
       load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't delete this review.");
+      setError(err instanceof ApiError ? err.message : t("reviewsSection.deleteError"));
     } finally {
       setDeleting(false);
     }
@@ -95,14 +97,14 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
   return (
     <section className="mt-10">
       <div className="flex items-center justify-between">
-        <h2 className="disp text-lg font-bold text-ink">Reviews</h2>
+        <h2 className="disp text-lg font-bold text-ink">{t("reviewsSection.title")}</h2>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => (showForm ? setShowForm(false) : openForm())}
             className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg"
           >
-            {myReview ? "Edit your review" : "Write a review"}
+            {myReview ? t("reviewsSection.editReview") : t("reviewsSection.writeReview")}
           </button>
           {myReview && (
             <button
@@ -110,7 +112,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
               onClick={() => setConfirmDelete(true)}
               className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-50"
             >
-              Delete
+              {t("reviewsSection.delete")}
             </button>
           )}
         </div>
@@ -121,7 +123,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
           <div className="text-center">
             <p className="disp text-3xl font-extrabold text-ink">{data.average.toFixed(1)}</p>
             <RatingStars rating={data.average} size="md" className="mt-1 justify-center" />
-            <p className="mt-1 text-xs text-muted">{data.total} reviews</p>
+            <p className="mt-1 text-xs text-muted">{t("reviewsSection.reviewsCount", { count: data.total })}</p>
           </div>
           <div className="min-w-[180px] flex-1 space-y-1">
             {[5, 4, 3, 2, 1].map((star) => {
@@ -143,13 +145,13 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
 
       {showForm && (
         <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <label className="mb-1.5 block text-xs font-bold text-label">Your rating</label>
+          <label className="mb-1.5 block text-xs font-bold text-label">{t("reviewsSection.yourRating")}</label>
           <StarRatingInput value={rating} onChange={setRating} size="lg" />
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
-            placeholder="Share your experience…"
+            placeholder={t("reviewsSection.sharePlaceholder")}
             className="mt-3 w-full resize-none rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
           />
           {error && <p className="mt-2 text-xs font-semibold text-red-600">{error}</p>}
@@ -159,7 +161,11 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
             disabled={submitting}
             className="mt-3 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Saving…" : myReview ? "Save changes" : "Submit review"}
+            {submitting
+              ? t("reviewsSection.saving")
+              : myReview
+                ? t("reviewsSection.saveChanges")
+                : t("reviewsSection.submitReview")}
           </button>
         </div>
       )}
@@ -180,7 +186,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
                     {review.user.name}
                     {user && review.userId === user.id && (
                       <span className="ml-2 rounded-full bg-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
-                        You
+                        {t("reviewsSection.you")}
                       </span>
                     )}
                   </p>
@@ -190,7 +196,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
               {review.text && <p className="mt-2 text-sm text-ink">{review.text}</p>}
               {review.ownerReply && (
                 <div className="mt-2 rounded-xl bg-bg px-4 py-3 text-sm text-ink">
-                  <span className="font-semibold">Owner reply: </span>
+                  <span className="font-semibold">{t("reviewsSection.ownerReply")}</span>
                   {review.ownerReply}
                 </div>
               )}
@@ -202,10 +208,10 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
       <Modal
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        title="Delete this review?"
+        title={t("reviewsSection.deleteModalTitle")}
       >
         <div>
-          <p className="text-sm text-ink">This can&apos;t be undone.</p>
+          <p className="text-sm text-ink">{t("reviewsSection.cantUndo")}</p>
           {error && <p className="mt-2 text-sm font-semibold text-red-600">{error}</p>}
           <div className="mt-5 flex gap-3">
             <button
@@ -213,7 +219,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
               onClick={() => setConfirmDelete(false)}
               className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
             >
-              Keep review
+              {t("reviewsSection.keepReview")}
             </button>
             <button
               type="button"
@@ -221,7 +227,7 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
               disabled={deleting}
               className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-60"
             >
-              {deleting ? "Deleting…" : "Delete review"}
+              {deleting ? t("reviewsSection.deleting") : t("reviewsSection.deleteReview")}
             </button>
           </div>
         </div>

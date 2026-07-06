@@ -11,7 +11,6 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { FormField, TextField } from "@/components/ui/FormField";
 import { ChefHatIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Select } from "@/components/ui/Select";
 import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
@@ -29,7 +28,7 @@ import type { SavedRestaurant } from "@/lib/savedRestaurants/types";
 const PRICE_LABEL: Record<string, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$" };
 
 export default function ProfilePage() {
-  const { user, token, status, updateProfile } = useCustomerAuth();
+  const { user, token, status } = useCustomerAuth();
   const { t } = useLanguage();
 
   if (status === "loading") {
@@ -55,13 +54,7 @@ export default function ProfilePage() {
   return (
     <main className="mx-auto max-w-[900px] px-8 py-12">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <ProfileHeader
-          name={user.name}
-          avatarUrl={user.avatarUrl}
-          contact={user.phone ?? user.email ?? "—"}
-          preferredLocale={user.preferredLocale === "en" ? "en" : "km"}
-          onChangeLocale={(locale) => updateProfile({ preferredLocale: locale })}
-        />
+        <ProfileHeader name={user.name} avatarUrl={user.avatarUrl} contact={user.phone ?? user.email ?? "—"} />
       </motion.div>
 
       <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ delay: 0.05 }}>
@@ -79,12 +72,9 @@ interface ProfileHeaderProps {
   name: string;
   avatarUrl: string | null;
   contact: string;
-  preferredLocale: "km" | "en";
-  onChangeLocale: (locale: "km" | "en") => void;
 }
 
-function ProfileHeader({ name, avatarUrl, contact, preferredLocale, onChangeLocale }: ProfileHeaderProps) {
-  const { t } = useLanguage();
+function ProfileHeader({ name, avatarUrl, contact }: ProfileHeaderProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-6">
       <div className="flex items-center gap-4">
@@ -93,17 +83,6 @@ function ProfileHeader({ name, avatarUrl, contact, preferredLocale, onChangeLoca
           <h1 className="disp text-xl font-extrabold text-ink">{name}</h1>
           <p className="mt-0.5 text-sm text-muted">{contact}</p>
         </div>
-      </div>
-      <div>
-        <p className="mb-1.5 text-xs font-bold text-label">{t("common.language")}</p>
-        <SegmentedControl
-          value={preferredLocale}
-          onChange={onChangeLocale}
-          options={[
-            { value: "km", label: "ខ្មែរ" },
-            { value: "en", label: "English" },
-          ]}
-        />
       </div>
     </div>
   );
