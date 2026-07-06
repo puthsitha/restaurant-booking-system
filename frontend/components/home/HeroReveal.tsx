@@ -4,6 +4,8 @@ import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-mot
 import Image from "next/image";
 import type { CSSProperties, PointerEvent, ReactNode } from "react";
 
+import { useLanguage } from "@/lib/i18n/context";
+
 // The two scenes are now real photos (frontend/public/images/hero-*.png).
 // Kept the original hand-drawn SVG scenes below, commented out rather than
 // deleted, as a fallback/reference in case photos ever need to come back out.
@@ -119,6 +121,7 @@ interface HeroRevealProps {
 // content — a sibling layer behind the text would never receive pointermove
 // there, since the topmost element under the cursor captures it.
 export function HeroReveal({ children, className }: HeroRevealProps) {
+  const { t } = useLanguage();
   const mx = useMotionValue(50);
   const my = useMotionValue(50);
   const smoothX = useSpring(mx, { stiffness: 140, damping: 20, mass: 0.4 });
@@ -145,7 +148,7 @@ export function HeroReveal({ children, className }: HeroRevealProps) {
       <div className="absolute inset-0 -z-20">
         <Image
           src="/images/hero-dish.png"
-          alt="Steaming Cambodian crab curry in a banana leaf bowl"
+          alt={t("home.heroDishAlt")}
           fill
           priority
           sizes="100vw"
@@ -158,7 +161,7 @@ export function HeroReveal({ children, className }: HeroRevealProps) {
       >
         <Image
           src="/images/hero-restaurant.png"
-          alt="Warm Cambodian restaurant interior with pendant lighting"
+          alt={t("home.heroRestaurantAlt")}
           fill
           priority
           sizes="100vw"

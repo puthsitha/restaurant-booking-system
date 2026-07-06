@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/lib/i18n/context";
+
 interface QrCodeProps {
   value: string;
   size?: number;
@@ -8,6 +12,7 @@ interface QrCodeProps {
 // design/TableSite.reference.html's own `makeQR` helper. Not scannable;
 // there's no payment gateway to actually round-trip a scan against.
 export function QrCode({ value, size = 180, className }: QrCodeProps) {
+  const { t } = useLanguage();
   const cells = 21;
   let seed = 0;
   for (let i = 0; i < value.length; i++) {
@@ -35,7 +40,7 @@ export function QrCode({ value, size = 180, className }: QrCodeProps) {
       height={size}
       className={className}
       role="img"
-      aria-label="QR code"
+      aria-label={t("common.qrCode")}
     >
       <rect width={size} height={size} fill="#fff" />
       {modules.map((filled, i) => {

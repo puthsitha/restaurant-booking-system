@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { QrCode } from "@/components/ui/QrCode";
 import { DownloadIcon, ZoomInIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface QrCodeViewerProps {
   value: string;
@@ -60,6 +61,7 @@ async function downloadQrCode(svg: SVGSVGElement, filename: string): Promise<voi
 // "Download" button — used for the check-in QR (My bookings) and the KHQR
 // payment/confirmation codes in the booking flow.
 export function QrCodeViewer({ value, size = 180, className, label, downloadName }: QrCodeViewerProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const largeContainerRef = useRef<HTMLDivElement>(null);
@@ -81,7 +83,7 @@ export function QrCodeViewer({ value, size = 180, className, label, downloadName
         type="button"
         onClick={() => setOpen(true)}
         className="group relative inline-block"
-        aria-label={`View ${label} full screen`}
+        aria-label={t("common.viewFullScreen", { label })}
       >
         <QrCode value={value} size={size} className={className} />
         <span className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition group-hover:bg-ink/10 group-hover:opacity-100">
@@ -102,7 +104,7 @@ export function QrCodeViewer({ value, size = 180, className, label, downloadName
             className="mt-5 flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
           >
             <DownloadIcon className="h-4 w-4" />
-            {downloading ? "Preparing…" : "Download"}
+            {downloading ? t("common.preparing") : t("common.download")}
           </button>
         </div>
       </Lightbox>

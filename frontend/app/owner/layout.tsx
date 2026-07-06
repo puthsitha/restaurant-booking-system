@@ -57,8 +57,12 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
             count: res.total,
             items: res.items.map((r) => ({
               id: r.id,
-              title: `${r.user.name} · ${r.partySize} guests`,
-              subtitle: `${r.restaurant.name} · ${r.date.slice(0, 10)} at ${r.time}`,
+              title: t("owner.notificationTitle", { name: r.user.name, count: r.partySize }),
+              subtitle: t("owner.notificationSubtitle", {
+                restaurant: r.restaurant.name,
+                date: r.date.slice(0, 10),
+                time: r.time,
+              }),
               href: "/owner/bookings",
             })),
             emptyLabel: t("owner.noPendingBookings"),

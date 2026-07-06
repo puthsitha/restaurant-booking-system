@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ZoomInIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface ZoomableImageProps {
   src: string;
@@ -16,6 +17,7 @@ interface ZoomableImageProps {
 // client component so server-rendered pages (like the restaurant detail
 // page) don't have to become client components just to add this.
 export function ZoomableImage({ src, alt, className }: ZoomableImageProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   return (
@@ -24,7 +26,7 @@ export function ZoomableImage({ src, alt, className }: ZoomableImageProps) {
         type="button"
         onClick={() => setOpen(true)}
         className="group relative block h-full w-full"
-        aria-label={`View ${alt} full screen`}
+        aria-label={t("common.viewFullScreen", { label: alt })}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} className={className} />

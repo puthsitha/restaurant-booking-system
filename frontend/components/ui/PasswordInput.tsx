@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { InputHTMLAttributes } from "react";
 
 import { EyeIcon, EyeOffIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface PasswordInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "onChange"> {
@@ -12,6 +13,7 @@ interface PasswordInputProps
 }
 
 export function PasswordInput({ value, onChange, className, ...rest }: PasswordInputProps) {
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -26,7 +28,7 @@ export function PasswordInput({ value, onChange, className, ...rest }: PasswordI
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? t("common.hidePassword") : t("common.showPassword")}
         tabIndex={-1}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition hover:text-ink"
       >

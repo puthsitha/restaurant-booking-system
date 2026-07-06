@@ -1,4 +1,7 @@
+"use client";
+
 import { UtensilsIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 const SIZE_PX = { sm: 40, md: 64, lg: 88 } as const;
 const DOT_PX = { sm: 5, md: 7, lg: 9 } as const;
@@ -14,6 +17,7 @@ interface LoadingSpinnerProps {
 // steam are motion-safe only; reduced-motion users still see the plate and
 // label, just static.
 export function LoadingSpinner({ label, size = "md", className }: LoadingSpinnerProps) {
+  const { t } = useLanguage();
   const dims = SIZE_PX[size];
   const dot = DOT_PX[size];
   const radius = dims / 2 - dot / 2;
@@ -60,7 +64,7 @@ export function LoadingSpinner({ label, size = "md", className }: LoadingSpinner
       </div>
 
       {label && <p className="km text-sm font-medium text-muted">{label}</p>}
-      <span className="sr-only">Loading</span>
+      <span className="sr-only">{t("common.loading")}</span>
     </div>
   );
 }

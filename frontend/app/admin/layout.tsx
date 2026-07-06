@@ -84,8 +84,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             requestCount: requests.total,
             requestItems: requests.items.map((r) => ({
               id: r.id,
-              title: `${r.owner.name} · wants ${r.requestedCount} restaurants`,
-              subtitle: `Currently ${r.currentCount}/${r.owner.restaurantLimit}`,
+              title: t("admin.notificationRequestTitle", {
+                name: r.owner.name,
+                count: r.requestedCount,
+              }),
+              subtitle: t("admin.notificationRequestSubtitle", {
+                current: r.currentCount,
+                limit: r.owner.restaurantLimit,
+              }),
               href: "/admin/requests",
             })),
           });
@@ -99,7 +105,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [token]);
+  }, [token, t]);
 
   const notifications: DashboardNotifications | undefined = pending
     ? {

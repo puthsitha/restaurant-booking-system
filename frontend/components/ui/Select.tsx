@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import { CheckIcon, ChevronDownIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 export interface SelectOption<T extends string> {
   value: T;
@@ -33,12 +34,13 @@ export function Select<T extends string>({
   onChange,
   options,
   label,
-  placeholder = "Select…",
+  placeholder,
   id,
   disabled,
   required,
   className
 }: SelectProps<T>) {
+  const { t } = useLanguage();
   const generatedId = useId();
   const selectId = id ?? generatedId;
   const [open, setOpen] = useState(false);
@@ -107,7 +109,7 @@ export function Select<T extends string>({
         } ${className ?? ""}`}
       >
         <span className={`truncate ${selected ? "text-ink" : "text-muted"}`}>
-          {selected ? selected.label : placeholder}
+          {selected ? selected.label : (placeholder ?? t("common.selectPlaceholder"))}
         </span>
         <ChevronDownIcon
           className={`h-4 w-4 shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`}

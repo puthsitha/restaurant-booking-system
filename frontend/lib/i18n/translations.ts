@@ -28,7 +28,25 @@ const en = {
     unsavedChanges: "You have unsaved changes",
     discard: "Discard",
     saved: "Saved",
-    saveChanges: "Save changes"
+    saveChanges: "Save changes",
+    saveRestaurant: "Save restaurant",
+    removeFromSaved: "Remove from saved restaurants",
+    close: "Close",
+    loading: "Loading",
+    selectPlaceholder: "Select…",
+    errorStateTitle: "Something spilled in the kitchen",
+    errorStateMessage: "We couldn't load this. Give it another try.",
+    tryAgain: "Try again",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    qrCode: "QR code",
+    viewFullScreen: "View {label} full screen",
+    preparing: "Preparing…",
+    download: "Download",
+    starsCount: "{count} star{plural}",
+    outOfFiveStars: "{rating} out of 5 stars",
+    brandPanel: "{brand} panel",
+    bookingCountTooltip: "{date}: {count} booking{plural}"
   },
   customerHeader: {
     myBookings: "My bookings",
@@ -43,7 +61,8 @@ const en = {
     cityKampot: "Kampot",
     blurb:
       "Book the best tables across Cambodia — Phnom Penh, Siem Reap, Kampot and beyond.",
-    poweredBy: "Powered by"
+    poweredBy: "Powered by",
+    phone: "Phone"
   },
   sessionEndedModal: {
     title: "You've been logged out",
@@ -64,7 +83,9 @@ const en = {
     noPendingBookings: "No pending bookings.",
     viewAllBookings: "View all bookings",
     loginTitle: "Restaurant owner login",
-    loginSubtitle: "Sign in to manage your restaurant."
+    loginSubtitle: "Sign in to manage your restaurant.",
+    notificationTitle: "{name} · {count} guests",
+    notificationSubtitle: "{restaurant} · {date} at {time}"
   },
   admin: {
     brand: "Admin",
@@ -78,7 +99,9 @@ const en = {
     nothingAwaitingReview: "Nothing awaiting review.",
     viewAllRestaurants: "View all restaurants",
     loginTitle: "Platform admin login",
-    loginSubtitle: "Sign in to moderate the platform."
+    loginSubtitle: "Sign in to moderate the platform.",
+    notificationRequestTitle: "{name} · wants {count} restaurants",
+    notificationRequestSubtitle: "Currently {current}/{limit}"
   },
   auth: {
     email: "Email",
@@ -88,13 +111,29 @@ const en = {
     somethingWentWrong: "Something went wrong",
     continueWithGoogle: "Continue with Google",
     googleUnavailable:
-      "Google sign-in isn't available in this browser right now — please sign in with your phone number instead."
+      "Google sign-in isn't available in this browser right now — please sign in with your phone number instead.",
+    somethingWentWrongRetry: "Something went wrong, please try again.",
+    welcomeBack: "Welcome back",
+    signInWithPhone: "Sign in with your phone number",
+    phoneNumber: "Phone number",
+    phonePlaceholder: "12 345 678",
+    sendingCode: "Sending…",
+    sendCode: "Send code",
+    or: "or",
+    enterCode: "Enter the code",
+    sentTo: "Sent to {phone}",
+    devCodeSuffix: " — dev code: {code}",
+    verifying: "Verifying…",
+    logIn: "Log in",
+    useDifferentNumber: "Use a different number"
   },
   home: {
     heroTagline: "TableSite · Cambodia",
     heroTitlePrefix: "Find your table across",
     heroTitleHighlight: "Cambodia",
     heroSubtitle: "Reserve Cambodia's best tables — bilingual, dual-currency, KHQR-ready.",
+    heroDishAlt: "Steaming Cambodian crab curry in a banana leaf bowl",
+    heroRestaurantAlt: "Warm Cambodian restaurant interior with pendant lighting",
     searchPlaceholder: "Search by restaurant name…",
     search: "Search",
     statRestaurants: "Restaurants",
@@ -270,6 +309,7 @@ const en = {
     tableReserved: "Table reserved!",
     scanToPay: "Scan with any KHQR-enabled banking app to pay ",
     payAtRestaurant: "Or pay via ABA · Wing · Bakong · ACLEDA at the restaurant",
+    khqrPaymentLabel: "KHQR payment",
     ivePaid: "I've paid",
     confirming: "Confirming…",
     simulatedDemo: "Simulated for this demo — no real payment gateway is connected.",
@@ -622,12 +662,16 @@ const en = {
     noDescription: "No description provided.",
     bookingPolicy: "Booking policy",
     minBookingNotice: "Min booking notice",
+    minBookingNoticeValue: "{minutes} min",
     maxBookingDays: "Max booking days ahead",
+    maxBookingDaysValue: "{days} days",
     cancellationWindow: "Cancellation window",
+    cancellationWindowValue: "{hours} hrs",
     depositLabel: "Deposit",
     notRequired: "Not required",
     capacityAmenities: "Capacity & amenities",
     capacity: "Capacity",
+    capacityValue: "{min}–{max} guests",
     parking: "Parking",
     available: "Available",
     notAvailable: "Not available",
@@ -752,6 +796,13 @@ const en = {
     completed: "Completed",
     cancelled: "Cancelled",
     noShow: "No-show"
+  },
+  routeStates: {
+    settingTheTable: "Setting the table…",
+    findingYourTable: "Finding your table…",
+    restaurantNotFoundTitle: "This table isn't set",
+    restaurantNotFoundMessage:
+      "We couldn't find a restaurant at this address — it may have closed, or the link's a little off."
   }
 } as const;
 
@@ -780,7 +831,25 @@ const km = {
     unsavedChanges: "អ្នកមានការផ្លាស់ប្តូរមិនទាន់រក្សាទុក",
     discard: "បោះបង់",
     saved: "បានរក្សាទុក",
-    saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ"
+    saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
+    saveRestaurant: "រក្សាទុកភោជនីយដ្ឋាន",
+    removeFromSaved: "លុបចេញពីភោជនីយដ្ឋានដែលបានរក្សាទុក",
+    close: "បិទ",
+    loading: "កំពុងផ្ទុក",
+    selectPlaceholder: "ជ្រើសរើស…",
+    errorStateTitle: "មានអ្វីមួយកម្ពប់នៅក្នុងផ្ទះបាយ",
+    errorStateMessage: "យើងមិនអាចផ្ទុកវាបានទេ។ សូមព្យាយាមម្តងទៀត។",
+    tryAgain: "ព្យាយាមម្តងទៀត",
+    showPassword: "បង្ហាញពាក្យសម្ងាត់",
+    hidePassword: "លាក់ពាក្យសម្ងាត់",
+    qrCode: "កូដ QR",
+    viewFullScreen: "មើល {label} ពេញអេក្រង់",
+    preparing: "កំពុងរៀបចំ…",
+    download: "ទាញយក",
+    starsCount: "ផ្កាយ {count}",
+    outOfFiveStars: "{rating} ក្នុងចំណោម 5 ផ្កាយ",
+    brandPanel: "ផ្ទាំង {brand}",
+    bookingCountTooltip: "{date}៖ ការកក់ {count}"
   },
   customerHeader: {
     myBookings: "ការកក់របស់ខ្ញុំ",
@@ -794,7 +863,8 @@ const km = {
     citySiemReap: "សៀមរាប",
     cityKampot: "កំពត",
     blurb: "កក់តុល្អបំផុតទូទាំងកម្ពុជា — ភ្នំពេញ សៀមរាប កំពត និងផ្សេងទៀត។",
-    poweredBy: "ដំណើរការដោយ"
+    poweredBy: "ដំណើរការដោយ",
+    phone: "ទូរស័ព្ទ"
   },
   sessionEndedModal: {
     title: "អ្នកត្រូវបានចាកចេញ",
@@ -815,7 +885,9 @@ const km = {
     noPendingBookings: "មិនមានការកក់រង់ចាំ។",
     viewAllBookings: "មើលការកក់ទាំងអស់",
     loginTitle: "ចូលគណនីម្ចាស់ភោជនីយដ្ឋាន",
-    loginSubtitle: "ចូលដើម្បីគ្រប់គ្រងភោជនីយដ្ឋានរបស់អ្នក។"
+    loginSubtitle: "ចូលដើម្បីគ្រប់គ្រងភោជនីយដ្ឋានរបស់អ្នក។",
+    notificationTitle: "{name} · {count} ភ្ញៀវ",
+    notificationSubtitle: "{restaurant} · {date} ម៉ោង {time}"
   },
   admin: {
     brand: "អ្នកគ្រប់គ្រង",
@@ -829,7 +901,9 @@ const km = {
     nothingAwaitingReview: "គ្មានអ្វីរង់ចាំពិនិត្យទេ។",
     viewAllRestaurants: "មើលភោជនីយដ្ឋានទាំងអស់",
     loginTitle: "ចូលគណនីអ្នកគ្រប់គ្រងវេទិកា",
-    loginSubtitle: "ចូលដើម្បីត្រួតពិនិត្យវេទិកា។"
+    loginSubtitle: "ចូលដើម្បីត្រួតពិនិត្យវេទិកា។",
+    notificationRequestTitle: "{name} · ចង់បាន {count} ភោជនីយដ្ឋាន",
+    notificationRequestSubtitle: "បច្ចុប្បន្ន {current}/{limit}"
   },
   auth: {
     email: "អ៊ីមែល",
@@ -839,13 +913,29 @@ const km = {
     somethingWentWrong: "មានបញ្ហាមួយបានកើតឡើង",
     continueWithGoogle: "បន្តជាមួយ Google",
     googleUnavailable:
-      "ការចូលដោយ Google មិនអាចប្រើបានទេនៅក្នុងកម្មវិធីរុករកនេះ សូមប្រើលេខទូរស័ព្ទរបស់អ្នកជំនួសវិញ។"
+      "ការចូលដោយ Google មិនអាចប្រើបានទេនៅក្នុងកម្មវិធីរុករកនេះ សូមប្រើលេខទូរស័ព្ទរបស់អ្នកជំនួសវិញ។",
+    somethingWentWrongRetry: "មានបញ្ហាកើតឡើង សូមព្យាយាមម្តងទៀត។",
+    welcomeBack: "សូមស្វាគមន៍ត្រឡប់មកវិញ",
+    signInWithPhone: "ចូលដោយប្រើលេខទូរស័ព្ទរបស់អ្នក",
+    phoneNumber: "លេខទូរស័ព្ទ",
+    phonePlaceholder: "12 345 678",
+    sendingCode: "កំពុងផ្ញើ…",
+    sendCode: "ផ្ញើលេខកូដ",
+    or: "ឬ",
+    enterCode: "បញ្ចូលលេខកូដ",
+    sentTo: "បានផ្ញើទៅ {phone}",
+    devCodeSuffix: " — លេខកូដសាកល្បង៖ {code}",
+    verifying: "កំពុងផ្ទៀងផ្ទាត់…",
+    logIn: "ចូល",
+    useDifferentNumber: "ប្រើលេខផ្សេង"
   },
   home: {
     heroTagline: "TableSite · កម្ពុជា",
     heroTitlePrefix: "រកតុរបស់អ្នកទូទាំង",
     heroTitleHighlight: "កម្ពុជា",
     heroSubtitle: "កក់តុល្អបំផុតរបស់កម្ពុជា — ពីរភាសា ពីររូបិយប័ណ្ណ ត្រៀមខ្លួនជាមួយ KHQR។",
+    heroDishAlt: "អាម៉ុកក្ដាមក្ដៅៗនៅក្នុងចានស្លឹកចេក",
+    heroRestaurantAlt: "បរិយាកាសភោជនីយដ្ឋានកម្ពុជាកក់ក្ដៅជាមួយពន្លឺព្យួរ",
     searchPlaceholder: "ស្វែងរកតាមឈ្មោះភោជនីយដ្ឋាន…",
     search: "ស្វែងរក",
     statRestaurants: "ភោជនីយដ្ឋាន",
@@ -1021,6 +1111,7 @@ const km = {
     tableReserved: "តុត្រូវបានកក់ជោគជ័យ!",
     scanToPay: "ស្កេនដោយកម្មវិធីធនាគារណាមួយដែលគាំទ្រ KHQR ដើម្បីបង់ ",
     payAtRestaurant: "ឬបង់តាម ABA · Wing · Bakong · ACLEDA នៅភោជនីយដ្ឋាន",
+    khqrPaymentLabel: "ការបង់ប្រាក់ KHQR",
     ivePaid: "ខ្ញុំបានបង់ប្រាក់ហើយ",
     confirming: "កំពុងបញ្ជាក់…",
     simulatedDemo: "ត្រូវបានក្លែងធ្វើសម្រាប់ការសាកល្បងនេះ — មិនមានច្រកបង់ប្រាក់ពិតភ្ជាប់ទេ។",
@@ -1373,12 +1464,16 @@ const km = {
     noDescription: "មិនមានការពិពណ៌នាទេ។",
     bookingPolicy: "គោលការណ៍ការកក់",
     minBookingNotice: "រយៈពេលជូនដំណឹងកក់អប្បបរមា",
+    minBookingNoticeValue: "{minutes} នាទី",
     maxBookingDays: "ចំនួនថ្ងៃកក់មុនអតិបរមា",
+    maxBookingDaysValue: "{days} ថ្ងៃ",
     cancellationWindow: "រយៈពេលលុបចោល",
+    cancellationWindowValue: "{hours} ម៉ោង",
     depositLabel: "ប្រាក់កក់",
     notRequired: "មិនតម្រូវ",
     capacityAmenities: "ចំណុះ និងសម្ភារៈបរិក្ខារ",
     capacity: "ចំណុះ",
+    capacityValue: "{min}–{max} ភ្ញៀវ",
     parking: "កន្លែងចតរថយន្ត",
     available: "មាន",
     notAvailable: "គ្មាន",
@@ -1501,6 +1596,13 @@ const km = {
     completed: "បានបញ្ចប់",
     cancelled: "បានលុបចោល",
     noShow: "មិនបានមក"
+  },
+  routeStates: {
+    settingTheTable: "កំពុងរៀបចំតុ…",
+    findingYourTable: "កំពុងស្វែងរកតុរបស់អ្នក…",
+    restaurantNotFoundTitle: "តុនេះមិនទាន់រៀបចំទេ",
+    restaurantNotFoundMessage:
+      "យើងរកមិនឃើញភោជនីយដ្ឋាននៅអាសយដ្ឋាននេះទេ — វាប្រហែលជាបានបិទទ្វារ ឬតំណភ្ជាប់មិនត្រឹមត្រូវ។"
   }
 } as const;
 

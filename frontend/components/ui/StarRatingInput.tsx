@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 
+import { useLanguage } from "@/lib/i18n/context";
+
 interface StarRatingInputProps {
   value: number;
   onChange: (rating: number) => void;
@@ -22,6 +24,7 @@ const POP_KEYFRAME = [1, 1.4, 1];
 // pops on the click that sets it, and gently scales on hover, distinct from
 // the read-only `RatingStars` display component.
 export function StarRatingInput({ value, onChange, size = "md", className }: StarRatingInputProps) {
+  const { t } = useLanguage();
   const [poppedStar, setPoppedStar] = useState<number | null>(null);
 
   function handleClick(n: number): void {
@@ -39,7 +42,7 @@ export function StarRatingInput({ value, onChange, size = "md", className }: Sta
             key={n}
             type="button"
             onClick={() => handleClick(n)}
-            aria-label={`${n} star${n > 1 ? "s" : ""}`}
+            aria-label={t("common.starsCount", { count: n, plural: n > 1 ? "s" : "" })}
             className={SIZE_CLASS[size]}
             animate={{
               scale: poppedStar === n ? POP_KEYFRAME : 1,

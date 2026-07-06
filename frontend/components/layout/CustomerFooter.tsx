@@ -8,9 +8,9 @@ import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
 
 const SOCIAL_LINKS = [
-  { label: "Facebook", icon: FacebookIcon },
-  { label: "Instagram", icon: InstagramIcon },
-  { label: "Phone", icon: PhoneIcon },
+  { label: "Facebook", labelKey: null, icon: FacebookIcon },
+  { label: "Instagram", labelKey: null, icon: InstagramIcon },
+  { label: "Phone", labelKey: "customerFooter.phone" as const, icon: PhoneIcon },
 ];
 
 // Mirrors design/TableSite.reference.html's footer() renderer: dark ink
@@ -55,7 +55,7 @@ export function CustomerFooter() {
             {SOCIAL_LINKS.map((social) => (
               <span
                 key={social.label}
-                aria-label={social.label}
+                aria-label={social.labelKey ? t(social.labelKey) : social.label}
                 className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-[#332925] text-[#C9BCB0]"
               >
                 <social.icon className="h-4 w-4" />
