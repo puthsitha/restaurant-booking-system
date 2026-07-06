@@ -80,6 +80,22 @@ allowlist (`CORS_ORIGIN`), per-IP rate limiting, a JSON body-size cap, and a
 centralized error handler that never leaks stack traces. Run the backend tests
 with `npm run test --workspace backend`.
 
+### API docs (Swagger)
+
+With the backend running, interactive API docs are served at:
+
+```
+http://localhost:4000/docs
+```
+
+The spec is generated from `@openapi` JSDoc comments on the route files
+(`backend/src/docs/openapi.ts`), so it always matches the code. Outside
+production, the docs page also gets three **"Log in as…"** buttons (customer /
+owner / admin) that sign in through the real auth endpoints and authorize
+Swagger UI automatically — no manual token copy-paste needed before hitting
+**"Try it out"** on a protected endpoint. If you'd rather grab a token
+directly, `npm run tokens --workspace backend` prints one for each role.
+
 ## Styling
 
 The frontend uses [Tailwind CSS](https://tailwindcss.com). Design tokens (colors
