@@ -19,7 +19,9 @@ const LABEL_CLASS = "mb-1.5 block text-xs font-bold text-label";
 
 interface ProfileDraft {
   name: string;
+  nameKm: string;
   description: string;
+  descriptionKm: string;
   cuisineType: string;
   address: string;
   city: string;
@@ -34,7 +36,9 @@ interface ProfileDraft {
 function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileDraft {
   return {
     name: restaurant.name,
+    nameKm: restaurant.nameKm ?? "",
     description: restaurant.description ?? "",
+    descriptionKm: restaurant.descriptionKm ?? "",
     cuisineType: restaurant.cuisineType,
     address: restaurant.address,
     city: restaurant.city,
@@ -76,8 +80,10 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         restaurant.id,
         {
           name: draft.name,
+          nameKm: draft.nameKm || undefined,
           slug: restaurant.slug,
           description: draft.description || undefined,
+          descriptionKm: draft.descriptionKm || undefined,
           cuisineType: draft.cuisineType,
           address: draft.address,
           city: draft.city,
@@ -118,24 +124,47 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
 
   return (
     <form onSubmit={handleSubmit} className="max-w-xl space-y-4 pb-2">
-      <div>
-        <label className={LABEL_CLASS}>{t("ownerManage.profile.name")}</label>
-        <input
-          value={draft.name}
-          onChange={(e) => set("name", e.target.value)}
-          placeholder={t("ownerManage.profile.namePlaceholder")}
-          className={FIELD_CLASS}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.name")}</label>
+          <input
+            value={draft.name}
+            onChange={(e) => set("name", e.target.value)}
+            placeholder={t("ownerManage.profile.namePlaceholder")}
+            className={FIELD_CLASS}
+          />
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.nameKm")}</label>
+          <input
+            value={draft.nameKm}
+            onChange={(e) => set("nameKm", e.target.value)}
+            placeholder={t("ownerManage.profile.nameKmPlaceholder")}
+            className={`km ${FIELD_CLASS}`}
+          />
+        </div>
       </div>
-      <div>
-        <label className={LABEL_CLASS}>{t("ownerManage.profile.description")}</label>
-        <textarea
-          value={draft.description}
-          onChange={(e) => set("description", e.target.value)}
-          rows={3}
-          placeholder={t("ownerManage.profile.descriptionPlaceholder")}
-          className={FIELD_CLASS}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.description")}</label>
+          <textarea
+            value={draft.description}
+            onChange={(e) => set("description", e.target.value)}
+            rows={3}
+            placeholder={t("ownerManage.profile.descriptionPlaceholder")}
+            className={FIELD_CLASS}
+          />
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.descriptionKm")}</label>
+          <textarea
+            value={draft.descriptionKm}
+            onChange={(e) => set("descriptionKm", e.target.value)}
+            rows={3}
+            placeholder={t("ownerManage.profile.descriptionKmPlaceholder")}
+            className={`km ${FIELD_CLASS}`}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

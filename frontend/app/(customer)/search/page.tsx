@@ -33,7 +33,7 @@ export default function SearchPage() {
 }
 
 function SearchPageContent() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const searchParams = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
@@ -59,10 +59,10 @@ function SearchPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listTags()
+    listTags(locale)
       .then((res) => setTags(res.tags))
       .catch(() => setTags([]));
-  }, []);
+  }, [locale]);
 
   // A new debounced text filter should restart pagination at page 1, same
   // as the tag/price handlers already do.
@@ -73,15 +73,18 @@ function SearchPageContent() {
   const runSearch = useCallback(() => {
     setIsLoading(true);
     setError(null);
-    listRestaurants({
-      search: debouncedSearch || undefined,
-      city: debouncedCity || undefined,
-      cuisineType: debouncedCuisineType || undefined,
-      tag: tag || undefined,
-      priceRange: priceRange || undefined,
-      page,
-      pageSize: 12,
-    })
+    listRestaurants(
+      {
+        search: debouncedSearch || undefined,
+        city: debouncedCity || undefined,
+        cuisineType: debouncedCuisineType || undefined,
+        tag: tag || undefined,
+        priceRange: priceRange || undefined,
+        page,
+        pageSize: 12,
+      },
+      locale,
+    )
       .then(setResult)
       .catch(() => setError(t("searchPage.loadError")))
       .finally(() => setIsLoading(false));
@@ -92,6 +95,7 @@ function SearchPageContent() {
     tag,
     priceRange,
     page,
+    locale,
     t,
   ]);
 

@@ -14,6 +14,9 @@ interface ApiFetchOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   token?: string | null;
+  // Forwarded as Accept-Language so the backend can return restaurant/tag
+  // names in Khmer for that request — see backend/src/lib/locale.ts.
+  locale?: "en" | "km";
 }
 
 // Fired whenever an authenticated request (one sent with a token) comes back
@@ -44,6 +47,7 @@ export async function apiFetch<T>(
     headers: {
       "Content-Type": "application/json",
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+      ...(options.locale ? { "Accept-Language": options.locale } : {}),
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     // Restaurant data changes via owner/admin actions with no revalidation

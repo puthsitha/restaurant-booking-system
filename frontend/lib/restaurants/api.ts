@@ -25,8 +25,10 @@ import type {
 
 export interface RestaurantProfileInput {
   name: string;
+  nameKm?: string;
   slug: string;
   description?: string;
+  descriptionKm?: string;
   cuisineType: string;
   address: string;
   city: string;
@@ -62,14 +64,19 @@ function toQueryString(params: Record<string, string | number | undefined>): str
 
 export function listRestaurants(
   params: ListRestaurantsParams = {},
+  locale?: "en" | "km",
 ): Promise<ListRestaurantsResponse> {
   return apiFetch<ListRestaurantsResponse>(
     `/api/restaurants${toQueryString(params as Record<string, string | number | undefined>)}`,
+    { locale },
   );
 }
 
-export function getRestaurantBySlug(slug: string): Promise<{ restaurant: RestaurantPublicDetail }> {
-  return apiFetch(`/api/restaurants/slug/${encodeURIComponent(slug)}`);
+export function getRestaurantBySlug(
+  slug: string,
+  locale?: "en" | "km",
+): Promise<{ restaurant: RestaurantPublicDetail }> {
+  return apiFetch(`/api/restaurants/slug/${encodeURIComponent(slug)}`, { locale });
 }
 
 export function listMyRestaurants(
@@ -339,12 +346,20 @@ export function setRestaurantTags(
   return apiFetch(`/api/restaurants/${id}/tags`, { method: "PUT", body: { tagIds }, token });
 }
 
-export function listTags(): Promise<{ tags: Tag[] }> {
-  return apiFetch("/api/tags");
+export function listTags(locale?: "en" | "km"): Promise<{ tags: Tag[] }> {
+  return apiFetch("/api/tags", { locale });
 }
 
-export function createTag(name: string, token: string): Promise<{ tag: Tag }> {
-  return apiFetch("/api/tags", { method: "POST", body: { name }, token });
+export function createTag(name: string, nameKm: string | undefined, token: string): Promise<{ tag: Tag }> {
+  return apiFetch("/api/tags", { method: "POST", body: { name, nameKm }, token });
+}
+
+export function updateTag(
+  id: string,
+  input: { name?: string; nameKm?: string },
+  token: string,
+): Promise<{ tag: Tag }> {
+  return apiFetch(`/api/tags/${id}`, { method: "PATCH", body: input, token });
 }
 
 export function deleteTag(id: string, token: string): Promise<void> {

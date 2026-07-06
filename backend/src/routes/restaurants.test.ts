@@ -53,6 +53,7 @@ vi.mock("../lib/prisma", () => {
     count: vi.fn(),
     findMany: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
     delete: vi.fn(),
   };
   const user = {
@@ -98,7 +99,9 @@ const baseRestaurant = {
   id: "rest_1",
   slug: "pho-corner",
   name: "Pho Corner",
+  nameKm: null,
   description: null,
+  descriptionKm: null,
   cuisineType: "Vietnamese",
   address: "123 St",
   city: "Phnom Penh",
@@ -126,6 +129,7 @@ const baseRestaurant = {
   ownerId: OWNER_ID,
   createdAt: new Date("2026-01-01"),
   updatedAt: new Date("2026-01-01"),
+  tags: [],
 };
 
 beforeEach(() => {
@@ -267,6 +271,42 @@ describe("GET /api/restaurants", () => {
     const whereArg = vi.mocked(prisma.restaurant.findMany).mock.calls[0]?.[0]?.where;
     expect(whereArg?.status).toBe("ACTIVE");
   });
+
+  it("returns the English name/description by default", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
+      { ...baseRestaurant, name: "Pho Corner", nameKm: "ផូកន័រ", description: "Great pho", descriptionKm: "ផ្សេងទៀត" },
+    ]);
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
+
+    const res = await request(app).get("/api/restaurants");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].name).toBe("Pho Corner");
+    expect(res.body.items[0].description).toBe("Great pho");
+  });
+
+  it("returns the Khmer name/description when Accept-Language is km", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
+      { ...baseRestaurant, name: "Pho Corner", nameKm: "ផូកន័រ", description: "Great pho", descriptionKm: "ម្ហូបផូឆ្ងាញ់" },
+    ]);
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
+
+    const res = await request(app).get("/api/restaurants").set("Accept-Language", "km");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].name).toBe("ផូកន័រ");
+    expect(res.body.items[0].description).toBe("ម្ហូបផូឆ្ងាញ់");
+  });
+
+  it("falls back to the English name/description when Khmer isn't set", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
+
+    const res = await request(app).get("/api/restaurants").set("Accept-Language", "km");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].name).toBe(baseRestaurant.name);
+  });
 });
 
 describe("GET /api/restaurants/slug/:slug", () => {
@@ -286,6 +326,22 @@ describe("GET /api/restaurants/slug/:slug", () => {
     const res = await request(app).get("/api/restaurants/slug/pho-corner");
     expect(res.status).toBe(200);
     expect(res.body.restaurant.slug).toBe("pho-corner");
+  });
+
+  it("returns the Khmer name/description when Accept-Language is km", async () => {
+    vi.mocked(prisma.restaurant.findUnique).mockResolvedValueOnce({
+      ...baseRestaurant,
+      nameKm: "ផូកន័រ",
+      descriptionKm: "ម្ហូបផូឆ្ងាញ់",
+    });
+
+    const res = await request(app)
+      .get("/api/restaurants/slug/pho-corner")
+      .set("Accept-Language", "km");
+
+    expect(res.status).toBe(200);
+    expect(res.body.restaurant.name).toBe("ផូកន័រ");
+    expect(res.body.restaurant.description).toBe("ម្ហូបផូឆ្ងាញ់");
   });
 });
 
@@ -696,6 +752,15 @@ describe("Tags", () => {
     expect(res.body.tags).toHaveLength(1);
   });
 
+  it("returns the Khmer tag name when Accept-Language is km", async () => {
+    vi.mocked(prisma.tag.findMany).mockResolvedValueOnce([
+      { id: "tag_1", name: "Vegan", nameKm: "អាហារបួស" },
+    ]);
+    const res = await request(app).get("/api/tags").set("Accept-Language", "km");
+    expect(res.status).toBe(200);
+    expect(res.body.tags[0].name).toBe("អាហារបួស");
+  });
+
   it("rejects a non-admin creating a tag", async () => {
     const res = await request(app)
       .post("/api/tags")
@@ -729,5 +794,37 @@ describe("Tags", () => {
       .delete("/api/tags/tag_1")
       .set("Authorization", `Bearer ${adminToken}`);
     expect(res.status).toBe(204);
+  });
+
+  it("rejects a non-admin updating a tag", async () => {
+    const res = await request(app)
+      .patch("/api/tags/tag_1")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ nameKm: "អាហារបួស" });
+    expect(res.status).toBe(403);
+  });
+
+  it("404s when updating a tag that doesn't exist", async () => {
+    vi.mocked(prisma.tag.findUnique).mockResolvedValueOnce(null);
+    const res = await request(app)
+      .patch("/api/tags/tag_missing")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ nameKm: "អាហារបួស" });
+    expect(res.status).toBe(404);
+  });
+
+  it("lets an admin add a Khmer name to an existing tag", async () => {
+    vi.mocked(prisma.tag.findUnique).mockResolvedValueOnce({ id: "tag_1", name: "Vegan", nameKm: null });
+    vi.mocked(prisma.tag.update).mockResolvedValueOnce({
+      id: "tag_1",
+      name: "Vegan",
+      nameKm: "អាហារបួស",
+    });
+    const res = await request(app)
+      .patch("/api/tags/tag_1")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ nameKm: "អាហារបួស" });
+    expect(res.status).toBe(200);
+    expect(res.body.tag.nameKm).toBe("អាហារបួស");
   });
 });

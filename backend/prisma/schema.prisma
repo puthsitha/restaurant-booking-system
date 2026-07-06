@@ -138,7 +138,9 @@ model Restaurant {
   id            String           @id @default(cuid())
   slug          String           @unique
   name          String
+  nameKm        String?
   description   String?
+  descriptionKm String?
   cuisineType   String
   address       String
   city          String
@@ -194,6 +196,7 @@ model Restaurant {
 model Tag {
   id          String       @id @default(cuid())
   name        String       @unique
+  nameKm      String?
   restaurants Restaurant[] @relation("RestaurantTags")
 }
 
