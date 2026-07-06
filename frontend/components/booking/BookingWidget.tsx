@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { DateField } from "@/components/ui/DateField";
@@ -10,6 +11,7 @@ import { CalendarIcon, CheckIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { formatRelativeDate, parseIsoDate } from "@/lib/dateFormat";
 import { useLanguage } from "@/lib/i18n/context";
 import { confirmPayment, createPayment } from "@/lib/payments/api";
 import type { Payment } from "@/lib/payments/types";
@@ -65,15 +67,21 @@ interface BookingWidgetProps {
   restaurant: RestaurantPublicDetail;
 }
 
+const DEFAULT_SEATING: SeatingPreference = "INDOOR";
+
 export function BookingWidget({ restaurant }: BookingWidgetProps) {
   const { token, status } = useCustomerAuth();
   const { open: openLogin } = useAuthModal();
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
+  const router = useRouter();
 
-  const [date, setDate] = useState(addDaysIso(1));
+  const defaultDate = addDaysIso(1);
+  const defaultPartySize = Math.max(2, restaurant.minCapacity);
+
+  const [date, setDate] = useState(defaultDate);
   const [time, setTime] = useState("");
-  const [partySize, setPartySize] = useState(Math.max(2, restaurant.minCapacity));
-  const [seatingPreference, setSeatingPreference] = useState<SeatingPreference>("INDOOR");
+  const [partySize, setPartySize] = useState(defaultPartySize);
+  const [seatingPreference, setSeatingPreference] = useState<SeatingPreference>(DEFAULT_SEATING);
   const [specialRequests, setSpecialRequests] = useState("");
 
   const [availability, setAvailability] = useState<AvailabilityResult | null>(null);
@@ -182,8 +190,35 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
     setPaid(false);
   }
 
+  function resetBookingForm(): void {
+    setDate(defaultDate);
+    setPartySize(defaultPartySize);
+    setSeatingPreference(DEFAULT_SEATING);
+    setSpecialRequests("");
+  }
+
+  function handleDone(): void {
+    closeConfirmation();
+    resetBookingForm();
+  }
+
+  function handleSeeTicket(): void {
+    closeConfirmation();
+    resetBookingForm();
+    router.push("/bookings");
+  }
+
   const maxDate = addDaysIso(restaurant.maxBookingDays);
   const canSubmit = Boolean(date && time && partySize) && !submitting;
+  const selectedDateLabel = useMemo(() => {
+    const parsed = parseIsoDate(date);
+    return parsed ? formatRelativeDate(parsed, locale, t) : date;
+  }, [date, locale, t]);
+  const confirmedDateLabel = useMemo(() => {
+    if (!confirmed) return "";
+    const parsed = parseIsoDate(confirmed.date.slice(0, 10));
+    return parsed ? formatRelativeDate(parsed, locale, t) : confirmed.date.slice(0, 10);
+  }, [confirmed, locale, t]);
 
   return (
     <div className="rounded-3xl border border-border bg-surface p-6 shadow-sm">
@@ -325,7 +360,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
             <div className="flex items-center justify-between gap-4">
               <dt className="text-muted">{t("bookingWidget.dateTime")}</dt>
               <dd className="text-right font-semibold text-ink">
-                {date} {t("bookingsPage.at")} {time}
+                {selectedDateLabel} {t("bookingsPage.at")} {time}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-4">
@@ -426,7 +461,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               </div>
               <p className="disp mt-4 text-2xl font-extrabold text-ink">{confirmed.confirmationCode}</p>
               <p className="mt-1 text-sm text-muted">
-                {confirmed.date.slice(0, 10)} {t("bookingsPage.at")} {confirmed.time} ·{" "}
+                {confirmedDateLabel} {t("bookingsPage.at")} {confirmed.time} ·{" "}
                 {t("bookingWidget.guestsCount", { count: confirmed.partySize })}
               </p>
               <p className="mt-3 text-sm text-ink">
@@ -439,13 +474,22 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
                 label={t("bookingWidget.checkInCode")}
                 downloadName={`check-in-${confirmed.confirmationCode}`}
               />
-              <button
-                type="button"
-                onClick={closeConfirmation}
-                className="mt-5 w-full rounded-xl bg-accent py-3 text-sm font-bold text-white"
-              >
-                {t("bookingWidget.done")}
-              </button>
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleDone}
+                  className="flex-1 rounded-xl border border-border py-3 text-sm font-bold text-ink"
+                >
+                  {t("bookingWidget.done")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSeeTicket}
+                  className="flex-1 rounded-xl bg-accent py-3 text-sm font-bold text-white"
+                >
+                  {t("bookingWidget.seeTicket")}
+                </button>
+              </div>
             </div>
           )
         )}

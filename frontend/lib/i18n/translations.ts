@@ -259,7 +259,40 @@ const en = {
     sentToAccount: "We've sent this to your account. Show this check-in code when you arrive.",
     checkInCode: "Check-in code",
     done: "Done",
+    seeTicket: "See ticket",
     couldntConfirmPayment: "Couldn't confirm payment, please try again."
+  },
+  dateField: {
+    selectDate: "Select date",
+    today: "Today",
+    tomorrow: "Tomorrow",
+    nextWeekOn: "Next week (on {date})",
+    nextMonthOn: "Next month (on {date})",
+    previousMonth: "Previous month",
+    nextMonth: "Next month",
+    weekdays: {
+      su: "Su",
+      mo: "Mo",
+      tu: "Tu",
+      we: "We",
+      th: "Th",
+      fr: "Fr",
+      sa: "Sa"
+    },
+    months: {
+      jan: "January",
+      feb: "February",
+      mar: "March",
+      apr: "April",
+      may: "May",
+      jun: "June",
+      jul: "July",
+      aug: "August",
+      sep: "September",
+      oct: "October",
+      nov: "November",
+      dec: "December"
+    }
   }
 } as const;
 
@@ -518,7 +551,40 @@ const km = {
     sentToAccount: "យើងបានផ្ញើវាទៅគណនីរបស់អ្នក។ បង្ហាញលេខកូដចូលរួមនេះនៅពេលអ្នកមកដល់។",
     checkInCode: "លេខកូដចូលរួម",
     done: "រួចរាល់",
+    seeTicket: "មើលសំបុត្រ",
     couldntConfirmPayment: "មិនអាចបញ្ជាក់ការបង់ប្រាក់បានទេ សូមព្យាយាមម្តងទៀត។"
+  },
+  dateField: {
+    selectDate: "ជ្រើសរើសកាលបរិច្ឆេទ",
+    today: "ថ្ងៃនេះ",
+    tomorrow: "ថ្ងៃស្អែក",
+    nextWeekOn: "សប្តាហ៍ក្រោយ ({date})",
+    nextMonthOn: "ខែក្រោយ ({date})",
+    previousMonth: "ខែមុន",
+    nextMonth: "ខែបន្ទាប់",
+    weekdays: {
+      su: "អា",
+      mo: "ច",
+      tu: "អ",
+      we: "ព",
+      th: "ព្រ",
+      fr: "សុ",
+      sa: "ស"
+    },
+    months: {
+      jan: "មករា",
+      feb: "កុម្ភៈ",
+      mar: "មីនា",
+      apr: "មេសា",
+      may: "ឧសភា",
+      jun: "មិថុនា",
+      jul: "កក្កដា",
+      aug: "សីហា",
+      sep: "កញ្ញា",
+      oct: "តុលា",
+      nov: "វិច្ឆិកា",
+      dec: "ធ្នូ"
+    }
   }
 } as const;
 
