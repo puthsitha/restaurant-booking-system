@@ -15,12 +15,14 @@ import { ListSkeleton } from "@/components/ui/skeletons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { createOwner, updateRestaurantLimit, updateUserStatus, listUsers } from "@/lib/users/api";
 import type { ManageableRole, ManagedUser, UserAccountStatus } from "@/lib/users/types";
 
 export default function AdminUsersPage() {
   const { token } = useAdminAuth();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 350);
   const [role, setRole] = useState<ManageableRole | "">("");
@@ -36,9 +38,9 @@ export default function AdminUsersPage() {
     listUsers({ search: debouncedSearch || undefined, role: role || undefined, pageSize: 50 }, token)
       .then((res) => setUsers(res.items))
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Couldn't load users.");
+        setError(err instanceof ApiError ? err.message : t("adminUsers.loadError"));
       });
-  }, [token, debouncedSearch, role]);
+  }, [token, debouncedSearch, role, t]);
 
   useEffect(load, [load]);
 
@@ -46,15 +48,15 @@ export default function AdminUsersPage() {
     <main className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="disp text-2xl font-extrabold text-ink">Users</h1>
-          <p className="mt-1 text-sm text-muted">Diners and restaurant owners on the platform.</p>
+          <h1 className="disp text-2xl font-extrabold text-ink">{t("adminUsers.title")}</h1>
+          <p className="mt-1 text-sm text-muted">{t("adminUsers.subtitle")}</p>
         </div>
         <button
           type="button"
           onClick={() => setShowCreateModal(true)}
           className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white"
         >
-          + New owner
+          {t("adminUsers.newOwner")}
         </button>
       </div>
 
@@ -62,16 +64,16 @@ export default function AdminUsersPage() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or phone"
+          placeholder={t("adminUsers.searchPlaceholder")}
           className="min-w-[240px] rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
         />
         <Select
           value={role}
           onChange={setRole}
           options={[
-            { value: "", label: "All roles" },
-            { value: "DINER", label: "Customer" },
-            { value: "OWNER", label: "Owner" }
+            { value: "", label: t("adminUsers.allRoles") },
+            { value: "DINER", label: t("adminUsers.roleCustomer") },
+            { value: "OWNER", label: t("adminUsers.roleOwner") }
           ]}
         />
       </div>
@@ -86,8 +88,8 @@ export default function AdminUsersPage() {
         <EmptyState
           className="mt-8"
           icon={SearchOffIcon}
-          title="No users match those filters"
-          actionLabel="Clear filters"
+          title={t("adminUsers.emptyTitle")}
+          actionLabel={t("common.clearFilters")}
           onAction={() => {
             setSearch("");
             setRole("");
@@ -102,12 +104,14 @@ export default function AdminUsersPage() {
                 <div>
                   <p className="font-bold text-ink">{u.name}</p>
                   <p className="mt-0.5 text-sm text-muted">
-                    {u.role === "OWNER" ? "Owner" : "Customer"} · {u.phone ?? u.email ?? "—"}
-                    {u.role === "OWNER" && ` · ${u.restaurantLimit} restaurant limit`}
+                    {u.role === "OWNER" ? t("adminUsers.roleOwner") : t("adminUsers.roleCustomer")} ·{" "}
+                    {u.phone ?? u.email ?? "—"}
+                    {u.role === "OWNER" &&
+                      ` · ${t("adminUsers.restaurantLimitSuffix", { count: u.restaurantLimit })}`}
                   </p>
                   {u.statusReason && (
                     <p className="mt-1 text-xs text-muted">
-                      <span className="font-semibold">Reason: </span>
+                      <span className="font-semibold">{t("adminUsers.reasonPrefix")}</span>
                       {u.statusReason}
                     </p>
                   )}
@@ -115,7 +119,7 @@ export default function AdminUsersPage() {
               </div>
               <div className="flex items-center gap-3">
                 <StatusBadge tone={u.status === "ACTIVE" ? "success" : "danger"}>
-                  {u.status}
+                  {u.status === "ACTIVE" ? t("adminUsers.statusActive") : t("adminUsers.statusSuspended")}
                 </StatusBadge>
                 {u.role === "OWNER" && (
                   <button
@@ -123,7 +127,7 @@ export default function AdminUsersPage() {
                     onClick={() => setLimitTarget(u)}
                     className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg"
                   >
-                    Edit limit
+                    {t("adminUsers.editLimit")}
                   </button>
                 )}
                 <button
@@ -131,7 +135,7 @@ export default function AdminUsersPage() {
                   onClick={() => setStatusTarget(u)}
                   className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-bg disabled:opacity-50"
                 >
-                  {u.status === "ACTIVE" ? "Suspend" : "Reactivate"}
+                  {u.status === "ACTIVE" ? t("adminUsers.suspend") : t("adminUsers.reactivate")}
                 </button>
               </div>
             </div>
@@ -180,6 +184,7 @@ interface LimitModalProps {
 }
 
 function LimitModal({ user, onClose, token, onUpdated }: LimitModalProps) {
+  const { t } = useLanguage();
   const [limit, setLimit] = useState(3);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -200,21 +205,21 @@ function LimitModal({ user, onClose, token, onUpdated }: LimitModalProps) {
       const { user: updated } = await updateRestaurantLimit(user.id, limit, token);
       onUpdated(updated);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update the restaurant limit.");
+      setError(err instanceof ApiError ? err.message : t("adminUsers.limitUpdateError"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={user !== null} onClose={onClose} title="Edit restaurant limit">
+    <Modal open={user !== null} onClose={onClose} title={t("adminUsers.limitModalTitle")}>
       {user && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <p className="text-sm text-ink">
-            How many restaurants can {user.name} create and manage?
+            {t("adminUsers.limitModalBody", { name: user.name })}
           </p>
           <TextField
-            label="Restaurant limit"
+            label={t("adminUsers.restaurantLimit")}
             type="number"
             min={1}
             max={100}
@@ -228,7 +233,7 @@ function LimitModal({ user, onClose, token, onUpdated }: LimitModalProps) {
             disabled={submitting}
             className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Saving…" : "Save limit"}
+            {submitting ? t("common.saving") : t("adminUsers.saveLimit")}
           </button>
         </form>
       )}
@@ -244,6 +249,7 @@ interface StatusModalProps {
 }
 
 function StatusModal({ user, onClose, token, onUpdated }: StatusModalProps) {
+  const { t } = useLanguage();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -267,29 +273,33 @@ function StatusModal({ user, onClose, token, onUpdated }: StatusModalProps) {
       const { user: updated } = await updateUserStatus(user.id, nextStatus, reason, token);
       onUpdated(updated);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't update this account.");
+      setError(err instanceof ApiError ? err.message : t("adminUsers.statusUpdateError"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={user !== null} onClose={onClose} title={isSuspending ? "Suspend account" : "Reactivate account"}>
+    <Modal
+      open={user !== null}
+      onClose={onClose}
+      title={isSuspending ? t("adminUsers.suspendModalTitle") : t("adminUsers.reactivateModalTitle")}
+    >
       {user && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <p className="text-sm text-ink">
             {isSuspending
-              ? `${user.name} will be signed out immediately and won't be able to sign back in until reactivated.`
-              : `${user.name} will be able to sign in again.`}
+              ? t("adminUsers.suspendBody", { name: user.name })
+              : t("adminUsers.reactivateBody", { name: user.name })}
           </p>
           <TextAreaField
-            label="Reason"
+            label={t("adminUsers.reason")}
             required
             rows={3}
             placeholder={
               isSuspending
-                ? "Explain why this account is being suspended…"
-                : "Explain why this account is being reactivated…"
+                ? t("adminUsers.suspendReasonPlaceholder")
+                : t("adminUsers.reactivateReasonPlaceholder")
             }
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -300,7 +310,11 @@ function StatusModal({ user, onClose, token, onUpdated }: StatusModalProps) {
             disabled={submitting}
             className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Saving…" : isSuspending ? "Confirm suspension" : "Confirm reactivation"}
+            {submitting
+              ? t("common.saving")
+              : isSuspending
+                ? t("adminUsers.confirmSuspension")
+                : t("adminUsers.confirmReactivation")}
           </button>
         </form>
       )}
@@ -316,6 +330,7 @@ interface CreateOwnerModalProps {
 }
 
 function CreateOwnerModal({ open, onClose, token, onCreated }: CreateOwnerModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -342,31 +357,35 @@ function CreateOwnerModal({ open, onClose, token, onCreated }: CreateOwnerModalP
       await createOwner({ name, email, password, restaurantLimit }, token);
       onCreated();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("common.somethingWentWrong"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add a restaurant owner">
+    <Modal open={open} onClose={onClose} title={t("adminUsers.createModalTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField
-          label="Full name"
+          label={t("adminUsers.fullName")}
           required
           autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <TextField
-          label="Email"
+          label={t("adminUsers.email")}
           required
           type="email"
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <FormField label="Password" htmlFor="new-owner-password" hint="Share this with the owner directly.">
+        <FormField
+          label={t("adminUsers.password")}
+          htmlFor="new-owner-password"
+          hint={t("adminUsers.passwordHint")}
+        >
           <PasswordInput
             id="new-owner-password"
             required
@@ -377,7 +396,7 @@ function CreateOwnerModal({ open, onClose, token, onCreated }: CreateOwnerModalP
           />
         </FormField>
         <TextField
-          label="Restaurant limit"
+          label={t("adminUsers.restaurantLimit")}
           type="number"
           min={1}
           required
@@ -390,7 +409,7 @@ function CreateOwnerModal({ open, onClose, token, onCreated }: CreateOwnerModalP
           disabled={submitting}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
-          {submitting ? "Creating…" : "Create owner account"}
+          {submitting ? t("common.creating") : t("adminUsers.createOwnerAccount")}
         </button>
       </form>
     </Modal>

@@ -23,7 +23,11 @@ import {
   listOwnerReservations,
   updateReservationStatus,
 } from "@/lib/reservations/api";
-import { RESERVATION_STATUS_OPTIONS, RESERVATION_STATUS_TONE } from "@/lib/reservations/statusTone";
+import {
+  RESERVATION_STATUS_LABEL_KEY,
+  RESERVATION_STATUS_OPTIONS,
+  RESERVATION_STATUS_TONE,
+} from "@/lib/reservations/statusTone";
 import type {
   ListReservationsResponse,
   Reservation,
@@ -135,7 +139,7 @@ export default function OwnerBookingsPage() {
           onChange={setStatusFilter}
           options={[
             { value: "", label: t("ownerBookings.allStatuses") },
-            ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))
+            ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: t(RESERVATION_STATUS_LABEL_KEY[s]) }))
           ]}
         />
         <DateField value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
@@ -179,11 +183,16 @@ export default function OwnerBookingsPage() {
                     </p>
                   </button>
                   <div className="flex items-center gap-2">
-                    <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
+                    <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>
+                      {t(RESERVATION_STATUS_LABEL_KEY[r.status])}
+                    </StatusBadge>
                     <Select
                       value={r.status}
                       onChange={(status) => handleStatusChange(r.id, status)}
-                      options={RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+                      options={RESERVATION_STATUS_OPTIONS.map((s) => ({
+                        value: s,
+                        label: t(RESERVATION_STATUS_LABEL_KEY[s])
+                      }))}
                       className="min-w-[130px] py-1.5 text-xs"
                     />
                   </div>

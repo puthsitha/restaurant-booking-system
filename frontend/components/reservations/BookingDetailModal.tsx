@@ -5,7 +5,7 @@ import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatRelativeDate, parseIsoDate } from "@/lib/dateFormat";
 import { useLanguage } from "@/lib/i18n/context";
-import { RESERVATION_STATUS_TONE } from "@/lib/reservations/statusTone";
+import { RESERVATION_STATUS_LABEL_KEY, RESERVATION_STATUS_TONE } from "@/lib/reservations/statusTone";
 import type { Reservation } from "@/lib/reservations/types";
 import { theme } from "@/lib/theme";
 
@@ -53,7 +53,7 @@ export function BookingDetailModal({
               </div>
             </div>
             <StatusBadge tone={RESERVATION_STATUS_TONE[reservation.status]}>
-              {reservation.status}
+              {t(RESERVATION_STATUS_LABEL_KEY[reservation.status])}
             </StatusBadge>
           </div>
 
