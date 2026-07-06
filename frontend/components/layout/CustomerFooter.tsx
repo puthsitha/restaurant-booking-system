@@ -23,9 +23,9 @@ export function CustomerFooter() {
     {
       headingKey: "customerFooter.discover",
       links: [
-        { label: "Phnom Penh", href: "/search?city=Phnom%20Penh" },
-        { label: "Siem Reap", href: "/search?city=Siem%20Reap" },
-        { label: "Kampot", href: "/search?city=Kampot" },
+        { label: t("customerFooter.cityPhnomPenh"), href: "/search?city=Phnom%20Penh" },
+        { label: t("customerFooter.citySiemReap"), href: "/search?city=Siem%20Reap" },
+        { label: t("customerFooter.cityKampot"), href: "/search?city=Kampot" },
         { label: t("customerFooter.fineDining"), href: "/search" },
       ],
     },
