@@ -66,7 +66,9 @@ export function LanguageToggle({ variant = "light" }: LanguageToggleProps) {
         <ul
           role="listbox"
           aria-label={t("common.language")}
-          className={`absolute right-0 top-full z-40 mt-1.5 w-36 overflow-hidden rounded-lg border shadow-lg ${menuClass}`}
+          className={`absolute top-full z-40 mt-1.5 w-36 overflow-hidden rounded-lg border shadow-lg ${
+            variant === "dark" ? "left-0" : "right-0"
+          } ${menuClass}`}
         >
           {LANGUAGE_OPTIONS.map((option) => (
             <li key={option.value}>
