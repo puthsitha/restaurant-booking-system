@@ -11,7 +11,7 @@ import { CalendarIcon, CheckIcon } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
-import { formatRelativeDate, parseIsoDate } from "@/lib/dateFormat";
+import { formatRelativeDate, formatTimeLabel, parseIsoDate } from "@/lib/dateFormat";
 import { useLanguage } from "@/lib/i18n/context";
 import { confirmPayment, createPayment } from "@/lib/payments/api";
 import type { Payment } from "@/lib/payments/types";
@@ -227,16 +227,17 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         <h2 className="disp text-lg font-bold text-ink">{t("bookingWidget.reserveTable")}</h2>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.date")}</label>
-          <DateField
-            value={date}
-            min={todayIso()}
-            max={maxDate}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
+      <div className="mt-5">
+        <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.date")}</label>
+        <DateField
+          value={date}
+          min={todayIso()}
+          max={maxDate}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
           <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.partySize")}</label>
           <input
@@ -247,6 +248,23 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
             onChange={(e) => setPartySize(Number(e.target.value))}
             className="w-full rounded-xl border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
           />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.seating")}</label>
+          <div className="flex flex-wrap gap-1.5">
+            {SEATING_VALUES.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setSeatingPreference(value)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  seatingPreference === value ? "bg-accent text-white" : "bg-bg text-ink hover:bg-border/60"
+                }`}
+              >
+                {t(SEATING_LABEL_KEY[value])}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -267,29 +285,11 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
                   time === slot ? "bg-accent text-white" : "bg-bg text-ink hover:bg-border/60"
                 }`}
               >
-                {slot}
+                {formatTimeLabel(slot, locale, t)}
               </button>
             ))}
           </div>
         )}
-      </div>
-
-      <div className="mt-3">
-        <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.seating")}</label>
-        <div className="flex gap-1.5">
-          {SEATING_VALUES.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSeatingPreference(value)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                seatingPreference === value ? "bg-accent text-white" : "bg-bg text-ink hover:bg-border/60"
-              }`}
-            >
-              {t(SEATING_LABEL_KEY[value])}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="mt-3">
@@ -360,7 +360,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
             <div className="flex items-center justify-between gap-4">
               <dt className="text-muted">{t("bookingWidget.dateTime")}</dt>
               <dd className="text-right font-semibold text-ink">
-                {selectedDateLabel} {t("bookingsPage.at")} {time}
+                {selectedDateLabel} {t("bookingsPage.at")} {formatTimeLabel(time, locale, t)}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-4">
@@ -461,7 +461,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
               </div>
               <p className="disp mt-4 text-2xl font-extrabold text-ink">{confirmed.confirmationCode}</p>
               <p className="mt-1 text-sm text-muted">
-                {confirmedDateLabel} {t("bookingsPage.at")} {confirmed.time} ·{" "}
+                {confirmedDateLabel} {t("bookingsPage.at")} {formatTimeLabel(confirmed.time, locale, t)} ·{" "}
                 {t("bookingWidget.guestsCount", { count: confirmed.partySize })}
               </p>
               <p className="mt-3 text-sm text-ink">

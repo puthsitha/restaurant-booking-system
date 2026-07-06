@@ -78,3 +78,23 @@ export function formatRelativeDate(
 
   return absolute;
 }
+
+// 12-hour time display: en uses AM/PM, km swaps in a day-period word instead
+// (ព្រឹក 12am–12pm, ល្ងាច 12pm–6pm, យប់ 6pm–12am).
+export function formatTimeLabel(time: string, locale: Locale, t: Translate): string {
+  const [hourStr, minute] = time.split(":");
+  const hour = Number(hourStr);
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+
+  if (locale === "km") {
+    const period =
+      hour < 12
+        ? t("dateField.periods.morning")
+        : hour < 18
+          ? t("dateField.periods.afternoon")
+          : t("dateField.periods.night");
+    return `${displayHour}:${minute} ${period}`;
+  }
+
+  return `${displayHour}:${minute} ${hour < 12 ? "AM" : "PM"}`;
+}
