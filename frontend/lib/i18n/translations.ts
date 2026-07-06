@@ -132,6 +132,18 @@ const en = {
     logIn: "Log in",
     useDifferentNumber: "Use a different number"
   },
+  authSplit: {
+    backToHome: "Back to home",
+    roleDiner: "Diner",
+    roleOwner: "Owner",
+    roleAdmin: "Admin",
+    welcomeTitle: "Welcome to TableSite",
+    welcomeSubtitle: "One platform for every seat — diners, restaurant owners, and platform admins.",
+    featurePhone: "Sign in with your +855 phone number",
+    featureKhqr: "Pay deposits via KHQR",
+    featureTables: "Manage tables and bookings",
+    demoAccount: "Demo account: {email}"
+  },
   home: {
     heroTagline: "TableSite · Cambodia",
     heroTitlePrefix: "Find your table across",
@@ -963,6 +975,18 @@ const km = {
     verifying: "កំពុងផ្ទៀងផ្ទាត់…",
     logIn: "ចូល",
     useDifferentNumber: "ប្រើលេខផ្សេង"
+  },
+  authSplit: {
+    backToHome: "ត្រឡប់ទៅគេហទំព័រ",
+    roleDiner: "អ្នកញ៉ាំ",
+    roleOwner: "ម្ចាស់ហាង",
+    roleAdmin: "អ្នកគ្រប់គ្រង",
+    welcomeTitle: "សូមស្វាគមន៍មកកាន់ TableSite",
+    welcomeSubtitle: "កម្មវិធីមួយសម្រាប់គ្រប់តួនាទី — អ្នកញ៉ាំ ម្ចាស់ហាង និងអ្នកគ្រប់គ្រងវេទិកា។",
+    featurePhone: "ចូលដោយលេខទូរស័ព្ទ +855",
+    featureKhqr: "បង់ប្រាក់កក់តាម KHQR",
+    featureTables: "គ្រប់គ្រងតុ និងការកក់",
+    demoAccount: "គណនីសាកល្បង៖ {email}"
   },
   home: {
     heroTagline: "TableSite · កម្ពុជា",
