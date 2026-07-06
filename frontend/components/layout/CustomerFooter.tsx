@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import { FacebookIcon, InstagramIcon, PhoneIcon } from "@/components/ui/icons";
@@ -38,8 +39,14 @@ export function CustomerFooter() {
     <footer className="mt-16 bg-ink text-[#C9BCB0]">
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-10 px-8 py-14 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]">
         <div>
-          <Link href="/" className="disp flex items-center gap-2.5 text-lg font-extrabold text-white">
-            Table<span className="text-accent">Site</span>
+          <Link href="/" aria-label="TableSite" className="flex items-center">
+            <Image
+              src="/images/secondary_logo.png"
+              alt="TableSite"
+              width={228}
+              height={152}
+              className="h-24 w-auto"
+            />
           </Link>
           <p className="km mt-3.5 max-w-[280px] text-sm leading-relaxed text-[#9C8E82]">
             {t("customerFooter.blurb")}
