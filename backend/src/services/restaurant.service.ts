@@ -2,6 +2,7 @@ import type { Prisma, Restaurant } from "@prisma/client";
 
 import { prisma } from "../lib/prisma";
 import { HttpError } from "../lib/httpError";
+import { localizeRestaurant, localizeTags, type Locale } from "../lib/locale";
 import type {
   CreateRestaurantInput,
   UpdateRestaurantInput,
@@ -56,7 +57,9 @@ const publicListSelect = {
   id: true,
   slug: true,
   name: true,
+  nameKm: true,
   description: true,
+  descriptionKm: true,
   cuisineType: true,
   address: true,
   city: true,
@@ -66,7 +69,7 @@ const publicListSelect = {
   priceRange: true,
   isPopular: true,
   createdAt: true,
-  tags: { select: { id: true, name: true } },
+  tags: { select: { id: true, name: true, nameKm: true } },
 } satisfies Prisma.RestaurantSelect;
 
 // Same as the public listing, plus fields diners don't need but admins
@@ -127,7 +130,7 @@ export async function createRestaurant(
   return prisma.restaurant.create({ data: { ...input, ownerId, status: "PENDING" } });
 }
 
-export async function listRestaurants(query: ListRestaurantsQuery) {
+export async function listRestaurants(query: ListRestaurantsQuery, locale: Locale) {
   const where: Prisma.RestaurantWhereInput = {
     status: "ACTIVE",
     ...(query.city ? { city: { equals: query.city, mode: "insensitive" } } : {}),
@@ -152,7 +155,12 @@ export async function listRestaurants(query: ListRestaurantsQuery) {
     prisma.restaurant.count({ where }),
   ]);
 
-  return { items, total, page: query.page, pageSize: query.pageSize };
+  const localizedItems = items.map((item) => ({
+    ...localizeRestaurant(item, locale),
+    tags: localizeTags(item.tags, locale),
+  }));
+
+  return { items: localizedItems, total, page: query.page, pageSize: query.pageSize };
 }
 
 export async function listAllRestaurantsForAdmin(query: AdminListRestaurantsQuery) {
@@ -204,7 +212,7 @@ export async function listMyRestaurants(ownerId: string, query: ListMyRestaurant
   return { items, total, page: query.page, pageSize: query.pageSize };
 }
 
-export async function getPublicRestaurantBySlug(slug: string) {
+export async function getPublicRestaurantBySlug(slug: string, locale: Locale) {
   const restaurant = await prisma.restaurant.findUnique({
     where: { slug },
     include: publicDetailInclude,
@@ -212,7 +220,7 @@ export async function getPublicRestaurantBySlug(slug: string) {
   if (!restaurant || restaurant.status !== "ACTIVE") {
     throw new HttpError(404, "Restaurant not found");
   }
-  return restaurant;
+  return { ...localizeRestaurant(restaurant, locale), tags: localizeTags(restaurant.tags, locale) };
 }
 
 export async function getManagementRestaurant(

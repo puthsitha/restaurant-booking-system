@@ -19,7 +19,7 @@ export const TagsTab = forwardRef<DirtyTabHandle, ManageTabProps>(function TagsT
   { restaurant, token, onSaved, onDirtyChange },
   ref,
 ) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const baseline = useRef(new Set(restaurant.tags.map((tag) => tag.id)));
   const [selected, setSelected] = useState<Set<string>>(baseline.current);
@@ -34,10 +34,10 @@ export const TagsTab = forwardRef<DirtyTabHandle, ManageTabProps>(function TagsT
   }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
-    listTags()
+    listTags(locale)
       .then((res) => setAllTags(res.tags))
       .catch(() => setAllTags([]));
-  }, []);
+  }, [locale]);
 
   function toggle(tagId: string): void {
     setSelected((prev) => {

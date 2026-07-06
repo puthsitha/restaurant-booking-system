@@ -3,7 +3,7 @@ import { Router } from "express";
 import * as tagController from "../controllers/tag.controller";
 import { authenticate, requireRole } from "../middleware/auth";
 import { validateBody } from "../middleware/validate";
-import { createTagSchema } from "../schemas/tag.schemas";
+import { createTagSchema, updateTagSchema } from "../schemas/tag.schemas";
 
 export const tagsRouter: Router = Router();
 
@@ -40,6 +40,21 @@ tagsRouter.post("/api/tags", adminOnly, validateBody(createTagSchema), tagContro
 /**
  * @openapi
  * /api/tags/{id}:
+ *   patch:
+ *     summary: Update a tag, e.g. to add its Khmer name (admin only)
+ *     tags: [Tags]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               nameKm: { type: string }
+ *     responses:
+ *       200: { description: OK }
+ *       404: { description: Not found }
  *   delete:
  *     summary: Delete a tag (admin only)
  *     tags: [Tags]
@@ -48,4 +63,5 @@ tagsRouter.post("/api/tags", adminOnly, validateBody(createTagSchema), tagContro
  *       204: { description: Deleted }
  *       404: { description: Not found }
  */
+tagsRouter.patch("/api/tags/:id", adminOnly, validateBody(updateTagSchema), tagController.update);
 tagsRouter.delete("/api/tags/:id", adminOnly, tagController.remove);

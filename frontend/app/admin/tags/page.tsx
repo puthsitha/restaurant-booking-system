@@ -10,7 +10,7 @@ import { ListSkeleton } from "@/components/ui/skeletons";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { useLanguage } from "@/lib/i18n/context";
-import { createTag, deleteTag, listTags } from "@/lib/restaurants/api";
+import { createTag, deleteTag, listTags, updateTag } from "@/lib/restaurants/api";
 import type { Tag } from "@/lib/restaurants/types";
 
 export default function AdminTagsPage() {
@@ -18,6 +18,7 @@ export default function AdminTagsPage() {
   const { t } = useLanguage();
   const [tags, setTags] = useState<Tag[] | null>(null);
   const [name, setName] = useState("");
+  const [nameKm, setNameKm] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -37,13 +38,25 @@ export default function AdminTagsPage() {
     setFormError(null);
     setIsSaving(true);
     try {
-      await createTag(name, token);
+      await createTag(name, nameKm || undefined, token);
       setName("");
+      setNameKm("");
       reload();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : t("adminTags.createError"));
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleNameKmBlur(tag: Tag, value: string): Promise<void> {
+    if (!token || value === (tag.nameKm ?? "")) return;
+    setFormError(null);
+    try {
+      await updateTag(tag.id, { nameKm: value }, token);
+      reload();
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : t("adminTags.updateError"));
     }
   }
 
@@ -63,7 +76,7 @@ export default function AdminTagsPage() {
       <h1 className="disp text-2xl font-extrabold text-ink">{t("adminTags.title")}</h1>
       <p className="mt-2 text-sm text-muted">{t("adminTags.subtitle")}</p>
 
-      <form onSubmit={handleAdd} className="mt-6 flex max-w-[560px] items-end gap-3">
+      <form onSubmit={handleAdd} className="mt-6 flex max-w-[720px] flex-wrap items-end gap-3">
         <div className="flex-1">
           <label className="mb-1.5 block text-xs font-bold text-label">
             {t("adminTags.newTagLabel")}
@@ -73,6 +86,17 @@ export default function AdminTagsPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("adminTags.newTagPlaceholder")}
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm text-ink outline-none"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="mb-1.5 block text-xs font-bold text-label">
+            {t("adminTags.newTagKmLabel")}
+          </label>
+          <input
+            value={nameKm}
+            onChange={(e) => setNameKm(e.target.value)}
+            placeholder={t("adminTags.newTagKmPlaceholder")}
             className="w-full rounded-xl border border-border px-4 py-2.5 text-sm text-ink outline-none"
           />
         </div>
@@ -109,6 +133,12 @@ export default function AdminTagsPage() {
               className="flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-sm text-ink"
             >
               {tag.name}
+              <input
+                defaultValue={tag.nameKm ?? ""}
+                onBlur={(e) => handleNameKmBlur(tag, e.target.value)}
+                placeholder={t("adminTags.tagKmPlaceholder")}
+                className="km w-28 rounded-lg border border-border bg-bg px-2 py-1 text-xs text-ink outline-none"
+              />
               <button
                 onClick={() => handleDelete(tag.id)}
                 className="font-bold text-red-600"

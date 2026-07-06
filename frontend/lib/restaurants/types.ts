@@ -13,6 +13,9 @@ export type TableStatus = "AVAILABLE" | "SEATED" | "RESERVED";
 export interface Tag {
   id: string;
   name: string;
+  // Only present on owner/admin management responses — public reads already
+  // swap `name` for the Khmer value server-side based on Accept-Language.
+  nameKm?: string | null;
 }
 
 export interface OperatingHours {
@@ -83,7 +86,12 @@ export interface RestaurantCore {
   id: string;
   slug: string;
   name: string;
+  // Only present on owner/admin management responses — public reads already
+  // swap `name`/`description` for the Khmer value server-side based on
+  // Accept-Language.
+  nameKm?: string | null;
   description: string | null;
+  descriptionKm?: string | null;
   cuisineType: string;
   address: string;
   city: string;
@@ -123,7 +131,9 @@ export interface RestaurantSummary {
   id: string;
   slug: string;
   name: string;
+  nameKm?: string | null;
   description: string | null;
+  descriptionKm?: string | null;
   cuisineType: string;
   address: string;
   city: string;

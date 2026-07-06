@@ -20,6 +20,7 @@ export const tableStatusEnum = z.enum(["AVAILABLE", "SEATED", "RESERVED"]);
 
 export const createRestaurantSchema = z.object({
   name: z.string().trim().min(1).max(150),
+  nameKm: z.string().trim().max(150).optional(),
   slug: z
     .string()
     .trim()
@@ -28,6 +29,7 @@ export const createRestaurantSchema = z.object({
     .max(150)
     .regex(SLUG, "Use lowercase letters, numbers, and hyphens only"),
   description: z.string().trim().max(2000).optional(),
+  descriptionKm: z.string().trim().max(2000).optional(),
   cuisineType: z.string().trim().min(1).max(80),
   address: z.string().trim().min(1).max(255),
   city: z.string().trim().min(1).max(120),
