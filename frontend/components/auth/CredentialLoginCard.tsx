@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { FormEvent } from "react";
 
 import { FormField, TextField } from "@/components/ui/FormField";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -11,15 +11,16 @@ import { useLanguage } from "@/lib/i18n/context";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface CredentialLoginCardProps {
-  icon: ReactNode;
   title: string;
   subtitle: string;
+  demoEmail?: string;
   onSubmit: (email: string, password: string) => Promise<void>;
 }
 
-// Shared card for the admin and owner sign-in pages: same layout,
-// placeholders, and email/password validation for both portals.
-export function CredentialLoginCard({ icon, title, subtitle, onSubmit }: CredentialLoginCardProps) {
+// Shared form for the admin and owner sign-in pages: same layout,
+// placeholders, and email/password validation for both portals. Rendered
+// inside AuthSplitLayout, which supplies the surrounding page chrome.
+export function CredentialLoginCard({ title, subtitle, demoEmail, onSubmit }: CredentialLoginCardProps) {
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,12 +57,9 @@ export function CredentialLoginCard({ icon, title, subtitle, onSubmit }: Credent
   }
 
   return (
-    <div className="w-full max-w-[420px] rounded-[22px] border border-border bg-surface p-9 shadow-xl">
-      <div className="mb-5 flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-accent text-2xl">
-        {icon}
-      </div>
-      <h1 className="disp text-2xl font-extrabold text-ink">{title}</h1>
-      <p className="mt-2 text-sm text-muted">{subtitle}</p>
+    <div>
+      <h1 className="km disp text-2xl font-extrabold text-ink">{title}</h1>
+      <p className="km mt-2 text-sm text-muted">{subtitle}</p>
 
       <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-4">
         <TextField
@@ -99,6 +97,12 @@ export function CredentialLoginCard({ icon, title, subtitle, onSubmit }: Credent
           {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
         </button>
       </form>
+
+      {demoEmail && (
+        <p className="mt-5 rounded-xl border border-dashed border-border py-3 text-center text-xs text-muted">
+          {t("authSplit.demoAccount", { email: demoEmail })}
+        </p>
+      )}
     </div>
   );
 }

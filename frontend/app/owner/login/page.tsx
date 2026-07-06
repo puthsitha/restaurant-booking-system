@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
+import { AuthSplitLayout } from "@/components/auth/AuthSplitLayout";
 import { CredentialLoginCard } from "@/components/auth/CredentialLoginCard";
 import { SessionEndedModal } from "@/components/auth/SessionEndedModal";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
@@ -18,14 +19,14 @@ export default function OwnerLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-6 py-12">
+    <AuthSplitLayout activeRole="owner">
       <SessionEndedModal message={sessionMessage} onDismiss={clearSessionMessage} />
       <CredentialLoginCard
-        icon="🧑‍🍳"
         title={t("owner.loginTitle")}
         subtitle={t("owner.loginSubtitle")}
+        demoEmail="owner.dev@tablesite.local"
         onSubmit={handleLogin}
       />
-    </main>
+    </AuthSplitLayout>
   );
 }
