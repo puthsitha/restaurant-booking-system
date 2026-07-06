@@ -68,7 +68,7 @@ export function Avatar({
       className={`flex shrink-0 items-center justify-center rounded-full font-bold text-white ${SIZE_CLASS[size]} ${className ?? ""}`}
       style={{ background: "linear-gradient(135deg, #C2410C, #1F6F54)" }}
     >
-      {label ? label : <UserIcon className={ICON_SIZE_CLASS[size]} />}
+      {label != "+" ? label : <UserIcon className={ICON_SIZE_CLASS[size]} />}
     </div>
   );
 }
