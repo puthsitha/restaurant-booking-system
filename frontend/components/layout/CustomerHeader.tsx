@@ -35,7 +35,14 @@ export function CustomerHeader() {
       <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8 py-4">
           <Link href="/" aria-label="TableSite" className="flex items-center">
-            <Image src="/images/symbol_mark.png" alt="TableSite" width={36} height={36} className="h-9 w-9" priority />
+            <Image
+              src="/images/primary_logo.png"
+              alt="TableSite"
+              width={168}
+              height={112}
+              className="h-10 w-auto"
+              priority
+            />
           </Link>
 
           <div className="flex items-center gap-2">
