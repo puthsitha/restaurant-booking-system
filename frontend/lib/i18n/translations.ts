@@ -246,6 +246,9 @@ const en = {
     closed: "Closed",
     menu: "Menu",
     gallery: "Gallery",
+    galleryPrevious: "Previous photo",
+    galleryNext: "Next photo",
+    galleryCounter: "{current} of {total}",
     days: {
       monday: "Monday",
       tuesday: "Tuesday",
@@ -1048,6 +1051,9 @@ const km = {
     closed: "បិទ",
     menu: "ម៉ឺនុយ",
     gallery: "វិចិត្រសាល",
+    galleryPrevious: "រូបភាពមុន",
+    galleryNext: "រូបភាពបន្ទាប់",
+    galleryCounter: "{current} ក្នុងចំណោម {total}",
     days: {
       monday: "ថ្ងៃច័ន្ទ",
       tuesday: "ថ្ងៃអង្គារ",
