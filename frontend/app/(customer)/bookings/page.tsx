@@ -14,7 +14,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import { ApiError } from "@/lib/api";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
-import { formatRelativeDate, parseIsoDate } from "@/lib/dateFormat";
+import { formatRelativeDate, formatTimeLabel, parseIsoDate } from "@/lib/dateFormat";
 import { useLanguage } from "@/lib/i18n/context";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { cancelMyReservation, listMyReservations } from "@/lib/reservations/api";
@@ -150,7 +150,7 @@ export default function MyBookingsPage() {
                   <div>
                     <p className="font-bold text-ink">{r.restaurant.name}</p>
                     <p className="mt-1 text-sm text-muted">
-                      {formatReservationDate(r.date)} {t("bookingsPage.at")} {r.time} ·{" "}
+                      {formatReservationDate(r.date)} {t("bookingsPage.at")} {formatTimeLabel(r.time, locale, t)} ·{" "}
                       {t("bookingsPage.guestsCount", { count: r.partySize })}
                     </p>
                     <p className="mt-1 text-xs text-muted">
@@ -215,7 +215,8 @@ export default function MyBookingsPage() {
         {toCancel && (
           <div>
             <p className="text-sm text-ink">
-              {toCancel.restaurant.name} · {formatReservationDate(toCancel.date)} {t("bookingsPage.at")} {toCancel.time} ·{" "}
+              {toCancel.restaurant.name} · {formatReservationDate(toCancel.date)} {t("bookingsPage.at")}{" "}
+              {formatTimeLabel(toCancel.time, locale, t)} ·{" "}
               {t("bookingsPage.guestsCount", { count: toCancel.partySize })}
             </p>
             <p className="mt-2 text-sm text-muted">{t("bookingsPage.cancelModalBody")}</p>

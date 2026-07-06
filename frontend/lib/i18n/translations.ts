@@ -270,6 +270,11 @@ const en = {
     nextMonthOn: "Next month (on {date})",
     previousMonth: "Previous month",
     nextMonth: "Next month",
+    periods: {
+      morning: "Morning",
+      afternoon: "Afternoon",
+      night: "Night"
+    },
     weekdays: {
       su: "Su",
       mo: "Mo",
@@ -562,6 +567,11 @@ const km = {
     nextMonthOn: "ខែក្រោយ ({date})",
     previousMonth: "ខែមុន",
     nextMonth: "ខែបន្ទាប់",
+    periods: {
+      morning: "ព្រឹក",
+      afternoon: "ល្ងាច",
+      night: "យប់"
+    },
     weekdays: {
       su: "អា",
       mo: "ច",
