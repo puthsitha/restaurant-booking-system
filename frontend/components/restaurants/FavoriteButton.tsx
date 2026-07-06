@@ -6,6 +6,7 @@ import type { MouseEvent } from "react";
 
 import { HeartIcon } from "@/components/ui/icons";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { useLanguage } from "@/lib/i18n/context";
 import { useSavedRestaurants } from "@/lib/savedRestaurants/context";
 
 interface FavoriteButtonProps {
@@ -26,6 +27,7 @@ const BURST_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
 // radiating burst of dots for a satisfying "saved" moment.
 export function FavoriteButton({ restaurantId, size = "md", className }: FavoriteButtonProps) {
   const { status } = useCustomerAuth();
+  const { t } = useLanguage();
   const { savedIds, toggle } = useSavedRestaurants();
   const [bursting, setBursting] = useState(false);
   const dims = SIZE[size];
@@ -47,7 +49,7 @@ export function FavoriteButton({ restaurantId, size = "md", className }: Favorit
   return (
     <button
       type="button"
-      aria-label={isSaved ? "Remove from saved restaurants" : "Save restaurant"}
+      aria-label={isSaved ? t("common.removeFromSaved") : t("common.saveRestaurant")}
       aria-pressed={isSaved}
       onClick={handleClick}
       className={`flex items-center justify-center rounded-full bg-white/85 text-accent backdrop-blur transition hover:bg-white ${dims.button} ${className ?? ""}`}

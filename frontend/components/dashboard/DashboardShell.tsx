@@ -189,7 +189,7 @@ function SidebarContent({
             priority
           />
           <p className="min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wide text-sidebarMuted">
-            {brand} panel
+            {t("common.brandPanel", { brand })}
           </p>
         </div>
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-sidebarBorder pt-4">

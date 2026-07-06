@@ -166,15 +166,19 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
           <dl className="mt-3 space-y-2 text-sm">
             <Row
               label={t("adminRestaurantDetail.minBookingNotice")}
-              value={`${restaurant.minBookingNotice} min`}
+              value={t("adminRestaurantDetail.minBookingNoticeValue", {
+                minutes: restaurant.minBookingNotice,
+              })}
             />
             <Row
               label={t("adminRestaurantDetail.maxBookingDays")}
-              value={`${restaurant.maxBookingDays} days`}
+              value={t("adminRestaurantDetail.maxBookingDaysValue", { days: restaurant.maxBookingDays })}
             />
             <Row
               label={t("adminRestaurantDetail.cancellationWindow")}
-              value={`${restaurant.cancellationHours} hrs`}
+              value={t("adminRestaurantDetail.cancellationWindowValue", {
+                hours: restaurant.cancellationHours,
+              })}
             />
             <Row
               label={t("adminRestaurantDetail.depositLabel")}
@@ -194,7 +198,10 @@ export default function AdminRestaurantDetailPage({ params }: { params: { id: st
           <dl className="mt-3 space-y-2 text-sm">
             <Row
               label={t("adminRestaurantDetail.capacity")}
-              value={`${restaurant.minCapacity}–${restaurant.maxCapacity} guests`}
+              value={t("adminRestaurantDetail.capacityValue", {
+                min: restaurant.minCapacity,
+                max: restaurant.maxCapacity,
+              })}
             />
             <Row
               label={t("adminRestaurantDetail.parking")}

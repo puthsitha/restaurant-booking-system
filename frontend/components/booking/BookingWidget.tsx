@@ -428,7 +428,7 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
                 value={payment.khqrPayload ?? payment.id}
                 size={180}
                 className="mx-auto"
-                label="KHQR payment"
+                label={t("bookingWidget.khqrPaymentLabel")}
                 downloadName={`khqr-payment-${confirmed?.confirmationCode ?? payment.id}`}
               />
               <p className="mt-3 text-sm text-ink">

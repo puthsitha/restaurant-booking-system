@@ -8,16 +8,18 @@ import { GoogleButton } from "@/components/auth/GoogleButton";
 import { ApiError } from "@/lib/api";
 import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useAuthModal } from "@/lib/auth/authModal";
+import { useLanguage } from "@/lib/i18n/context";
 
 type Step = "phone" | "otp";
-
-function errorMessage(err: unknown): string {
-  return err instanceof ApiError ? err.message : "Something went wrong, please try again.";
-}
 
 export function LoginModal() {
   const { isOpen, close } = useAuthModal();
   const { requestOtp, verifyOtp, loginWithGoogle } = useCustomerAuth();
+  const { t } = useLanguage();
+
+  function errorMessage(err: unknown): string {
+    return err instanceof ApiError ? err.message : t("auth.somethingWentWrongRetry");
+  }
 
   const [step, setStep] = useState<Step>("phone");
   const [phoneDigits, setPhoneDigits] = useState("");
@@ -114,12 +116,12 @@ export function LoginModal() {
 
         {step === "phone" ? (
           <>
-            <h2 className="disp text-[23px] font-extrabold text-ink">Welcome back</h2>
-            <p className="mb-6 text-sm text-muted">Sign in with your phone number</p>
+            <h2 className="disp text-[23px] font-extrabold text-ink">{t("auth.welcomeBack")}</h2>
+            <p className="mb-6 text-sm text-muted">{t("auth.signInWithPhone")}</p>
 
             <form onSubmit={handleSendCode}>
               <label className="mb-2 block text-[12.5px] font-bold text-label">
-                Phone number
+                {t("auth.phoneNumber")}
               </label>
               <div className="mb-4 flex gap-2.5">
                 <div className="flex items-center gap-1.5 rounded-xl border border-border bg-bg px-3.5 font-bold text-ink">
@@ -129,7 +131,7 @@ export function LoginModal() {
                   required
                   inputMode="numeric"
                   autoComplete="tel-national"
-                  placeholder="12 345 678"
+                  placeholder={t("auth.phonePlaceholder")}
                   value={phoneDigits}
                   onChange={(e) => setPhoneDigits(e.target.value)}
                   className="flex-1 rounded-xl border border-border px-4 py-3 text-[15px] text-ink outline-none"
@@ -141,13 +143,13 @@ export function LoginModal() {
                 disabled={isSubmitting}
                 className="w-full rounded-xl bg-accent py-3.5 text-[15px] font-bold text-white disabled:opacity-60"
               >
-                {isSubmitting ? "Sending…" : "Send code"}
+                {isSubmitting ? t("auth.sendingCode") : t("auth.sendCode")}
               </button>
             </form>
 
             <div className="my-4 flex items-center gap-3 text-xs text-[#C3B6A9]">
               <div className="h-px flex-1 bg-border" />
-              or
+              {t("auth.or")}
               <div className="h-px flex-1 bg-border" />
             </div>
 
@@ -157,10 +159,10 @@ export function LoginModal() {
           </>
         ) : (
           <>
-            <h2 className="disp text-[23px] font-extrabold text-ink">Enter the code</h2>
+            <h2 className="disp text-[23px] font-extrabold text-ink">{t("auth.enterCode")}</h2>
             <p className="mb-6 text-sm text-muted">
-              Sent to {phone}
-              {devCode ? ` — dev code: ${devCode}` : ""}
+              {t("auth.sentTo", { phone })}
+              {devCode ? t("auth.devCodeSuffix", { code: devCode }) : ""}
             </p>
 
             <form onSubmit={handleVerify}>
@@ -179,7 +181,7 @@ export function LoginModal() {
                 disabled={isSubmitting}
                 className="w-full rounded-xl bg-accent py-3.5 text-[15px] font-bold text-white disabled:opacity-60"
               >
-                {isSubmitting ? "Verifying…" : "Log in"}
+                {isSubmitting ? t("auth.verifying") : t("auth.logIn")}
               </button>
             </form>
 
@@ -188,7 +190,7 @@ export function LoginModal() {
               onClick={() => setStep("phone")}
               className="mt-3 w-full text-center text-xs text-muted"
             >
-              Use a different number
+              {t("auth.useDifferentNumber")}
             </button>
           </>
         )}

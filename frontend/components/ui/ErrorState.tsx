@@ -1,6 +1,7 @@
 "use client";
 
 import { SpilledBowlIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface ErrorStateProps {
   title?: string;
@@ -14,12 +15,13 @@ interface ErrorStateProps {
 // gives the error a little personality (subtle jiggle) without being
 // alarming. Announced via role="alert" so screen readers pick it up.
 export function ErrorState({
-  title = "Something spilled in the kitchen",
-  message = "We couldn't load this. Give it another try.",
+  title,
+  message,
   onRetry,
-  retryLabel = "Try again",
+  retryLabel,
   className,
 }: ErrorStateProps) {
+  const { t } = useLanguage();
   return (
     <div
       role="alert"
@@ -28,15 +30,15 @@ export function ErrorState({
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent motion-safe:animate-ts-jiggle">
         <SpilledBowlIcon className="h-8 w-8" />
       </div>
-      <h3 className="disp text-lg font-bold text-ink">{title}</h3>
-      <p className="max-w-sm text-sm text-muted">{message}</p>
+      <h3 className="disp text-lg font-bold text-ink">{title ?? t("common.errorStateTitle")}</h3>
+      <p className="max-w-sm text-sm text-muted">{message ?? t("common.errorStateMessage")}</p>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
           className="mt-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
         >
-          {retryLabel}
+          {retryLabel ?? t("common.tryAgain")}
         </button>
       )}
     </div>

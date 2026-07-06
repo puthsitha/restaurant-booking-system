@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 
 import { CloseIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface ModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ interface ModalProps {
 // confirm/approve/deny/edit dialog across the owner and admin sites feels
 // the same rather than each screen rolling its own popup.
 export function Modal({ open, onClose, title, children, className, dismissible = true }: ModalProps) {
+  const { t } = useLanguage();
   // Portal straight into <body> so the overlay always paints above every
   // other element on the page — without this, content elsewhere that forces
   // its own compositing layer (e.g. a CSS transform or gradient background,
@@ -84,7 +86,7 @@ export function Modal({ open, onClose, title, children, className, dismissible =
                 <button
                   type="button"
                   onClick={onClose}
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                   className="rounded-full p-1.5 text-muted transition hover:bg-bg hover:text-ink"
                 >
                   <CloseIcon className="h-5 w-5" />

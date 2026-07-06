@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 
 import { CloseIcon } from "@/components/ui/icons";
+import { useLanguage } from "@/lib/i18n/context";
 import { pop } from "@/lib/motion";
 
 interface LightboxProps {
@@ -18,6 +19,7 @@ interface LightboxProps {
 // padded card chrome (border/rounded/bg-surface) that a fullscreen viewer
 // doesn't want.
 export function Lightbox({ open, onClose, children }: LightboxProps) {
+  const { t } = useLanguage();
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent): void {
@@ -44,7 +46,7 @@ export function Lightbox({ open, onClose, children }: LightboxProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20"
           >
             <CloseIcon className="h-5 w-5" />
