@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -137,9 +138,9 @@ export function DashboardShell({
           >
             <MenuIcon className="h-5 w-5" />
           </button>
-          <span className="disp flex-1 text-base font-extrabold text-ink">
-            Table<span style={{ color: style.accent }}>Site</span>{" "}
-            <span className="text-muted">{brand}</span>
+          <span className="flex flex-1 items-center gap-2">
+            <Image src="/images/primary_logo.png" alt="TableSite" width={126} height={84} className="h-7 w-auto" />
+            <span className="text-sm font-bold text-muted">{brand}</span>
           </span>
           <LanguageToggle />
         </header>
@@ -179,18 +180,17 @@ function SidebarContent({
     <>
       <div className="px-6 py-6">
         <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-extrabold text-white"
-            style={{ background: style.accent }}
-          >
-            T
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="disp text-base font-extrabold text-white">TableSite</span>
-            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-sidebarMuted">
-              {brand} panel
-            </p>
-          </div>
+          <Image
+            src="/images/primary_logo.png"
+            alt="TableSite"
+            width={168}
+            height={112}
+            className="h-10 w-auto shrink-0"
+            priority
+          />
+          <p className="min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wide text-sidebarMuted">
+            {brand} panel
+          </p>
         </div>
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-sidebarBorder pt-4">
           <LanguageToggle variant="dark" />
