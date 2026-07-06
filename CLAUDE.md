@@ -126,6 +126,18 @@ This repo enforces a commit convention via a `commit-msg` git hook
 | 🔥    | remove   | Removing code or files                   |
 | ◀️    | revert   | Reverting changes                        |
 | 〰️    | wip      | Work in progress                         |
+| 🎉    | init     | Beginning a project                       |
+| 🚑️    | hotfix   | Critical fix that can't wait             |
+| 💄    | ui       | Adding or updating UI/style files        |
+| 🌐    | i18n     | Internationalization and localization    |
+| 🚚    | move     | Moving or renaming files                 |
+| 🔖    | release  | Releasing/tagging a version              |
+| 👷    | ci       | Adding or updating CI build system       |
+| 🗃️    | db       | Database schema or migration changes     |
+| ♿    | a11y     | Improving accessibility                  |
+| ➕    | deps-add | Adding a dependency                      |
+| ➖    | deps-remove | Removing a dependency                 |
+| 🔐    | secret   | Adding or updating secrets                |
 
 See [`docs/COMMIT_CONVENTION.md`](./docs/COMMIT_CONVENTION.md) for the full rules.
 

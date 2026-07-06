@@ -45,7 +45,19 @@ const TYPES = {
   security: { emoji: "🔒", description: "Security fixes" },
   remove: { emoji: "🔥", description: "Removing code or files" },
   revert: { emoji: "◀️", description: "Reverting changes" },
-  wip: { emoji: "〰️", description: "Work in progress" }
+  wip: { emoji: "〰️", description: "Work in progress" },
+  init: { emoji: "🎉", description: "Beginning a project" },
+  hotfix: { emoji: "🚑️", description: "Critical fix that can't wait" },
+  ui: { emoji: "💄", description: "Adding or updating UI/style files" },
+  i18n: { emoji: "🌐", description: "Internationalization and localization" },
+  move: { emoji: "🚚", description: "Moving or renaming files" },
+  release: { emoji: "🔖", description: "Releasing/tagging a version" },
+  ci: { emoji: "👷", description: "Adding or updating CI build system" },
+  db: { emoji: "🗃️", description: "Database schema or migration changes" },
+  a11y: { emoji: "♿", description: "Improving accessibility" },
+  "deps-add": { emoji: "➕", description: "Adding a dependency" },
+  "deps-remove": { emoji: "➖", description: "Removing a dependency" },
+  secret: { emoji: "🔐", description: "Adding or updating secrets" }
 };
 
 const emojis = Object.values(TYPES).map((t) => t.emoji);

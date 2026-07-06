@@ -42,6 +42,20 @@ All commits in this repo follow a single format, enforced locally by the
 | 🔥    | remove   | Removing code or files                   |
 | ◀️    | revert   | Reverting changes                        |
 | 〰️    | wip      | Work in progress                         |
+| 🎉    | init     | Beginning a project                       |
+| 🚑️    | hotfix   | Critical fix that can't wait             |
+| 💄    | ui       | Adding or updating UI/style files        |
+| 🌐    | i18n     | Internationalization and localization    |
+| 🚚    | move     | Moving or renaming files                 |
+| 🔖    | release  | Releasing/tagging a version              |
+| 👷    | ci       | Adding or updating CI build system       |
+| 🗃️    | db       | Database schema or migration changes     |
+| ♿    | a11y     | Improving accessibility                  |
+| ➕    | deps-add | Adding a dependency                      |
+| ➖    | deps-remove | Removing a dependency                 |
+| 🔐    | secret   | Adding or updating secrets                |
+
+Full emoji reference: [gitmoji.dev](https://gitmoji.dev).
 
 ## How it's enforced
 
