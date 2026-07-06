@@ -18,6 +18,7 @@ import { formatRelativeDate, formatTimeLabel, parseIsoDate } from "@/lib/dateFor
 import { useLanguage } from "@/lib/i18n/context";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { cancelMyReservation, listMyReservations } from "@/lib/reservations/api";
+import { RESERVATION_STATUS_LABEL_KEY } from "@/lib/reservations/statusTone";
 import type { ListReservationsResponse, Reservation, ReservationStatus } from "@/lib/reservations/types";
 
 const STATUS_TONE: Record<ReservationStatus, StatusTone> = {
@@ -158,7 +159,7 @@ export default function MyBookingsPage() {
                     </p>
                   </div>
                   <StatusBadge tone={STATUS_TONE[r.status]} className="shrink-0">
-                    {r.status}
+                    {t(RESERVATION_STATUS_LABEL_KEY[r.status])}
                   </StatusBadge>
                 </div>
                 {CANCELLABLE.includes(r.status) && (

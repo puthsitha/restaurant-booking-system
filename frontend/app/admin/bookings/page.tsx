@@ -16,7 +16,11 @@ import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { formatRelativeDate, formatTimeLabel, parseIsoDate } from "@/lib/dateFormat";
 import { useLanguage } from "@/lib/i18n/context";
 import { listAllReservationsAdmin } from "@/lib/reservations/api";
-import { RESERVATION_STATUS_OPTIONS, RESERVATION_STATUS_TONE } from "@/lib/reservations/statusTone";
+import {
+  RESERVATION_STATUS_LABEL_KEY,
+  RESERVATION_STATUS_OPTIONS,
+  RESERVATION_STATUS_TONE,
+} from "@/lib/reservations/statusTone";
 import type { ListReservationsResponse, Reservation, ReservationStatus } from "@/lib/reservations/types";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
@@ -75,7 +79,7 @@ export default function AdminBookingsPage() {
           onChange={setStatusFilter}
           options={[
             { value: "", label: t("adminBookings.allStatuses") },
-            ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))
+            ...RESERVATION_STATUS_OPTIONS.map((s) => ({ value: s, label: t(RESERVATION_STATUS_LABEL_KEY[s]) }))
           ]}
         />
         <DateField value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
@@ -114,7 +118,9 @@ export default function AdminBookingsPage() {
                       {r.user.phone ?? r.user.email ?? ""} · {r.confirmationCode}
                     </p>
                   </div>
-                  <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>{r.status}</StatusBadge>
+                  <StatusBadge tone={RESERVATION_STATUS_TONE[r.status]}>
+                    {t(RESERVATION_STATUS_LABEL_KEY[r.status])}
+                  </StatusBadge>
                 </button>
               );
             })}
