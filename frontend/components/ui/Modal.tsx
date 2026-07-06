@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 
 import { CloseIcon } from "@/components/ui/icons";
@@ -22,6 +23,16 @@ interface ModalProps {
 // confirm/approve/deny/edit dialog across the owner and admin sites feels
 // the same rather than each screen rolling its own popup.
 export function Modal({ open, onClose, title, children, className, dismissible = true }: ModalProps) {
+  // Portal straight into <body> so the overlay always paints above every
+  // other element on the page — without this, content elsewhere that forces
+  // its own compositing layer (e.g. a CSS transform or gradient background,
+  // like the dashboard's Donut chart or the Switch toggle knob) can render
+  // on top of the backdrop instead of being dimmed/blurred underneath it.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent): void {
@@ -41,7 +52,9 @@ export function Modal({ open, onClose, title, children, className, dismissible =
     };
   }, [open]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -82,6 +95,7 @@ export function Modal({ open, onClose, title, children, className, dismissible =
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
