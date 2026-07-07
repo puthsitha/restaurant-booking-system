@@ -12,7 +12,7 @@ import { ChevronDownIcon, ZoomInIcon } from "@/components/ui/icons";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
-import { useCustomerAuth } from "@/lib/auth/customerAuth";
+import { formatTimeLabel } from "@/lib/dateFormat";
 import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { listReviews } from "@/lib/reviews/api";
@@ -52,12 +52,15 @@ function menuPrice(usd: number, locale: "en" | "km"): string {
   return locale === "km" ? khr(usd) : `$${usd.toFixed(2)}`;
 }
 
+function todayDayOfWeek(): DayOfWeek {
+  return DAY_ORDER[(new Date().getDay() + 6) % 7];
+}
+
 // Whether the restaurant is open right now, from its weekly operating hours
 // — handles overnight ranges (close time past midnight) as a wraparound.
 function isOpenNow(hoursByDay: Map<DayOfWeek, RestaurantPublicDetail["operatingHours"][number]>): boolean {
   const now = new Date();
-  const today = DAY_ORDER[(now.getDay() + 6) % 7];
-  const hour = hoursByDay.get(today);
+  const hour = hoursByDay.get(todayDayOfWeek());
   if (!hour || hour.isClosed) return false;
   const current = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   if (hour.closeTime < hour.openTime) {
@@ -243,7 +246,6 @@ interface RestaurantDetailContentProps {
 
 export function RestaurantDetailContent({ restaurant: initialRestaurant }: RestaurantDetailContentProps) {
   const { t, locale } = useLanguage();
-  const { status: authStatus } = useCustomerAuth();
   const { savedIds } = useSavedRestaurants();
   const [restaurant, setRestaurant] = useState(initialRestaurant);
   const [ratingSummary, setRatingSummary] = useState<{ average: number; total: number } | null>(null);
@@ -277,6 +279,7 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
 
   const hoursByDay = new Map(restaurant.operatingHours.map((h) => [h.dayOfWeek, h]));
   const openNow = isOpenNow(hoursByDay);
+  const today = todayDayOfWeek();
   const quickInfo = [
     restaurant.dressCode ? { label: t("restaurantPage.dressCode"), value: restaurant.dressCode } : null,
     restaurant.depositRequired
@@ -338,14 +341,11 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                 </span>
               </div>
             </div>
-            {authStatus === "authenticated" && (
-              <div className="flex shrink-0 flex-col items-center gap-1">
-                <SaveRestaurantButton restaurantId={restaurant.id} className="border border-border" />
-                <span className="km text-[11px] font-semibold text-muted">
-                  {savedIds.has(restaurant.id) ? t("restaurantPage.saved") : t("restaurantPage.save")}
-                </span>
-              </div>
-            )}
+            <SaveRestaurantButton
+              restaurantId={restaurant.id}
+              label={savedIds.has(restaurant.id) ? t("restaurantPage.saved") : t("restaurantPage.save")}
+              className="shrink-0"
+            />
           </div>
 
           {restaurant.description && (
@@ -484,16 +484,19 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
 
           <div className="rounded-2xl border border-border bg-surface p-5">
             <h2 className="disp text-sm font-bold text-ink">{t("restaurantPage.hours")}</h2>
-            <div className="mt-3 space-y-1.5 text-sm">
+            <div className="mt-3 space-y-2 text-sm">
               {DAY_ORDER.map((day) => {
                 const hour = hoursByDay.get(day);
+                const closed = !hour || hour.isClosed;
+                const isToday = day === today;
+                const colorClass = isToday ? (closed ? "text-red-600" : "text-accent") : closed ? "text-muted" : "text-ink";
                 return (
-                  <div key={day} className="flex justify-between">
-                    <span className="km text-muted">{t(DAY_LABEL_KEY[day])}</span>
-                    <span className="km text-ink">
-                      {!hour || hour.isClosed
+                  <div key={day} className="flex justify-between font-semibold">
+                    <span className={`km ${colorClass}`}>{t(DAY_LABEL_KEY[day])}</span>
+                    <span className={`km ${colorClass}`}>
+                      {closed
                         ? t("restaurantPage.closed")
-                        : `${hour.openTime} – ${hour.closeTime}`}
+                        : `${formatTimeLabel(hour.openTime, locale, t)} – ${formatTimeLabel(hour.closeTime, locale, t)}`}
                     </span>
                   </div>
                 );
