@@ -11,6 +11,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { ChevronDownIcon, ZoomInIcon } from "@/components/ui/icons";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { RatingStars } from "@/components/ui/RatingStars";
+import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { listReviews } from "@/lib/reviews/api";
@@ -41,6 +42,12 @@ const DAY_LABEL_KEY: Record<DayOfWeek, TranslationKey> = {
 
 function khr(usd: number): string {
   return `៛${Math.round(usd * theme.currency.usdToKhrRate).toLocaleString()}`;
+}
+
+// A single currency, matching the active UI language, rather than both at
+// once — Khmer readers think in riel, English readers in dollars.
+function menuPrice(usd: number, locale: "en" | "km"): string {
+  return locale === "km" ? khr(usd) : `$${usd.toFixed(2)}`;
 }
 
 // Whether the restaurant is open right now, from its weekly operating hours
@@ -370,8 +377,7 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                           >
                             {item.imageUrl ? (
                               <div className="h-[74px] w-[74px] shrink-0 overflow-hidden rounded-xl">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
+                                <ZoomableImage
                                   src={item.imageUrl}
                                   alt={item.name}
                                   className="h-full w-full object-cover"
@@ -387,11 +393,27 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                                   {item.description}
                                 </p>
                               )}
-                              <p className="mt-1.5 text-sm font-extrabold text-accent">
-                                ${Number(item.price).toFixed(2)}{" "}
-                                <span className="km font-semibold text-muted">
-                                  · {khr(Number(item.price))}
-                                </span>
+                              {(item.isVegan || item.isVegetarian || item.isGlutenFree) && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {item.isVegan && (
+                                    <span className="km rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold text-secondary">
+                                      {t("ownerManage.menu.vegan")}
+                                    </span>
+                                  )}
+                                  {item.isVegetarian && !item.isVegan && (
+                                    <span className="km rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold text-secondary">
+                                      {t("ownerManage.menu.vegetarian")}
+                                    </span>
+                                  )}
+                                  {item.isGlutenFree && (
+                                    <span className="km rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold text-secondary">
+                                      {t("ownerManage.menu.glutenFree")}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <p className="km mt-1.5 text-sm font-extrabold text-accent">
+                                {menuPrice(Number(item.price), locale)}
                               </p>
                             </div>
                           </div>
