@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 import { FavoriteButton } from "@/components/restaurants/FavoriteButton";
-import { PinIcon } from "@/components/ui/icons";
+import { PinIcon, StarIcon } from "@/components/ui/icons";
 import { useLanguage } from "@/lib/i18n/context";
 import type { RestaurantSummary } from "@/lib/restaurants/types";
 
@@ -31,18 +31,18 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
             <div className="flex h-full items-center justify-center text-3xl">🍽️</div>
           )}
           {restaurant.isPopular && (
-            <span className="km absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-accent backdrop-blur">
-              ⭐ {t("restaurantCard.popular")}
+            <span className="km absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white backdrop-blur">
+              <StarIcon className="h-3 w-3" />
+              {t("restaurantCard.popular")}
             </span>
           )}
-          <FavoriteButton
-            restaurantId={restaurant.id}
-            size="sm"
-            className="absolute right-3 top-3 z-10"
-          />
+          <div className="absolute right-3 top-3 z-10">
+            <FavoriteButton restaurantId={restaurant.id} size="sm" />
+          </div>
           {restaurant.avgRating != null && (
-            <span className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-ink backdrop-blur">
-              ★ {restaurant.avgRating.toFixed(1)}
+            <span className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white backdrop-blur">
+              <StarIcon className="h-3 w-3" />
+              {restaurant.avgRating.toFixed(1)}
             </span>
           )}
         </div>
