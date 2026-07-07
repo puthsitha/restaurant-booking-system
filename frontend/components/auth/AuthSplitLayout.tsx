@@ -1,8 +1,18 @@
 "use client";
 
-import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import {
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
 import Image from "next/image";
-import type { ComponentType, CSSProperties, PointerEvent, ReactNode } from "react";
+import type {
+  ComponentType,
+  CSSProperties,
+  PointerEvent,
+  ReactNode,
+} from "react";
 
 import { CashIcon, ChairIcon, PhoneIcon } from "@/components/ui/icons";
 import { useLanguage } from "@/lib/i18n/context";
@@ -12,30 +22,33 @@ type Role = "owner" | "admin";
 
 const ROLE_OVERLAY: Record<Role, string> = {
   owner: "linear-gradient(160deg, rgba(194,65,12,.93), rgba(146,49,9,.50))",
-  admin: "linear-gradient(160deg, rgba(31,111,84,.93), rgba(21,80,60,.50))"
+  admin: "linear-gradient(160deg, rgba(31,111,84,.93), rgba(21,80,60,.50))",
 };
 
 const ROLE_SUBTITLE: Record<Role, TranslationKey> = {
   owner: "authSplit.welcomeSubtitleOwner",
-  admin: "authSplit.welcomeSubtitleAdmin"
+  admin: "authSplit.welcomeSubtitleAdmin",
 };
 
 const ROLE_FOOTER: Record<Role, TranslationKey> = {
   owner: "authSplit.footerOwner",
-  admin: "authSplit.footerAdmin"
+  admin: "authSplit.footerAdmin",
 };
 
-const ROLE_FEATURES: Record<Role, { icon: ComponentType<{ className?: string }>; labelKey: TranslationKey }[]> = {
+const ROLE_FEATURES: Record<
+  Role,
+  { icon: ComponentType<{ className?: string }>; labelKey: TranslationKey }[]
+> = {
   owner: [
     { icon: PhoneIcon, labelKey: "authSplit.ownerFeatureAlerts" },
     { icon: CashIcon, labelKey: "authSplit.ownerFeatureKhqr" },
-    { icon: ChairIcon, labelKey: "authSplit.ownerFeatureTables" }
+    { icon: ChairIcon, labelKey: "authSplit.ownerFeatureTables" },
   ],
   admin: [
     { icon: PhoneIcon, labelKey: "authSplit.adminFeatureRequests" },
     { icon: CashIcon, labelKey: "authSplit.adminFeatureModerate" },
-    { icon: ChairIcon, labelKey: "authSplit.adminFeatureSettings" }
-  ]
+    { icon: ChairIcon, labelKey: "authSplit.adminFeatureSettings" },
+  ],
 };
 
 interface AuthSplitLayoutProps {
@@ -45,7 +58,10 @@ interface AuthSplitLayoutProps {
 
 // Split-screen shell shared by the owner and admin sign-in pages: a brand
 // panel on the left, credential form on the right.
-export function AuthSplitLayout({ activeRole, children }: AuthSplitLayoutProps) {
+export function AuthSplitLayout({
+  activeRole,
+  children,
+}: AuthSplitLayoutProps) {
   const { t } = useLanguage();
 
   const mx = useMotionValue(50);
@@ -75,11 +91,22 @@ export function AuthSplitLayout({ activeRole, children }: AuthSplitLayoutProps) 
         onPointerEnter={() => radiusTarget.set(220)}
         onPointerLeave={() => radiusTarget.set(0)}
       >
-        <Image src="/images/hero-restaurant.png" alt="" fill priority sizes="50vw" className="object-cover" />
+        <Image
+          src="/images/hero-restaurant.png"
+          alt=""
+          fill
+          priority
+          sizes="50vw"
+          className="object-cover"
+        />
         <motion.div
           className="absolute inset-0"
           style={
-            { background: ROLE_OVERLAY[activeRole], WebkitMaskImage: maskImage, maskImage } as unknown as CSSProperties
+            {
+              background: ROLE_OVERLAY[activeRole],
+              WebkitMaskImage: maskImage,
+              maskImage,
+            } as unknown as CSSProperties
           }
         />
         <div className="relative z-10 flex h-full flex-col p-12 text-white">
@@ -91,12 +118,12 @@ export function AuthSplitLayout({ activeRole, children }: AuthSplitLayoutProps) 
               height={128}
               className="h-24 w-24 rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,.35)] sm:h-28 sm:w-28"
             />
-            <span className="disp mt-4 text-2xl font-extrabold">TableSite</span>
-
             <h1 className="km disp mt-8 max-w-md text-4xl font-extrabold leading-tight">
               {t("authSplit.welcomeTitle")}
             </h1>
-            <p className="km mt-4 max-w-md text-white/85">{t(ROLE_SUBTITLE[activeRole])}</p>
+            <p className="km mt-4 max-w-md text-white/85">
+              {t(ROLE_SUBTITLE[activeRole])}
+            </p>
 
             <div className="mt-9 w-full max-w-sm space-y-4 text-left">
               {ROLE_FEATURES[activeRole].map(({ icon: Icon, labelKey }) => (
@@ -104,13 +131,17 @@ export function AuthSplitLayout({ activeRole, children }: AuthSplitLayoutProps) 
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15">
                     <Icon className="h-4 w-4" />
                   </span>
-                  <span className="km text-sm text-white/90">{t(labelKey)}</span>
+                  <span className="km text-sm text-white/90">
+                    {t(labelKey)}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
-          <p className="text-center text-sm text-white/70">{t(ROLE_FOOTER[activeRole])}</p>
+          <p className="text-center text-sm text-white/70">
+            {t(ROLE_FOOTER[activeRole])}
+          </p>
         </div>
       </div>
 
