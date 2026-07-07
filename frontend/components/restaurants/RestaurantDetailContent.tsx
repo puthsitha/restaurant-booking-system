@@ -17,11 +17,18 @@ import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { listReviews } from "@/lib/reviews/api";
 import { getRestaurantBySlug } from "@/lib/restaurants/api";
-import type { DayOfWeek, RestaurantPublicDetail } from "@/lib/restaurants/types";
+import type {
+  DayOfWeek,
+  RestaurantPublicDetail,
+} from "@/lib/restaurants/types";
 import { useSavedRestaurants } from "@/lib/savedRestaurants/context";
 import { theme } from "@/lib/theme";
 
-const PRICE_LABEL: Record<string, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$" };
+const PRICE_LABEL: Record<string, string> = {
+  LOW: "$",
+  MEDIUM: "$$",
+  HIGH: "$$$",
+};
 
 const DAY_ORDER: DayOfWeek[] = [
   "MONDAY",
@@ -58,7 +65,9 @@ function todayDayOfWeek(): DayOfWeek {
 
 // Whether the restaurant is open right now, from its weekly operating hours
 // — handles overnight ranges (close time past midnight) as a wraparound.
-function isOpenNow(hoursByDay: Map<DayOfWeek, RestaurantPublicDetail["operatingHours"][number]>): boolean {
+function isOpenNow(
+  hoursByDay: Map<DayOfWeek, RestaurantPublicDetail["operatingHours"][number]>,
+): boolean {
   const now = new Date();
   const hour = hoursByDay.get(todayDayOfWeek());
   if (!hour || hour.isClosed) return false;
@@ -81,7 +90,13 @@ const SWIPE_THRESHOLD = 80;
 // cell, three smaller ones, the last with a "+N" overlay for the rest),
 // sharing a single Lightbox so any cell opens into a swipeable/arrow-key
 // carousel across every photo on file.
-function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurantId: string }) {
+function HeroGallery({
+  images,
+  restaurantId,
+}: {
+  images: HeroImage[];
+  restaurantId: string;
+}) {
   const { t } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const hasMultiple = images.length > 1;
@@ -113,7 +128,10 @@ function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurant
     return (
       <FadeIn className="relative flex h-64 w-full items-center justify-center overflow-hidden rounded-2xl bg-bg text-5xl">
         🍽️
-        <SaveRestaurantButton restaurantId={restaurantId} className="absolute right-4 top-4" />
+        <SaveRestaurantButton
+          restaurantId={restaurantId}
+          className="absolute right-4 top-4"
+        />
       </FadeIn>
     );
   }
@@ -121,9 +139,17 @@ function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurant
   if (images.length === 1) {
     return (
       <FadeIn className="relative h-64 w-full overflow-hidden rounded-2xl bg-bg">
-        <button type="button" onClick={() => setOpenIndex(0)} className="group block h-full w-full">
+        <button
+          type="button"
+          onClick={() => setOpenIndex(0)}
+          className="group block h-full w-full"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={images[0].url} alt={images[0].alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
+          <img
+            src={images[0].url}
+            alt={images[0].alt}
+            className="h-full w-full object-cover transition group-hover:opacity-90"
+          />
         </button>
       </FadeIn>
     );
@@ -153,20 +179,27 @@ function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurant
 
   return (
     <>
-      <FadeIn className={`grid h-[290px] gap-2.5 overflow-hidden rounded-2xl ${GRID_CLASS[sideImages.length]}`}>
+      <FadeIn
+        className={`grid h-[290px] gap-2.5 overflow-hidden rounded-2xl ${GRID_CLASS[sideImages.length]}`}
+      >
         <button
           type="button"
           onClick={() => setOpenIndex(0)}
           className="group relative row-span-full block h-full w-full overflow-hidden bg-bg"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={images[0].url} alt={images[0].alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
+          <img
+            src={images[0].url}
+            alt={images[0].alt}
+            className="h-full w-full object-cover transition group-hover:opacity-90"
+          />
           <span className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition group-hover:bg-ink/20 group-hover:opacity-100">
             <ZoomInIcon className="h-6 w-6 text-white drop-shadow" />
           </span>
         </button>
         {sideImages.map((image, index) => {
-          const isLast = index === sideImages.length - 1 && sideImages.length === 4;
+          const isLast =
+            index === sideImages.length - 1 && sideImages.length === 4;
           return (
             <button
               key={image.id}
@@ -175,7 +208,11 @@ function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurant
               className={`group relative block h-full w-full overflow-hidden bg-bg ${SIDE_CELL_CLASS[sideImages.length][index]}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={image.url} alt={image.alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
+              <img
+                src={image.url}
+                alt={image.alt}
+                className="h-full w-full object-cover transition group-hover:opacity-90"
+              />
               {isLast && extraCount > 0 ? (
                 <span className="km absolute inset-0 flex items-center justify-center bg-ink/55 text-sm font-bold text-white">
                   {t("restaurantPage.morePhotos", { count: extraCount })}
@@ -230,7 +267,10 @@ function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurant
             </div>
             {hasMultiple && (
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-                {t("restaurantPage.galleryCounter", { current: activeIndex + 1, total: images.length })}
+                {t("restaurantPage.galleryCounter", {
+                  current: activeIndex + 1,
+                  total: images.length,
+                })}
               </span>
             )}
           </div>
@@ -244,11 +284,16 @@ interface RestaurantDetailContentProps {
   restaurant: RestaurantPublicDetail;
 }
 
-export function RestaurantDetailContent({ restaurant: initialRestaurant }: RestaurantDetailContentProps) {
+export function RestaurantDetailContent({
+  restaurant: initialRestaurant,
+}: RestaurantDetailContentProps) {
   const { t, locale } = useLanguage();
   const { savedIds } = useSavedRestaurants();
   const [restaurant, setRestaurant] = useState(initialRestaurant);
-  const [ratingSummary, setRatingSummary] = useState<{ average: number; total: number } | null>(null);
+  const [ratingSummary, setRatingSummary] = useState<{
+    average: number;
+    total: number;
+  } | null>(null);
 
   // The page is server-rendered with the UI shell's default locale (the
   // user's stored preference isn't known yet at that point — see the page
@@ -264,12 +309,16 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
 
   useEffect(() => {
     listReviews(restaurant.id)
-      .then((res) => setRatingSummary({ average: res.average, total: res.total }))
+      .then((res) =>
+        setRatingSummary({ average: res.average, total: res.total }),
+      )
       .catch(() => setRatingSummary(null));
   }, [restaurant.id]);
 
   const heroImages: HeroImage[] = [
-    ...(restaurant.coverImageUrl ? [{ id: "cover", url: restaurant.coverImageUrl, alt: restaurant.name }] : []),
+    ...(restaurant.coverImageUrl
+      ? [{ id: "cover", url: restaurant.coverImageUrl, alt: restaurant.name }]
+      : []),
     ...restaurant.galleryImages.map((image) => ({
       id: image.id,
       url: image.url,
@@ -277,11 +326,15 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
     })),
   ];
 
-  const hoursByDay = new Map(restaurant.operatingHours.map((h) => [h.dayOfWeek, h]));
+  const hoursByDay = new Map(
+    restaurant.operatingHours.map((h) => [h.dayOfWeek, h]),
+  );
   const openNow = isOpenNow(hoursByDay);
   const today = todayDayOfWeek();
   const quickInfo = [
-    restaurant.dressCode ? { label: t("restaurantPage.dressCode"), value: restaurant.dressCode } : null,
+    restaurant.dressCode
+      ? { label: t("restaurantPage.dressCode"), value: restaurant.dressCode }
+      : null,
     restaurant.depositRequired
       ? {
           label: t("restaurantPage.deposit"),
@@ -290,15 +343,25 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
           }),
           accent: true,
         }
-      : { label: t("restaurantPage.deposit"), value: t("restaurantPage.depositNotRequired") },
+      : {
+          label: t("restaurantPage.deposit"),
+          value: t("restaurantPage.depositNotRequired"),
+        },
     {
       label: t("restaurantPage.cancellation"),
-      value: t("restaurantPage.cancellationNotice", { hours: restaurant.cancellationHours }),
+      value: t("restaurantPage.cancellationNotice", {
+        hours: restaurant.cancellationHours,
+      }),
     },
     restaurant.parkingAvailable
-      ? { label: t("restaurantPage.parking"), value: t("restaurantPage.parkingAvailable") }
+      ? {
+          label: t("restaurantPage.parking"),
+          value: t("restaurantPage.parkingAvailable"),
+        }
       : null,
-  ].filter((x): x is { label: string; value: string; accent?: boolean } => x !== null);
+  ].filter(
+    (x): x is { label: string; value: string; accent?: boolean } => x !== null,
+  );
 
   return (
     <main className="mx-auto max-w-[1280px] px-8 py-6">
@@ -320,9 +383,12 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                   ))}
                 </div>
               )}
-              <h1 className="disp text-3xl font-extrabold text-ink">{restaurant.name}</h1>
+              <h1 className="disp text-3xl font-extrabold text-ink">
+                {restaurant.name}
+              </h1>
               <p className="km mt-1.5 text-sm text-muted">
-                {restaurant.cuisineType} · {restaurant.address}, {restaurant.city}
+                {restaurant.cuisineType} · {restaurant.address},{" "}
+                {restaurant.city}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-4">
                 {ratingSummary && ratingSummary.total > 0 && (
@@ -330,20 +396,36 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                     <RatingStars rating={ratingSummary.average} size="sm" />
                     {ratingSummary.average.toFixed(1)}
                     <span className="font-semibold text-muted">
-                      ({t("reviewsSection.reviewsCount", { count: ratingSummary.total })})
+                      (
+                      {t("reviewsSection.reviewsCount", {
+                        count: ratingSummary.total,
+                      })}
+                      )
                     </span>
                   </span>
                 )}
-                <span className="km text-sm text-muted">{PRICE_LABEL[restaurant.priceRange]}</span>
-                <span className={`km flex items-center gap-1.5 text-sm font-bold ${openNow ? "text-secondary" : "text-red-600"}`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${openNow ? "bg-secondary" : "bg-red-600"}`} />
-                  {openNow ? t("restaurantPage.openNow") : t("restaurantPage.closedNow")}
+                <span className="km text-sm text-muted">
+                  {PRICE_LABEL[restaurant.priceRange]}
+                </span>
+                <span
+                  className={`km flex items-center gap-1.5 text-sm font-bold ${openNow ? "text-secondary" : "text-red-600"}`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${openNow ? "bg-secondary" : "bg-red-600"}`}
+                  />
+                  {openNow
+                    ? t("restaurantPage.openNow")
+                    : t("restaurantPage.closedNow")}
                 </span>
               </div>
             </div>
             <SaveRestaurantButton
               restaurantId={restaurant.id}
-              label={savedIds.has(restaurant.id) ? t("restaurantPage.saved") : t("restaurantPage.save")}
+              label={
+                savedIds.has(restaurant.id)
+                  ? t("restaurantPage.saved")
+                  : t("restaurantPage.save")
+              }
               className="shrink-0"
             />
           </div>
@@ -357,11 +439,16 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
           {quickInfo.length > 0 && (
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {quickInfo.map((info) => (
-                <div key={info.label} className="rounded-xl border border-border bg-surface p-3.5">
+                <div
+                  key={info.label}
+                  className="rounded-xl border border-border bg-surface p-3.5"
+                >
                   <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
                     {info.label}
                   </p>
-                  <p className={`km mt-1 text-sm font-bold ${info.accent ? "text-accent" : "text-ink"}`}>
+                  <p
+                    className={`km mt-1 text-sm font-bold ${info.accent ? "text-accent" : "text-ink"}`}
+                  >
                     {info.value}
                   </p>
                 </div>
@@ -371,13 +458,19 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
 
           {restaurant.menus.length > 0 && (
             <section className="mt-10">
-              <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.menu")}</h2>
+              <h2 className="disp text-lg font-bold text-ink">
+                {t("restaurantPage.menu")}
+              </h2>
               {restaurant.menus
                 .filter((menu) => menu.isActive)
                 .map((menu) => (
                   <div key={menu.id} className="mt-5">
                     <h3 className="km font-bold text-ink">{menu.name}</h3>
-                    {menu.description && <p className="km mt-0.5 text-sm text-muted">{menu.description}</p>}
+                    {menu.description && (
+                      <p className="km mt-0.5 text-sm text-muted">
+                        {menu.description}
+                      </p>
+                    )}
                     <div className="mt-3 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                       {menu.items
                         .filter((item) => item.isAvailable)
@@ -398,13 +491,17 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                               <div className="h-[74px] w-[74px] shrink-0 rounded-xl bg-bg" />
                             )}
                             <div className="min-w-0 flex-1">
-                              <p className="km font-bold text-ink">{item.name}</p>
+                              <p className="km font-bold text-ink">
+                                {item.name}
+                              </p>
                               {item.description && (
                                 <p className="km mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">
                                   {item.description}
                                 </p>
                               )}
-                              {(item.isVegan || item.isVegetarian || item.isGlutenFree) && (
+                              {(item.isVegan ||
+                                item.isVegetarian ||
+                                item.isGlutenFree) && (
                                 <div className="mt-1.5 flex flex-wrap gap-1">
                                   {item.isVegan && (
                                     <span className="km rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold text-secondary">
@@ -437,10 +534,14 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
 
           {restaurant.latitude && restaurant.longitude && (
             <section className="mt-10">
-              <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.location")}</h2>
+              <h2 className="disp text-lg font-bold text-ink">
+                {t("restaurantPage.location")}
+              </h2>
               <div
                 className="relative mt-3 h-60 overflow-hidden rounded-2xl border border-border"
-                style={{ background: "linear-gradient(135deg,#E8EEEA,#DCE6E0)" }}
+                style={{
+                  background: "linear-gradient(135deg,#E8EEEA,#DCE6E0)",
+                }}
               >
                 <div
                   className="absolute inset-0"
@@ -458,7 +559,9 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                 </div>
                 <div className="absolute inset-x-3.5 bottom-3.5 flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3">
                   <div>
-                    <p className="km text-sm font-bold text-ink">{restaurant.name}</p>
+                    <p className="km text-sm font-bold text-ink">
+                      {restaurant.name}
+                    </p>
                     <p className="km text-xs text-muted">
                       {restaurant.address}, {restaurant.city}
                     </p>
@@ -483,16 +586,26 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
           <BookingWidget restaurant={restaurant} />
 
           <div className="rounded-2xl border border-border bg-surface p-5">
-            <h2 className="disp text-sm font-bold text-ink">{t("restaurantPage.hours")}</h2>
+            <h2 className="disp text-sm font-bold text-ink">
+              {t("restaurantPage.hours")}
+            </h2>
             <div className="mt-3 space-y-2 text-sm">
               {DAY_ORDER.map((day) => {
                 const hour = hoursByDay.get(day);
                 const closed = !hour || hour.isClosed;
                 const isToday = day === today;
-                const colorClass = isToday ? (closed ? "text-red-600" : "text-accent") : closed ? "text-muted" : "text-ink";
+                const colorClass = isToday
+                  ? closed
+                    ? "text-red-600"
+                    : "text-secondary"
+                  : closed
+                    ? "text-muted"
+                    : "text-ink";
                 return (
                   <div key={day} className="flex justify-between font-semibold">
-                    <span className={`km ${colorClass}`}>{t(DAY_LABEL_KEY[day])}</span>
+                    <span className={`km ${colorClass}`}>
+                      {t(DAY_LABEL_KEY[day])}
+                    </span>
                     <span className={`km ${colorClass}`}>
                       {closed
                         ? t("restaurantPage.closed")
