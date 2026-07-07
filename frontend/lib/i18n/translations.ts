@@ -5,6 +5,8 @@
 
 const en = {
   common: {
+    home: "Home",
+    profile: "Profile",
     logOut: "Log out",
     logOutConfirmTitle: "Log out?",
     logOutConfirmBody: "You'll need to sign in again to continue.",
@@ -230,6 +232,7 @@ const en = {
   },
   searchPage: {
     title: "Search restaurants",
+    breadcrumbTitle: "Search results",
     restaurantName: "Restaurant name",
     restaurantNamePlaceholder: "e.g. Malis",
     city: "City",
@@ -885,6 +888,8 @@ const en = {
 
 const km = {
   common: {
+    home: "ទំព័រដើម",
+    profile: "ប្រវត្តិរូប",
     logOut: "ចាកចេញ",
     logOutConfirmTitle: "ចាកចេញឬ?",
     logOutConfirmBody: "អ្នកនឹងត្រូវចូលម្តងទៀតដើម្បីបន្ត។",
@@ -1109,6 +1114,7 @@ const km = {
   },
   searchPage: {
     title: "ស្វែងរកភោជនីយដ្ឋាន",
+    breadcrumbTitle: "លទ្ធផលស្វែងរក",
     restaurantName: "ឈ្មោះភោជនីយដ្ឋាន",
     restaurantNamePlaceholder: "ឧ. Malis",
     city: "ទីក្រុង",

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { CalendarIcon } from "@/components/ui/icons";
@@ -95,6 +96,10 @@ export default function MyBookingsPage() {
   if (authStatus !== "authenticated") {
     return (
       <main className="mx-auto max-w-[720px] px-8 py-12">
+        <Breadcrumb
+          className="mb-4"
+          items={[{ label: t("common.home"), href: "/" }, { label: t("bookingsPage.title") }]}
+        />
         <EmptyState
           icon={CalendarIcon}
           title={t("bookingsPage.signInTitle")}
@@ -106,6 +111,10 @@ export default function MyBookingsPage() {
 
   return (
     <main className="mx-auto max-w-[720px] px-8 py-12">
+      <Breadcrumb
+        className="mb-4"
+        items={[{ label: t("common.home"), href: "/" }, { label: t("bookingsPage.title") }]}
+      />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="disp text-2xl font-extrabold text-ink">{t("bookingsPage.title")}</h1>
         <SegmentedControl
