@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TextAreaField, TextField } from "@/components/ui/FormField";
 import { ChefHatIcon, UtensilsIcon } from "@/components/ui/icons";
@@ -32,9 +33,12 @@ function Badge({ children }: { children: ReactNode }) {
 export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
   const { t } = useLanguage();
   const [newMenuName, setNewMenuName] = useState("");
+  const [newMenuNameKm, setNewMenuNameKm] = useState("");
   const [newMenuDescription, setNewMenuDescription] = useState("");
+  const [newMenuDescriptionKm, setNewMenuDescriptionKm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [menuPendingDelete, setMenuPendingDelete] = useState<string | null>(null);
 
   async function handleAddMenu(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -43,11 +47,18 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
     try {
       await createMenu(
         restaurant.id,
-        { name: newMenuName, description: newMenuDescription || undefined },
+        {
+          name: newMenuName,
+          nameKm: newMenuNameKm || undefined,
+          description: newMenuDescription || undefined,
+          descriptionKm: newMenuDescriptionKm || undefined,
+        },
         token,
       );
       setNewMenuName("");
+      setNewMenuNameKm("");
       setNewMenuDescription("");
+      setNewMenuDescriptionKm("");
       await onSaved();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("ownerManage.menu.addMenuError"));
@@ -77,11 +88,25 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
           className="w-56"
         />
         <TextField
+          label={t("ownerManage.menu.newMenuNameKm")}
+          value={newMenuNameKm}
+          onChange={(e) => setNewMenuNameKm(e.target.value)}
+          placeholder={t("ownerManage.menu.newMenuNameKmPlaceholder")}
+          className="km w-56"
+        />
+        <TextField
           label={t("ownerManage.menu.descriptionOptional")}
           value={newMenuDescription}
           onChange={(e) => setNewMenuDescription(e.target.value)}
           placeholder={t("ownerManage.menu.descriptionPlaceholder")}
           className="min-w-[220px] flex-1"
+        />
+        <TextField
+          label={t("ownerManage.menu.descriptionKmOptional")}
+          value={newMenuDescriptionKm}
+          onChange={(e) => setNewMenuDescriptionKm(e.target.value)}
+          placeholder={t("ownerManage.menu.descriptionKmPlaceholder")}
+          className="km min-w-[220px] flex-1"
         />
         <button
           type="submit"
@@ -113,7 +138,7 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
                   )}
                 </div>
                 <button
-                  onClick={() => handleDeleteMenu(menu.id)}
+                  onClick={() => setMenuPendingDelete(menu.id)}
                   className="shrink-0 text-sm font-semibold text-red-600"
                 >
                   {t("ownerManage.menu.deleteMenu")}
@@ -143,6 +168,16 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
           ))
         )}
       </div>
+
+      <ConfirmDeleteModal
+        open={menuPendingDelete !== null}
+        title={t("ownerManage.menu.deleteMenuConfirmTitle")}
+        body={t("ownerManage.menu.deleteMenuConfirmBody")}
+        onClose={() => setMenuPendingDelete(null)}
+        onConfirm={() => {
+          if (menuPendingDelete) void handleDeleteMenu(menuPendingDelete);
+        }}
+      />
     </div>
   );
 }
@@ -162,6 +197,7 @@ function MenuItemRow({
 }) {
   const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   async function toggleAvailable(isAvailable: boolean): Promise<void> {
     try {
@@ -208,6 +244,10 @@ function MenuItemRow({
         {item.description && (
           <p className="mt-1 line-clamp-2 text-sm text-muted">{item.description}</p>
         )}
+        {item.nameKm && <p className="km mt-1 truncate text-sm text-muted">{item.nameKm}</p>}
+        {item.descriptionKm && (
+          <p className="km mt-1 line-clamp-2 text-sm text-muted">{item.descriptionKm}</p>
+        )}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {item.isVegan && <Badge>{t("ownerManage.menu.vegan")}</Badge>}
@@ -222,12 +262,20 @@ function MenuItemRow({
             />
             {t("ownerManage.menu.available")}
           </label>
-          <button onClick={handleDelete} className="text-xs font-semibold text-red-600">
+          <button onClick={() => setConfirmingDelete(true)} className="text-xs font-semibold text-red-600">
             {t("common.delete")}
           </button>
         </div>
         {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
       </div>
+
+      <ConfirmDeleteModal
+        open={confirmingDelete}
+        title={t("ownerManage.menu.deleteItemConfirmTitle")}
+        body={t("ownerManage.menu.deleteItemConfirmBody")}
+        onClose={() => setConfirmingDelete(false)}
+        onConfirm={() => void handleDelete()}
+      />
     </div>
   );
 }
@@ -246,7 +294,9 @@ function AddItemForm({
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState("");
+  const [nameKm, setNameKm] = useState("");
   const [description, setDescription] = useState("");
+  const [descriptionKm, setDescriptionKm] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -258,7 +308,9 @@ function AddItemForm({
 
   function reset(): void {
     setName("");
+    setNameKm("");
     setDescription("");
+    setDescriptionKm("");
     setPrice("");
     setCategory("");
     setImageUrl("");
@@ -277,7 +329,9 @@ function AddItemForm({
         menuId,
         {
           name,
+          nameKm: nameKm || undefined,
           description: description || undefined,
+          descriptionKm: descriptionKm || undefined,
           price: Number(price),
           category: category || undefined,
           imageUrl: imageUrl || undefined,
@@ -340,12 +394,27 @@ function AddItemForm({
 
       {expanded && (
         <div className="space-y-3 rounded-xl bg-bg p-4">
+          <TextField
+            label={t("ownerManage.menu.itemNameKm")}
+            value={nameKm}
+            onChange={(e) => setNameKm(e.target.value)}
+            placeholder={t("ownerManage.menu.itemNameKmPlaceholder")}
+            className="km"
+          />
           <TextAreaField
             label={t("ownerManage.menu.description")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             placeholder={t("ownerManage.menu.descriptionItemPlaceholder")}
+          />
+          <TextAreaField
+            label={t("ownerManage.menu.descriptionKmItem")}
+            value={descriptionKm}
+            onChange={(e) => setDescriptionKm(e.target.value)}
+            rows={2}
+            placeholder={t("ownerManage.menu.descriptionKmItemPlaceholder")}
+            className="km"
           />
           <div className="flex flex-wrap gap-3">
             <div className="min-w-[160px] flex-1">

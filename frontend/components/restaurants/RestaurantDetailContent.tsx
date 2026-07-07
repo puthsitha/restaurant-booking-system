@@ -182,6 +182,30 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
             </section>
           )}
 
+          {restaurant.latitude && restaurant.longitude && (
+            <section className="mt-10">
+              <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.location")}</h2>
+              <div className="mt-3 overflow-hidden rounded-2xl border border-border">
+                <div className="h-60 w-full">
+                  <iframe
+                    title="restaurant-location"
+                    className="h-full w-full"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(restaurant.longitude) - 0.01}%2C${Number(restaurant.latitude) - 0.01}%2C${Number(restaurant.longitude) + 0.01}%2C${Number(restaurant.latitude) + 0.01}&marker=${restaurant.latitude}%2C${restaurant.longitude}&layer=mapnik`}
+                  />
+                </div>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-3 bg-surface px-4 py-3 text-sm font-bold text-accent"
+                >
+                  {restaurant.address}, {restaurant.city}
+                  <span>{t("restaurantPage.getDirections")}</span>
+                </a>
+              </div>
+            </section>
+          )}
+
           {restaurant.galleryImages.length > 0 && (
             <section className="mt-10">
               <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.gallery")}</h2>

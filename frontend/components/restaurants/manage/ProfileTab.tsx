@@ -24,6 +24,7 @@ interface ProfileDraft {
   descriptionKm: string;
   cuisineType: string;
   address: string;
+  addressKm: string;
   city: string;
   phone: string;
   website: string;
@@ -31,6 +32,9 @@ interface ProfileDraft {
   priceRange: PriceRange;
   depositRequired: boolean;
   depositAmount: string;
+  latitude: string;
+  longitude: string;
+  isPopular: boolean;
 }
 
 function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileDraft {
@@ -41,6 +45,7 @@ function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileD
     descriptionKm: restaurant.descriptionKm ?? "",
     cuisineType: restaurant.cuisineType,
     address: restaurant.address,
+    addressKm: restaurant.addressKm ?? "",
     city: restaurant.city,
     phone: restaurant.phone ?? "",
     website: restaurant.website ?? "",
@@ -48,6 +53,9 @@ function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileD
     priceRange: restaurant.priceRange,
     depositRequired: restaurant.depositRequired,
     depositAmount: String(restaurant.depositAmount),
+    latitude: restaurant.latitude ?? "",
+    longitude: restaurant.longitude ?? "",
+    isPopular: restaurant.isPopular,
   };
 }
 
@@ -86,6 +94,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           descriptionKm: draft.descriptionKm || undefined,
           cuisineType: draft.cuisineType,
           address: draft.address,
+          addressKm: draft.addressKm || undefined,
           city: draft.city,
           phone: draft.phone || undefined,
           website: draft.website || undefined,
@@ -93,6 +102,9 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           priceRange: draft.priceRange,
           depositRequired: draft.depositRequired,
           depositAmount: Number(draft.depositAmount) || 0,
+          latitude: draft.latitude ? Number(draft.latitude) : undefined,
+          longitude: draft.longitude ? Number(draft.longitude) : undefined,
+          isPopular: draft.isPopular,
         },
         token,
       );
@@ -186,15 +198,29 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           />
         </div>
       </div>
-      <div>
-        <label className={LABEL_CLASS}>{t("ownerManage.profile.address")}</label>
-        <input
-          value={draft.address}
-          onChange={(e) => set("address", e.target.value)}
-          placeholder={t("ownerManage.profile.addressPlaceholder")}
-          className={FIELD_CLASS}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.address")}</label>
+          <input
+            value={draft.address}
+            onChange={(e) => set("address", e.target.value)}
+            placeholder={t("ownerManage.profile.addressPlaceholder")}
+            className={FIELD_CLASS}
+          />
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.addressKm")}</label>
+          <input
+            value={draft.addressKm}
+            onChange={(e) => set("addressKm", e.target.value)}
+            placeholder={t("ownerManage.profile.addressKmPlaceholder")}
+            className={`km ${FIELD_CLASS}`}
+          />
+        </div>
       </div>
+
+      <LocationFields draft={draft} set={set} />
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={LABEL_CLASS}>{t("ownerManage.profile.phone")}</label>
@@ -245,6 +271,17 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           {t("ownerManage.profile.requireDeposit")}
         </label>
       </div>
+      <div className="flex items-center gap-3">
+        <input
+          id="isPopular"
+          type="checkbox"
+          checked={draft.isPopular}
+          onChange={(e) => set("isPopular", e.target.checked)}
+        />
+        <label htmlFor="isPopular" className="text-sm text-ink">
+          {t("ownerManage.profile.markPopular")}
+        </label>
+      </div>
       {draft.depositRequired && (
         <div>
           <label className={LABEL_CLASS}>{t("ownerManage.profile.depositAmount")}</label>
@@ -271,3 +308,75 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
     </form>
   );
 });
+
+// Lat/lng entry plus a live OpenStreetMap preview — no map SDK/API key
+// needed, just an iframe embed, so the owner can see the pin land in the
+// right place before saving. Feeds the same map shown on the public
+// restaurant page and its "get directions" link.
+function LocationFields({
+  draft,
+  set,
+}: {
+  draft: ProfileDraft;
+  set: <K extends keyof ProfileDraft>(key: K, value: ProfileDraft[K]) => void;
+}) {
+  const { t } = useLanguage();
+  const lat = Number(draft.latitude);
+  const lng = Number(draft.longitude);
+  const hasCoordinates = draft.latitude !== "" && draft.longitude !== "" && Number.isFinite(lat) && Number.isFinite(lng);
+
+  function useCurrentLocation(): void {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((position) => {
+      set("latitude", String(position.coords.latitude));
+      set("longitude", String(position.coords.longitude));
+    });
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <label className={LABEL_CLASS}>{t("ownerManage.profile.location")}</label>
+        <button
+          type="button"
+          onClick={useCurrentLocation}
+          className="mb-1.5 text-xs font-bold text-accent"
+        >
+          {t("ownerManage.profile.useCurrentLocation")}
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <input
+          type="number"
+          step="any"
+          min={-90}
+          max={90}
+          value={draft.latitude}
+          onChange={(e) => set("latitude", e.target.value)}
+          placeholder={t("ownerManage.profile.latitude")}
+          className={FIELD_CLASS}
+        />
+        <input
+          type="number"
+          step="any"
+          min={-180}
+          max={180}
+          value={draft.longitude}
+          onChange={(e) => set("longitude", e.target.value)}
+          placeholder={t("ownerManage.profile.longitude")}
+          className={FIELD_CLASS}
+        />
+      </div>
+      <p className="mt-1.5 text-xs text-muted">{t("ownerManage.profile.locationHint")}</p>
+      {hasCoordinates && (
+        <div className="mt-3 h-48 w-full overflow-hidden rounded-xl border border-border">
+          <iframe
+            title="location-preview"
+            className="h-full w-full"
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01}%2C${lat - 0.01}%2C${lng + 0.01}%2C${lat + 0.01}&marker=${lat}%2C${lng}&layer=mapnik`}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

@@ -32,6 +32,7 @@ export const createRestaurantSchema = z.object({
   descriptionKm: z.string().trim().max(2000).optional(),
   cuisineType: z.string().trim().min(1).max(80),
   address: z.string().trim().min(1).max(255),
+  addressKm: z.string().trim().max(255).optional(),
   city: z.string().trim().min(1).max(120),
   state: z.string().trim().max(120).optional(),
   country: z.string().trim().min(1).max(120).default("Cambodia"),
@@ -43,6 +44,7 @@ export const createRestaurantSchema = z.object({
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   priceRange: priceRangeEnum.default("MEDIUM"),
+  isPopular: z.boolean().default(false),
   minBookingNotice: z.number().int().min(0).default(60),
   maxBookingDays: z.number().int().min(1).default(30),
   cancellationHours: z.number().int().min(0).default(24),
@@ -137,7 +139,9 @@ export type UpdateTableInput = z.infer<typeof updateTableSchema>;
 
 export const createMenuSchema = z.object({
   name: z.string().trim().min(1).max(120),
+  nameKm: z.string().trim().max(120).optional(),
   description: z.string().trim().max(1000).optional(),
+  descriptionKm: z.string().trim().max(1000).optional(),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
 });
@@ -148,7 +152,9 @@ export type UpdateMenuInput = z.infer<typeof updateMenuSchema>;
 
 export const createMenuItemSchema = z.object({
   name: z.string().trim().min(1).max(150),
+  nameKm: z.string().trim().max(150).optional(),
   description: z.string().trim().max(1000).optional(),
+  descriptionKm: z.string().trim().max(1000).optional(),
   price: z.number().min(0),
   category: z.string().trim().max(80).optional(),
   imageUrl: z.string().trim().url().optional(),

@@ -130,6 +130,7 @@ const baseRestaurant = {
   createdAt: new Date("2026-01-01"),
   updatedAt: new Date("2026-01-01"),
   tags: [],
+  menus: [],
 };
 
 beforeEach(() => {
@@ -285,6 +286,32 @@ describe("GET /api/restaurants", () => {
     expect(res.body.items[0].description).toBe("Great pho");
   });
 
+  it("computes distanceKm from the client's coordinate headers", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
+      { ...baseRestaurant, latitude: "13.3671", longitude: "103.8448" }, // Siem Reap
+    ]);
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
+
+    const res = await request(app)
+      .get("/api/restaurants")
+      .set("X-Client-Lat", "11.5564")
+      .set("X-Client-Lng", "104.9282"); // Phnom Penh
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].distanceKm).toBeGreaterThan(230);
+    expect(res.body.items[0].distanceKm).toBeLessThan(280);
+  });
+
+  it("returns a null distanceKm when the restaurant has no coordinates on file", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
+
+    const res = await request(app).get("/api/restaurants");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].distanceKm).toBeNull();
+  });
+
   it("returns the Khmer name/description when Accept-Language is km", async () => {
     vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
       { ...baseRestaurant, name: "Pho Corner", nameKm: "ផូកន័រ", description: "Great pho", descriptionKm: "ម្ហូបផូឆ្ងាញ់" },
@@ -342,6 +369,42 @@ describe("GET /api/restaurants/slug/:slug", () => {
     expect(res.status).toBe(200);
     expect(res.body.restaurant.name).toBe("ផូកន័រ");
     expect(res.body.restaurant.description).toBe("ម្ហូបផូឆ្ងាញ់");
+  });
+
+  it("localizes the Khmer address and menu/item names when Accept-Language is km", async () => {
+    vi.mocked(prisma.restaurant.findUnique).mockResolvedValueOnce({
+      ...baseRestaurant,
+      address: "123 St",
+      addressKm: "ផ្លូវលេខ ១២៣",
+      menus: [
+        {
+          id: "menu_1",
+          name: "Lunch Menu",
+          nameKm: "ម៉ឺនុយថ្ងៃត្រង់",
+          description: null,
+          descriptionKm: null,
+          items: [
+            {
+              id: "item_1",
+              name: "Fish Amok",
+              nameKm: "អាម៉ុកត្រី",
+              description: "Steamed fish curry",
+              descriptionKm: "ត្រីចំហុយ",
+            },
+          ],
+        },
+      ],
+    });
+
+    const res = await request(app)
+      .get("/api/restaurants/slug/pho-corner")
+      .set("Accept-Language", "km");
+
+    expect(res.status).toBe(200);
+    expect(res.body.restaurant.address).toBe("ផ្លូវលេខ ១២៣");
+    expect(res.body.restaurant.menus[0].name).toBe("ម៉ឺនុយថ្ងៃត្រង់");
+    expect(res.body.restaurant.menus[0].items[0].name).toBe("អាម៉ុកត្រី");
+    expect(res.body.restaurant.menus[0].items[0].description).toBe("ត្រីចំហុយ");
   });
 });
 
