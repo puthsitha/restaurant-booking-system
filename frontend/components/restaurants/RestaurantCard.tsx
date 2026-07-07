@@ -31,11 +31,20 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
             <div className="flex h-full items-center justify-center text-3xl">🍽️</div>
           )}
           {restaurant.isPopular && (
-            <span className="km absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-accent backdrop-blur">
+            <span className="km absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-accent backdrop-blur">
               ⭐ {t("restaurantCard.popular")}
             </span>
           )}
-          <FavoriteButton restaurantId={restaurant.id} size="sm" className="absolute right-3 top-3" />
+          <FavoriteButton
+            restaurantId={restaurant.id}
+            size="sm"
+            className="absolute right-3 top-3 z-10"
+          />
+          {restaurant.avgRating != null && (
+            <span className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-ink backdrop-blur">
+              ★ {restaurant.avgRating.toFixed(1)}
+            </span>
+          )}
         </div>
         <div className="p-4">
           <div className="flex items-start justify-between gap-2">

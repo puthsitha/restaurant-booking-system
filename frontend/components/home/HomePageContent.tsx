@@ -61,8 +61,14 @@ export function HomePageContent({ items: initialItems }: HomePageContentProps) {
       {/* Featured restaurants */}
       <FadeIn delay={0.1} className="mt-14">
         <div className="flex items-center justify-between">
-          <h2 className="disp text-xl font-bold text-ink">{t("home.popularRestaurants")}</h2>
-          <Link href="/search" className="text-sm font-semibold text-accent">
+          <div>
+            <h2 className="disp text-xl font-bold text-ink">{t("home.popularRestaurants")}</h2>
+            <p className="km mt-1 text-sm text-muted">{t("home.popularRestaurantsSubtitle")}</p>
+          </div>
+          <Link
+            href="/search"
+            className="shrink-0 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink"
+          >
             {t("home.viewAll")}
           </Link>
         </div>

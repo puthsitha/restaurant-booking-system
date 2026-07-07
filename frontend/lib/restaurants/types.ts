@@ -158,6 +158,10 @@ export interface RestaurantSummary {
   // fallback) — only present on the public listing; null when the
   // restaurant has no lat/lng on file yet.
   distanceKm?: number | null;
+  // Aggregated from reviews server-side — null/0 when the restaurant has no
+  // reviews yet; only present on the public listing.
+  avgRating?: number | null;
+  reviewCount?: number;
   tags: Tag[];
   status?: RestaurantStatus;
   statusReason?: string | null;
