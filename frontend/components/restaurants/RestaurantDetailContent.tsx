@@ -185,23 +185,40 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
           {restaurant.latitude && restaurant.longitude && (
             <section className="mt-10">
               <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.location")}</h2>
-              <div className="mt-3 overflow-hidden rounded-2xl border border-border">
-                <div className="h-60 w-full">
-                  <iframe
-                    title="restaurant-location"
-                    className="h-full w-full"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(restaurant.longitude) - 0.01}%2C${Number(restaurant.latitude) - 0.01}%2C${Number(restaurant.longitude) + 0.01}%2C${Number(restaurant.latitude) + 0.01}&marker=${restaurant.latitude}%2C${restaurant.longitude}&layer=mapnik`}
+              <div
+                className="relative mt-3 h-60 overflow-hidden rounded-2xl border border-border"
+                style={{ background: "linear-gradient(135deg,#E8EEEA,#DCE6E0)" }}
+              >
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(31,111,84,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(31,111,84,.07) 1px,transparent 1px)",
+                    backgroundSize: "42px 42px",
+                  }}
+                />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
+                  <div
+                    className="h-[30px] w-[30px] rounded-[50%_50%_50%_0] bg-accent shadow-[0_6px_14px_rgba(0,0,0,.3)]"
+                    style={{ transform: "rotate(-45deg)" }}
                   />
                 </div>
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between gap-3 bg-surface px-4 py-3 text-sm font-bold text-accent"
-                >
-                  {restaurant.address}, {restaurant.city}
-                  <span>{t("restaurantPage.getDirections")}</span>
-                </a>
+                <div className="absolute inset-x-3.5 bottom-3.5 flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3">
+                  <div>
+                    <p className="km text-sm font-bold text-ink">{restaurant.name}</p>
+                    <p className="km text-xs text-muted">
+                      {restaurant.address}, {restaurant.city}
+                    </p>
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="km shrink-0 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white transition hover:brightness-110"
+                  >
+                    {t("restaurantPage.getDirections")}
+                  </a>
+                </div>
               </div>
             </section>
           )}
