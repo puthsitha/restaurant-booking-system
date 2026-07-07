@@ -116,21 +116,35 @@ function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurant
     );
   }
 
-  // Main photo (2fr, spans both rows) plus up to four side cells (1fr each,
-  // two rows) — mirrors design/TableSite.reference.html's `scDetail` hero
-  // mosaic exactly, so auto-placement fills col2/col3 row1 then row2 in
-  // document order. When there are more photos than fit, the last side cell
-  // gets a dark "+N" overlay instead of a plain thumbnail.
+  // Main photo (2fr, spans both rows) plus however many side cells actually
+  // exist — the grid shape (columns/rows/spans) changes with the photo count
+  // so every cell is always filled with a photo; nothing is ever left as bare
+  // empty space. Mirrors design/TableSite.reference.html's `scDetail` hero
+  // mosaic for 5+ photos (3 columns, "+N" overlay on the last cell); 2–4
+  // photos degrade to a matching layout with no gaps.
   const sideImages = images.slice(1, 5);
   const extraCount = images.length - 5;
 
+  const GRID_CLASS: Record<number, string> = {
+    1: "grid-cols-[2fr_1fr] grid-rows-1",
+    2: "grid-cols-[2fr_1fr] grid-rows-2",
+    3: "grid-cols-[2fr_1fr_1fr] grid-rows-2",
+    4: "grid-cols-[2fr_1fr_1fr] grid-rows-2",
+  };
+  const SIDE_CELL_CLASS: Record<number, string[]> = {
+    1: [""],
+    2: ["", ""],
+    3: ["", "", "col-span-2"],
+    4: ["", "", "", ""],
+  };
+
   return (
     <>
-      <FadeIn className="grid h-[290px] grid-cols-[2fr_1fr_1fr] grid-rows-2 gap-2.5 overflow-hidden rounded-2xl">
+      <FadeIn className={`grid h-[290px] gap-2.5 overflow-hidden rounded-2xl ${GRID_CLASS[sideImages.length]}`}>
         <button
           type="button"
           onClick={() => setOpenIndex(0)}
-          className="group relative row-span-2 block h-full w-full overflow-hidden bg-bg"
+          className="group relative row-span-full block h-full w-full overflow-hidden bg-bg"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={images[0].url} alt={images[0].alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
@@ -145,7 +159,7 @@ function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurant
               key={image.id}
               type="button"
               onClick={() => setOpenIndex(index + 1)}
-              className="group relative block h-full w-full overflow-hidden bg-bg"
+              className={`group relative block h-full w-full overflow-hidden bg-bg ${SIDE_CELL_CLASS[sideImages.length][index]}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={image.url} alt={image.alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
