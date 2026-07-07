@@ -19,6 +19,7 @@ import type {
   PriceRange,
   Tag,
 } from "@/lib/restaurants/types";
+import { useClientLocation } from "@/lib/useClientLocation";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 const PRICE_VALUES: (PriceRange | "")[] = ["", "LOW", "MEDIUM", "HIGH"];
@@ -35,6 +36,7 @@ export default function SearchPage() {
 function SearchPageContent() {
   const { t, locale } = useLanguage();
   const searchParams = useSearchParams();
+  const clientLocation = useClientLocation();
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [city, setCity] = useState(searchParams.get("city") ?? "");
@@ -84,6 +86,7 @@ function SearchPageContent() {
         pageSize: 12,
       },
       locale,
+      clientLocation,
     )
       .then(setResult)
       .catch(() => setError(t("searchPage.loadError")))
@@ -96,6 +99,7 @@ function SearchPageContent() {
     priceRange,
     page,
     locale,
+    clientLocation,
     t,
   ]);
 

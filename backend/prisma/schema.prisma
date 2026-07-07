@@ -143,6 +143,7 @@ model Restaurant {
   descriptionKm String?
   cuisineType   String
   address       String
+  addressKm     String?
   city          String
   state         String?
   country       String           @default("Cambodia")
@@ -259,7 +260,9 @@ model Menu {
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   name         String // "Lunch Menu", "Dinner Menu"
+  nameKm       String?
   description  String?
+  descriptionKm String?
   isActive     Boolean    @default(true)
   sortOrder    Int        @default(0)
 
@@ -271,7 +274,9 @@ model MenuItem {
   menuId       String
   menu         Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
   name         String
+  nameKm       String?
   description  String?
+  descriptionKm String?
   price        Decimal @db.Decimal(10, 2) // USD; KHR derived for display
   category     String? // Main, Starter, Dessert, Soup, Drink
   imageUrl     String?

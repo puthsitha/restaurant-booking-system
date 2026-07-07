@@ -17,6 +17,10 @@ interface ApiFetchOptions {
   // Forwarded as Accept-Language so the backend can return restaurant/tag
   // names in Khmer for that request — see backend/src/lib/locale.ts.
   locale?: "en" | "km";
+  // Forwarded as X-Client-Lat/X-Client-Lng so the backend can compute each
+  // restaurant's distance from the diner — see backend/src/lib/geo.ts. Falls
+  // back to Phnom Penh server-side when omitted (no geolocation permission).
+  location?: { lat: number; lng: number };
 }
 
 // Fired whenever an authenticated request (one sent with a token) comes back
@@ -48,6 +52,9 @@ export async function apiFetch<T>(
       "Content-Type": "application/json",
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
       ...(options.locale ? { "Accept-Language": options.locale } : {}),
+      ...(options.location
+        ? { "X-Client-Lat": String(options.location.lat), "X-Client-Lng": String(options.location.lng) }
+        : {}),
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     // Restaurant data changes via owner/admin actions with no revalidation

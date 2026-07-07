@@ -31,6 +31,7 @@ export interface RestaurantProfileInput {
   descriptionKm?: string;
   cuisineType: string;
   address: string;
+  addressKm?: string;
   city: string;
   state?: string;
   country?: string;
@@ -42,6 +43,7 @@ export interface RestaurantProfileInput {
   latitude?: number;
   longitude?: number;
   priceRange?: PriceRange;
+  isPopular?: boolean;
   minBookingNotice?: number;
   maxBookingDays?: number;
   cancellationHours?: number;
@@ -65,10 +67,11 @@ function toQueryString(params: Record<string, string | number | undefined>): str
 export function listRestaurants(
   params: ListRestaurantsParams = {},
   locale?: "en" | "km",
+  location?: { lat: number; lng: number },
 ): Promise<ListRestaurantsResponse> {
   return apiFetch<ListRestaurantsResponse>(
     `/api/restaurants${toQueryString(params as Record<string, string | number | undefined>)}`,
-    { locale },
+    { locale, location },
   );
 }
 
@@ -198,14 +201,18 @@ export function deleteTable(id: string, tableId: string, token: string): Promise
 
 export interface MenuInput {
   name: string;
+  nameKm?: string;
   description?: string;
+  descriptionKm?: string;
   isActive?: boolean;
   sortOrder?: number;
 }
 
 export interface MenuItemInput {
   name: string;
+  nameKm?: string;
   description?: string;
+  descriptionKm?: string;
   price: number;
   category?: string;
   imageUrl?: string;

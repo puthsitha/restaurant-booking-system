@@ -16,20 +16,52 @@ interface LocalizableRestaurant {
   nameKm?: string | null;
   description?: string | null;
   descriptionKm?: string | null;
+  address?: string;
+  addressKm?: string | null;
 }
 
-// Swaps `name`/`description` for their Khmer counterparts when present,
-// falling back to English so callers never see an empty field just because
-// a restaurant hasn't been translated yet. The `*Km` source fields are left
-// in the result (owner/admin management screens need them to edit the
-// Khmer text) — only the `name`/`description` keys themselves change value,
-// so public callers that just want the display text see the same shape
-// regardless of locale.
+// Swaps `name`/`description`/`address` for their Khmer counterparts when
+// present, falling back to English so callers never see an empty field just
+// because a restaurant hasn't been translated yet. The `*Km` source fields
+// are left in the result (owner/admin management screens need them to edit
+// the Khmer text) — only the `name`/`description`/`address` keys themselves
+// change value, so public callers that just want the display text see the
+// same shape regardless of locale.
 export function localizeRestaurant<T extends LocalizableRestaurant>(entity: T, locale: Locale): T {
+  if (locale === "km") {
+    return {
+      ...entity,
+      name: entity.nameKm || entity.name,
+      description: entity.descriptionKm || entity.description,
+      ...(entity.address !== undefined ? { address: entity.addressKm || entity.address } : {}),
+    };
+  }
+  return entity;
+}
+
+interface LocalizableMenuItem {
+  name: string;
+  nameKm?: string | null;
+  description?: string | null;
+  descriptionKm?: string | null;
+}
+
+export function localizeMenuItem<T extends LocalizableMenuItem>(entity: T, locale: Locale): T {
   if (locale === "km") {
     return { ...entity, name: entity.nameKm || entity.name, description: entity.descriptionKm || entity.description };
   }
   return entity;
+}
+
+interface LocalizableMenu extends LocalizableMenuItem {
+  items?: LocalizableMenuItem[];
+}
+
+export function localizeMenus<T extends LocalizableMenu>(entities: T[], locale: Locale): T[] {
+  return entities.map((entity) => ({
+    ...localizeMenuItem(entity, locale),
+    ...(entity.items ? { items: entity.items.map((item) => localizeMenuItem(item, locale)) } : {}),
+  }));
 }
 
 interface LocalizableTag {

@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 
 import { HttpError } from "../lib/httpError";
 import { getRequestLocale } from "../lib/locale";
+import { getClientCoordinates } from "../lib/geo";
 import * as restaurantService from "../services/restaurant.service";
 import type {
   CreateRestaurantInput,
@@ -52,7 +53,11 @@ export async function create(
 export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = res.locals.query as ListRestaurantsQuery;
-    const result = await restaurantService.listRestaurants(query, getRequestLocale(req));
+    const result = await restaurantService.listRestaurants(
+      query,
+      getRequestLocale(req),
+      getClientCoordinates(req),
+    );
     res.json(result);
   } catch (err) {
     next(err);

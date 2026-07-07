@@ -44,7 +44,9 @@ export interface MenuItem {
   id: string;
   menuId: string;
   name: string;
+  nameKm?: string | null;
   description: string | null;
+  descriptionKm?: string | null;
   // Prisma Decimal fields serialize to strings over JSON.
   price: string;
   category: string | null;
@@ -60,7 +62,9 @@ export interface Menu {
   id: string;
   restaurantId: string;
   name: string;
+  nameKm?: string | null;
   description: string | null;
+  descriptionKm?: string | null;
   isActive: boolean;
   sortOrder: number;
   items: MenuItem[];
@@ -94,6 +98,7 @@ export interface RestaurantCore {
   descriptionKm?: string | null;
   cuisineType: string;
   address: string;
+  addressKm?: string | null;
   city: string;
   state: string | null;
   country: string;
@@ -136,13 +141,23 @@ export interface RestaurantSummary {
   descriptionKm?: string | null;
   cuisineType: string;
   address: string;
+  addressKm?: string | null;
   city: string;
   state: string | null;
   country: string;
   coverImageUrl: string | null;
+  latitude: string | null;
+  longitude: string | null;
   priceRange: PriceRange;
   isPopular: boolean;
+  depositRequired: boolean;
+  depositAmount: string;
   createdAt: string;
+  // Distance from the requester's coordinates in kilometers, computed
+  // server-side (browser geolocation if granted, else Phnom Penh as a
+  // fallback) — only present on the public listing; null when the
+  // restaurant has no lat/lng on file yet.
+  distanceKm?: number | null;
   tags: Tag[];
   status?: RestaurantStatus;
   statusReason?: string | null;

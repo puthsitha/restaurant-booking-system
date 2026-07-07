@@ -2,7 +2,8 @@ import type { Prisma, Restaurant } from "@prisma/client";
 
 import { prisma } from "../lib/prisma";
 import { HttpError } from "../lib/httpError";
-import { localizeRestaurant, localizeTags, type Locale } from "../lib/locale";
+import { localizeRestaurant, localizeTags, localizeMenus, type Locale } from "../lib/locale";
+import { haversineDistanceKm, type Coordinates } from "../lib/geo";
 import type {
   CreateRestaurantInput,
   UpdateRestaurantInput,
@@ -62,12 +63,17 @@ const publicListSelect = {
   descriptionKm: true,
   cuisineType: true,
   address: true,
+  addressKm: true,
   city: true,
   state: true,
   country: true,
   coverImageUrl: true,
+  latitude: true,
+  longitude: true,
   priceRange: true,
   isPopular: true,
+  depositRequired: true,
+  depositAmount: true,
   createdAt: true,
   tags: { select: { id: true, name: true, nameKm: true } },
 } satisfies Prisma.RestaurantSelect;
@@ -130,7 +136,26 @@ export async function createRestaurant(
   return prisma.restaurant.create({ data: { ...input, ownerId, status: "PENDING" } });
 }
 
-export async function listRestaurants(query: ListRestaurantsQuery, locale: Locale) {
+// Distance from the client's coordinates, in kilometers rounded to 1 decimal
+// place — omitted when the restaurant has no lat/lng on file yet.
+function withDistance<T extends { latitude: unknown; longitude: unknown }>(
+  restaurant: T,
+  clientCoordinates: Coordinates,
+): T & { distanceKm: number | null } {
+  const latitude = restaurant.latitude === null || restaurant.latitude === undefined ? null : Number(restaurant.latitude);
+  const longitude = restaurant.longitude === null || restaurant.longitude === undefined ? null : Number(restaurant.longitude);
+  if (latitude === null || longitude === null) {
+    return { ...restaurant, distanceKm: null };
+  }
+  const distanceKm = haversineDistanceKm(clientCoordinates, { latitude, longitude });
+  return { ...restaurant, distanceKm: Math.round(distanceKm * 10) / 10 };
+}
+
+export async function listRestaurants(
+  query: ListRestaurantsQuery,
+  locale: Locale,
+  clientCoordinates: Coordinates,
+) {
   const where: Prisma.RestaurantWhereInput = {
     status: "ACTIVE",
     ...(query.city ? { city: { equals: query.city, mode: "insensitive" } } : {}),
@@ -156,7 +181,7 @@ export async function listRestaurants(query: ListRestaurantsQuery, locale: Local
   ]);
 
   const localizedItems = items.map((item) => ({
-    ...localizeRestaurant(item, locale),
+    ...withDistance(localizeRestaurant(item, locale), clientCoordinates),
     tags: localizeTags(item.tags, locale),
   }));
 
@@ -220,7 +245,11 @@ export async function getPublicRestaurantBySlug(slug: string, locale: Locale) {
   if (!restaurant || restaurant.status !== "ACTIVE") {
     throw new HttpError(404, "Restaurant not found");
   }
-  return { ...localizeRestaurant(restaurant, locale), tags: localizeTags(restaurant.tags, locale) };
+  return {
+    ...localizeRestaurant(restaurant, locale),
+    tags: localizeTags(restaurant.tags, locale),
+    menus: localizeMenus(restaurant.menus, locale),
+  };
 }
 
 export async function getManagementRestaurant(
