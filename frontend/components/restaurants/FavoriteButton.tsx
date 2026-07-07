@@ -13,6 +13,10 @@ interface FavoriteButtonProps {
   restaurantId: string;
   size?: "sm" | "md";
   className?: string;
+  // When set, renders as a labeled pill (outline heart + text, toggling
+  // between the saved/unsaved copy the caller passes) instead of the
+  // icon-only circle used on photo overlays like RestaurantCard.
+  label?: string;
 }
 
 const SIZE = {
@@ -25,7 +29,7 @@ const BURST_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
 // Heart toggle shared by RestaurantCard and the restaurant detail page —
 // pops on click and, when favoriting (not un-favoriting), throws a small
 // radiating burst of dots for a satisfying "saved" moment.
-export function FavoriteButton({ restaurantId, size = "md", className }: FavoriteButtonProps) {
+export function FavoriteButton({ restaurantId, size = "md", className, label }: FavoriteButtonProps) {
   const { status } = useCustomerAuth();
   const { t } = useLanguage();
   const { savedIds, toggle } = useSavedRestaurants();
@@ -52,7 +56,11 @@ export function FavoriteButton({ restaurantId, size = "md", className }: Favorit
       aria-label={isSaved ? t("common.removeFromSaved") : t("common.saveRestaurant")}
       aria-pressed={isSaved}
       onClick={handleClick}
-      className={`flex items-center justify-center rounded-full bg-white/85 text-accent backdrop-blur transition hover:bg-white ${dims.button} ${className ?? ""}`}
+      className={
+        label
+          ? `km relative inline-flex items-center gap-2 rounded-2xl border border-border bg-white px-5 py-3 text-sm font-bold text-ink shadow-sm transition hover:border-accent/40 ${className ?? ""}`
+          : `relative flex items-center justify-center rounded-full bg-white/85 text-accent backdrop-blur transition hover:bg-white ${dims.button} ${className ?? ""}`
+      }
     >
       <AnimatePresence>
         {bursting &&
@@ -78,10 +86,11 @@ export function FavoriteButton({ restaurantId, size = "md", className }: Favorit
         initial={{ scale: 0.6 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 520, damping: 14 }}
-        className="flex"
+        className={`flex ${label ? (isSaved ? "text-accent" : "text-ink") : ""}`}
       >
         <HeartIcon className={dims.icon} filled={isSaved} />
       </motion.span>
+      {label && <span>{label}</span>}
     </button>
   );
 }
