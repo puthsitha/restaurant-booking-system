@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ListSkeleton } from "@/components/ui/skeletons";
+import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { useLanguage } from "@/lib/i18n/context";
@@ -26,6 +27,9 @@ export default function AdminCitiesPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<City | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function reload(): void {
     setLoadError(null);
@@ -54,15 +58,18 @@ export default function AdminCitiesPage() {
     }
   }
 
-  async function handleDelete(city: City): Promise<void> {
-    if (!token) return;
-    if (!confirm(t("adminCities.deleteConfirm"))) return;
-    setFormError(null);
+  async function handleDelete(): Promise<void> {
+    if (!token || !pendingDelete) return;
+    setDeleteError(null);
+    setIsDeleting(true);
     try {
-      await deleteCity(city.id, token);
+      await deleteCity(pendingDelete.id, token);
+      setPendingDelete(null);
       reload();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : t("adminCities.deleteError"));
+      setDeleteError(err instanceof ApiError ? err.message : t("adminCities.deleteError"));
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -135,7 +142,7 @@ export default function AdminCitiesPage() {
               {city.name}
               {city.nameKm && <span className="km text-muted">({city.nameKm})</span>}
               <button
-                onClick={() => handleDelete(city)}
+                onClick={() => setPendingDelete(city)}
                 className="font-bold text-red-600"
                 aria-label={t("adminCities.deleteAria", { name: city.name })}
               >
@@ -145,6 +152,32 @@ export default function AdminCitiesPage() {
           ))}
         </div>
       )}
+
+      <Modal
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title={t("adminCities.deleteConfirm")}
+      >
+        <p className="text-sm text-ink">{t("adminCities.deleteModalBody")}</p>
+        {deleteError && <p className="mt-2 text-sm font-semibold text-red-600">{deleteError}</p>}
+        <div className="mt-5 flex gap-3">
+          <button
+            type="button"
+            onClick={() => setPendingDelete(null)}
+            className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {isDeleting ? t("adminCities.deleting") : t("common.delete")}
+          </button>
+        </div>
+      </Modal>
     </main>
   );
 }

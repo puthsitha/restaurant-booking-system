@@ -847,7 +847,9 @@ const en = {
     emptyTitle: "No cuisines yet",
     emptyMessage: "Add a few cuisines so owners have something to pick from when listing a restaurant.",
     deleteAria: "Delete {name}",
-    deleteConfirm: "Delete this cuisine?"
+    deleteConfirm: "Delete this cuisine?",
+    deleteModalBody: "This can't be undone.",
+    deleting: "Deleting…"
   },
   adminCities: {
     loadError: "Couldn't load cities.",
@@ -866,7 +868,9 @@ const en = {
     emptyTitle: "No cities yet",
     emptyMessage: "Add a few cities so owners have something to pick from when listing a restaurant.",
     deleteAria: "Delete {name}",
-    deleteConfirm: "Delete this city?"
+    deleteConfirm: "Delete this city?",
+    deleteModalBody: "This can't be undone.",
+    deleting: "Deleting…"
   },
   adminSettings: {
     loadError: "Couldn't load platform settings.",
@@ -1781,7 +1785,9 @@ const km = {
     emptyTitle: "មិនទាន់មានប្រភេទម្ហូបនៅឡើយទេ",
     emptyMessage: "បន្ថែមប្រភេទម្ហូបខ្លះដើម្បីឱ្យម្ចាស់ភោជនីយដ្ឋានមានជម្រើសនៅពេលចុះបញ្ជីភោជនីយដ្ឋាន។",
     deleteAria: "លុប {name}",
-    deleteConfirm: "លុបប្រភេទម្ហូបនេះ?"
+    deleteConfirm: "លុបប្រភេទម្ហូបនេះ?",
+    deleteModalBody: "សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+    deleting: "កំពុងលុប…"
   },
   adminCities: {
     loadError: "មិនអាចផ្ទុកទីក្រុងបានទេ។",
@@ -1800,7 +1806,9 @@ const km = {
     emptyTitle: "មិនទាន់មានទីក្រុងនៅឡើយទេ",
     emptyMessage: "បន្ថែមទីក្រុងខ្លះដើម្បីឱ្យម្ចាស់ភោជនីយដ្ឋានមានជម្រើសនៅពេលចុះបញ្ជីភោជនីយដ្ឋាន។",
     deleteAria: "លុប {name}",
-    deleteConfirm: "លុបទីក្រុងនេះ?"
+    deleteConfirm: "លុបទីក្រុងនេះ?",
+    deleteModalBody: "សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+    deleting: "កំពុងលុប…"
   },
   adminSettings: {
     loadError: "មិនអាចផ្ទុកការកំណត់វេទិកាបានទេ។",

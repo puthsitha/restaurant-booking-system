@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ListSkeleton } from "@/components/ui/skeletons";
+import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { useLanguage } from "@/lib/i18n/context";
@@ -27,6 +28,9 @@ export default function AdminCuisinesPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Cuisine | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function reload(): void {
     setLoadError(null);
@@ -64,15 +68,18 @@ export default function AdminCuisinesPage() {
     }
   }
 
-  async function handleDelete(cuisine: Cuisine): Promise<void> {
-    if (!token) return;
-    if (!confirm(t("adminCuisines.deleteConfirm"))) return;
-    setFormError(null);
+  async function handleDelete(): Promise<void> {
+    if (!token || !pendingDelete) return;
+    setDeleteError(null);
+    setIsDeleting(true);
     try {
-      await deleteCuisine(cuisine.id, token);
+      await deleteCuisine(pendingDelete.id, token);
+      setPendingDelete(null);
       reload();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : t("adminCuisines.deleteError"));
+      setDeleteError(err instanceof ApiError ? err.message : t("adminCuisines.deleteError"));
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -170,7 +177,7 @@ export default function AdminCuisinesPage() {
                 )}
               </div>
               <button
-                onClick={() => handleDelete(cuisine)}
+                onClick={() => setPendingDelete(cuisine)}
                 className="shrink-0 font-bold text-red-600"
                 aria-label={t("adminCuisines.deleteAria", { name: cuisine.name })}
               >
@@ -180,6 +187,32 @@ export default function AdminCuisinesPage() {
           ))}
         </div>
       )}
+
+      <Modal
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title={t("adminCuisines.deleteConfirm")}
+      >
+        <p className="text-sm text-ink">{t("adminCuisines.deleteModalBody")}</p>
+        {deleteError && <p className="mt-2 text-sm font-semibold text-red-600">{deleteError}</p>}
+        <div className="mt-5 flex gap-3">
+          <button
+            type="button"
+            onClick={() => setPendingDelete(null)}
+            className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {isDeleting ? t("adminCuisines.deleting") : t("common.delete")}
+          </button>
+        </div>
+      </Modal>
     </main>
   );
 }
