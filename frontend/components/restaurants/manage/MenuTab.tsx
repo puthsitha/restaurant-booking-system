@@ -14,9 +14,10 @@ import {
   createMenuItem,
   deleteMenu,
   deleteMenuItem,
+  updateMenu,
   updateMenuItem,
 } from "@/lib/restaurants/api";
-import type { MenuItem } from "@/lib/restaurants/types";
+import type { Menu, MenuItem } from "@/lib/restaurants/types";
 
 import type { ManageTabProps } from "./types";
 
@@ -39,6 +40,7 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [menuPendingDelete, setMenuPendingDelete] = useState<string | null>(null);
+  const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
 
   async function handleAddMenu(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -130,20 +132,39 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
         ) : (
           restaurant.menus.map((menu) => (
             <div key={menu.id} className="rounded-2xl border border-border bg-surface p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="disp font-bold text-ink">{menu.name}</h3>
-                  {menu.description && (
-                    <p className="mt-0.5 text-sm text-muted">{menu.description}</p>
-                  )}
+              {editingMenuId === menu.id ? (
+                <MenuEditForm
+                  restaurantId={restaurant.id}
+                  menu={menu}
+                  token={token}
+                  onSaved={onSaved}
+                  onDone={() => setEditingMenuId(null)}
+                />
+              ) : (
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="disp font-bold text-ink">{menu.name}</h3>
+                    {menu.nameKm && <p className="km text-sm text-muted">{menu.nameKm}</p>}
+                    {menu.description && (
+                      <p className="mt-0.5 text-sm text-muted">{menu.description}</p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <button
+                      onClick={() => setEditingMenuId(menu.id)}
+                      className="text-sm font-semibold text-ink"
+                    >
+                      {t("ownerManage.menu.editMenu")}
+                    </button>
+                    <button
+                      onClick={() => setMenuPendingDelete(menu.id)}
+                      className="text-sm font-semibold text-red-600"
+                    >
+                      {t("ownerManage.menu.deleteMenu")}
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setMenuPendingDelete(menu.id)}
-                  className="shrink-0 text-sm font-semibold text-red-600"
-                >
-                  {t("ownerManage.menu.deleteMenu")}
-                </button>
-              </div>
+              )}
 
               <div className="mt-4 space-y-3">
                 {menu.items.map((item) => (
@@ -158,7 +179,7 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
                 ))}
               </div>
 
-              <AddItemForm
+              <MenuItemForm
                 restaurantId={restaurant.id}
                 menuId={menu.id}
                 token={token}
@@ -182,6 +203,104 @@ export function MenuTab({ restaurant, token, onSaved }: ManageTabProps) {
   );
 }
 
+function MenuEditForm({
+  restaurantId,
+  menu,
+  token,
+  onSaved,
+  onDone,
+}: {
+  restaurantId: string;
+  menu: Menu;
+  token: string;
+  onSaved: () => Promise<void>;
+  onDone: () => void;
+}) {
+  const { t } = useLanguage();
+  const [name, setName] = useState(menu.name);
+  const [nameKm, setNameKm] = useState(menu.nameKm ?? "");
+  const [description, setDescription] = useState(menu.description ?? "");
+  const [descriptionKm, setDescriptionKm] = useState(menu.descriptionKm ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function handleSubmit(e: FormEvent): Promise<void> {
+    e.preventDefault();
+    setError(null);
+    setIsSaving(true);
+    try {
+      await updateMenu(
+        restaurantId,
+        menu.id,
+        {
+          name,
+          nameKm: nameKm || undefined,
+          description: description || undefined,
+          descriptionKm: descriptionKm || undefined,
+        },
+        token,
+      );
+      await onSaved();
+      onDone();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("ownerManage.menu.updateMenuError"));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="flex flex-wrap gap-3">
+        <TextField
+          label={t("ownerManage.menu.newMenuName")}
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="min-w-[200px] flex-1"
+        />
+        <TextField
+          label={t("ownerManage.menu.newMenuNameKm")}
+          value={nameKm}
+          onChange={(e) => setNameKm(e.target.value)}
+          className="km min-w-[200px] flex-1"
+        />
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <TextField
+          label={t("ownerManage.menu.descriptionOptional")}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="min-w-[200px] flex-1"
+        />
+        <TextField
+          label={t("ownerManage.menu.descriptionKmOptional")}
+          value={descriptionKm}
+          onChange={(e) => setDescriptionKm(e.target.value)}
+          className="km min-w-[200px] flex-1"
+        />
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+        >
+          {isSaving ? t("common.saving") : t("common.save")}
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="rounded-lg border border-border px-4 py-2 text-sm font-bold text-ink"
+        >
+          {t("common.cancel")}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function MenuItemRow({
   restaurantId,
   menuId,
@@ -198,6 +317,7 @@ function MenuItemRow({
   const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   async function toggleAvailable(isAvailable: boolean): Promise<void> {
     try {
@@ -215,6 +335,21 @@ function MenuItemRow({
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("ownerManage.menu.deleteItemError"));
     }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="rounded-xl border border-border p-3">
+        <MenuItemForm
+          restaurantId={restaurantId}
+          menuId={menuId}
+          token={token}
+          onSaved={onSaved}
+          editItem={item}
+          onCancel={() => setIsEditing(false)}
+        />
+      </div>
+    );
   }
 
   return (
@@ -262,6 +397,9 @@ function MenuItemRow({
             />
             {t("ownerManage.menu.available")}
           </label>
+          <button onClick={() => setIsEditing(true)} className="text-xs font-semibold text-ink">
+            {t("ownerManage.menu.editItem")}
+          </button>
           <button onClick={() => setConfirmingDelete(true)} className="text-xs font-semibold text-red-600">
             {t("common.delete")}
           </button>
@@ -280,29 +418,33 @@ function MenuItemRow({
   );
 }
 
-function AddItemForm({
+function MenuItemForm({
   restaurantId,
   menuId,
   token,
   onSaved,
+  editItem,
+  onCancel,
 }: {
   restaurantId: string;
   menuId: string;
   token: string;
   onSaved: () => Promise<void>;
+  editItem?: MenuItem;
+  onCancel?: () => void;
 }) {
   const { t } = useLanguage();
-  const [expanded, setExpanded] = useState(false);
-  const [name, setName] = useState("");
-  const [nameKm, setNameKm] = useState("");
-  const [description, setDescription] = useState("");
-  const [descriptionKm, setDescriptionKm] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [isVegan, setIsVegan] = useState(false);
-  const [isVegetarian, setIsVegetarian] = useState(false);
-  const [isGlutenFree, setIsGlutenFree] = useState(false);
+  const [expanded, setExpanded] = useState(Boolean(editItem));
+  const [name, setName] = useState(editItem?.name ?? "");
+  const [nameKm, setNameKm] = useState(editItem?.nameKm ?? "");
+  const [description, setDescription] = useState(editItem?.description ?? "");
+  const [descriptionKm, setDescriptionKm] = useState(editItem?.descriptionKm ?? "");
+  const [price, setPrice] = useState(editItem ? String(editItem.price) : "");
+  const [category, setCategory] = useState(editItem?.category ?? "");
+  const [imageUrl, setImageUrl] = useState(editItem?.imageUrl ?? "");
+  const [isVegan, setIsVegan] = useState(editItem?.isVegan ?? false);
+  const [isVegetarian, setIsVegetarian] = useState(editItem?.isVegetarian ?? false);
+  const [isGlutenFree, setIsGlutenFree] = useState(editItem?.isGlutenFree ?? false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -323,29 +465,35 @@ function AddItemForm({
     e.preventDefault();
     setError(null);
     setIsSaving(true);
+    const payload = {
+      name,
+      nameKm: nameKm || undefined,
+      description: description || undefined,
+      descriptionKm: descriptionKm || undefined,
+      price: Number(price),
+      category: category || undefined,
+      imageUrl: imageUrl || undefined,
+      isVegan,
+      isVegetarian,
+      isGlutenFree,
+    };
     try {
-      await createMenuItem(
-        restaurantId,
-        menuId,
-        {
-          name,
-          nameKm: nameKm || undefined,
-          description: description || undefined,
-          descriptionKm: descriptionKm || undefined,
-          price: Number(price),
-          category: category || undefined,
-          imageUrl: imageUrl || undefined,
-          isVegan,
-          isVegetarian,
-          isGlutenFree,
-        },
-        token,
-      );
-      reset();
-      setExpanded(false);
-      await onSaved();
+      if (editItem) {
+        await updateMenuItem(restaurantId, menuId, editItem.id, payload, token);
+        await onSaved();
+        onCancel?.();
+      } else {
+        await createMenuItem(restaurantId, menuId, payload, token);
+        reset();
+        setExpanded(false);
+        await onSaved();
+      }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t("ownerManage.menu.addItemError"));
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : t(editItem ? "ownerManage.menu.updateItemError" : "ownerManage.menu.addItemError"),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -354,7 +502,7 @@ function AddItemForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-4 space-y-3 border-t border-border pt-4"
+      className={editItem ? "space-y-3" : "mt-4 space-y-3 border-t border-border pt-4"}
     >
       <div className="flex flex-wrap items-end gap-2">
         <TextField
@@ -376,20 +524,37 @@ function AddItemForm({
           placeholder={t("ownerManage.menu.pricePlaceholder")}
           className="w-28"
         />
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="rounded-lg border border-border px-4 py-3 text-xs font-bold text-ink transition hover:bg-bg"
-        >
-          {expanded ? t("ownerManage.menu.fewerDetails") : t("ownerManage.menu.moreDetails")}
-        </button>
+        {!editItem && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="rounded-lg border border-border px-4 py-3 text-xs font-bold text-ink transition hover:bg-bg"
+          >
+            {expanded ? t("ownerManage.menu.fewerDetails") : t("ownerManage.menu.moreDetails")}
+          </button>
+        )}
         <button
           type="submit"
           disabled={isSaving}
           className="rounded-lg bg-accent px-5 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-60"
         >
-          {isSaving ? t("common.adding") : t("ownerManage.menu.addItem")}
+          {isSaving
+            ? editItem
+              ? t("common.saving")
+              : t("common.adding")
+            : editItem
+              ? t("common.save")
+              : t("ownerManage.menu.addItem")}
         </button>
+        {editItem && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-border px-4 py-3 text-xs font-bold text-ink transition hover:bg-bg"
+          >
+            {t("common.cancel")}
+          </button>
+        )}
       </div>
 
       {expanded && (
