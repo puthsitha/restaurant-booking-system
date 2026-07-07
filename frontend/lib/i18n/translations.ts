@@ -292,7 +292,7 @@ const en = {
     distanceKm: "{km} km"
   },
   reviewsSection: {
-    title: "Reviews",
+    title: "Ratings and reviews",
     writeReview: "Write a review",
     editReview: "Edit your review",
     delete: "Delete",
@@ -303,7 +303,7 @@ const en = {
     saveChanges: "Save changes",
     submitReview: "Submit review",
     you: "You",
-    ownerReply: "Owner reply: ",
+    ownerReply: "Owner reply",
     deleteModalTitle: "Delete this review?",
     cantUndo: "This can't be undone.",
     keepReview: "Keep review",
@@ -1171,7 +1171,7 @@ const km = {
     distanceKm: "{km} គីឡូម៉ែត្រ"
   },
   reviewsSection: {
-    title: "មតិវាយតម្លៃ",
+    title: "ការវាយតម្លៃ និងមតិ",
     writeReview: "សរសេរមតិវាយតម្លៃ",
     editReview: "កែសម្រួលមតិរបស់អ្នក",
     delete: "លុប",
@@ -1182,7 +1182,7 @@ const km = {
     saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
     submitReview: "ដាក់ស្នើមតិវាយតម្លៃ",
     you: "អ្នក",
-    ownerReply: "ការឆ្លើយតបពីម្ចាស់ភោជនីយដ្ឋាន៖ ",
+    ownerReply: "ការឆ្លើយតបពីម្ចាស់ហាង",
     deleteModalTitle: "លុបមតិវាយតម្លៃនេះ?",
     cantUndo: "សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
     keepReview: "រក្សាមតិវាយតម្លៃ",
