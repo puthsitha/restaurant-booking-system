@@ -8,18 +8,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ChefHatIcon } from "@/components/ui/icons";
 import { useLanguage } from "@/lib/i18n/context";
-import type { TranslationKey } from "@/lib/i18n/translations";
 import { listRestaurants } from "@/lib/restaurants/api";
+import { CUISINE_TILES } from "@/lib/restaurants/cuisineTiles";
 import type { RestaurantSummary } from "@/lib/restaurants/types";
-
-const CUISINE_TILES: { labelKey: TranslationKey; icon: string; cuisine?: string }[] = [
-  { labelKey: "cuisines.khmer", icon: "🍚", cuisine: "Khmer" },
-  { labelKey: "cuisines.seafood", icon: "🦐", cuisine: "Seafood" },
-  { labelKey: "cuisines.bbqGrill", icon: "🔥", cuisine: "BBQ" },
-  { labelKey: "cuisines.fineDining", icon: "🍽️", cuisine: undefined },
-  { labelKey: "cuisines.cafe", icon: "☕", cuisine: "Café" },
-  { labelKey: "cuisines.streetFood", icon: "🍢", cuisine: "Street food" },
-];
 
 interface HomePageContentProps {
   items: RestaurantSummary[];
