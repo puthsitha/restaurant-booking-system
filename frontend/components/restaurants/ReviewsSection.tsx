@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { StarRatingInput } from "@/components/ui/StarRatingInput";
+import { formatAbsoluteDate } from "@/lib/dateFormat";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { ApiError } from "@/lib/api";
 import { useAuthModal } from "@/lib/auth/authModal";
@@ -20,7 +21,7 @@ interface ReviewsSectionProps {
 }
 
 export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { token, status, user } = useCustomerAuth();
   const { open: openLogin } = useAuthModal();
   const [data, setData] = useState<ListReviewsResponse | null>(null);
@@ -119,26 +120,29 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
       </div>
 
       {data.total > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-6">
-          <div className="text-center">
-            <p className="disp text-3xl font-extrabold text-ink">{data.average.toFixed(1)}</p>
-            <RatingStars rating={data.average} size="md" className="mt-1 justify-center" />
-            <p className="mt-1 text-xs text-muted">{t("reviewsSection.reviewsCount", { count: data.total })}</p>
-          </div>
-          <div className="min-w-[180px] flex-1 space-y-1">
-            {[5, 4, 3, 2, 1].map((star) => {
-              const count = data.countByRating[star] ?? 0;
-              const pct = data.total ? Math.round((count / data.total) * 100) : 0;
-              return (
-                <div key={star} className="flex items-center gap-2 text-xs text-muted">
-                  <span className="w-3">{star}</span>
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg">
-                    <div className="h-full rounded-full bg-[#E8B04B]" style={{ width: `${pct}%` }} />
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-[200px_1fr] sm:items-center">
+            <div className="text-center sm:border-r sm:border-border sm:pr-6">
+              <p className="disp text-5xl font-extrabold text-accent">{data.average.toFixed(1)}</p>
+              <RatingStars rating={data.average} size="md" className="mt-1.5 justify-center" />
+              <p className="km mt-1.5 text-xs text-muted">
+                {t("reviewsSection.reviewsCount", { count: data.total })}
+              </p>
+            </div>
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = data.countByRating[star] ?? 0;
+                const pct = data.total ? Math.round((count / data.total) * 100) : 0;
+                return (
+                  <div key={star} className="flex items-center gap-2.5 text-xs font-semibold text-muted">
+                    <span className="w-6 shrink-0">{star}★</span>
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg">
+                      <div className="h-full rounded-full bg-[#E8B04B]" style={{ width: `${pct}%` }} />
+                    </div>
                   </div>
-                  <span className="w-6 text-right">{count}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -178,11 +182,15 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
           animate="show"
         >
           {data.items.map((review) => (
-            <motion.div key={review.id} variants={fadeUp} className="border-b border-border pb-4">
-              <div className="flex items-center gap-3">
-                <Avatar name={review.user.name} imageUrl={review.user.avatarUrl} size="sm" />
-                <div>
-                  <p className="text-sm font-bold text-ink">
+            <motion.div
+              key={review.id}
+              variants={fadeUp}
+              className="rounded-2xl border border-border bg-surface p-5"
+            >
+              <div className="flex items-start gap-3">
+                <Avatar name={review.user.name} imageUrl={review.user.avatarUrl} size="md" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-ink">
                     {review.user.name}
                     {user && review.userId === user.id && (
                       <span className="ml-2 rounded-full bg-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
@@ -190,14 +198,17 @@ export function ReviewsSection({ restaurantId }: ReviewsSectionProps) {
                       </span>
                     )}
                   </p>
-                  <RatingStars rating={review.rating} />
+                  <p className="km mt-0.5 text-xs text-muted">
+                    {formatAbsoluteDate(new Date(review.createdAt), locale, t)}
+                  </p>
                 </div>
+                <RatingStars rating={review.rating} className="shrink-0" />
               </div>
-              {review.text && <p className="mt-2 text-sm text-ink">{review.text}</p>}
+              {review.text && <p className="mt-3 text-sm leading-relaxed text-ink">{review.text}</p>}
               {review.ownerReply && (
-                <div className="mt-2 rounded-xl bg-bg px-4 py-3 text-sm text-ink">
-                  <span className="font-semibold">{t("reviewsSection.ownerReply")}</span>
-                  {review.ownerReply}
+                <div className="mt-3 rounded-xl border-l-[3px] border-accent bg-bg py-3 pl-3.5 pr-4">
+                  <p className="km text-xs font-bold text-accent">↳ {t("reviewsSection.ownerReply")}</p>
+                  <p className="km mt-1 text-sm text-ink">{review.ownerReply}</p>
                 </div>
               )}
             </motion.div>
