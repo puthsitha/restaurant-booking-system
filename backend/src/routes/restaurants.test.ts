@@ -63,6 +63,11 @@ vi.mock("../lib/prisma", () => {
     // need to stub it, and is overridden per-test to simulate suspension.
     findFirst: vi.fn().mockResolvedValue({ status: "ACTIVE", statusReason: null }),
   };
+  const review = {
+    // Rating aggregation for the public listing; defaults to "no reviews yet"
+    // so existing tests don't need to stub it.
+    groupBy: vi.fn().mockResolvedValue([]),
+  };
 
   const client = {
     restaurant,
@@ -74,6 +79,7 @@ vi.mock("../lib/prisma", () => {
     specialClosure,
     tag,
     user,
+    review,
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(client)),
   };
 

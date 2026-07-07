@@ -151,6 +151,28 @@ function withDistance<T extends { latitude: unknown; longitude: unknown }>(
   return { ...restaurant, distanceKm: Math.round(distanceKm * 10) / 10 };
 }
 
+// Average rating + review count per restaurant, batched into a single
+// groupBy so listing a page of restaurants doesn't fan out one query each.
+async function getRatingSummaries(
+  restaurantIds: string[],
+): Promise<Map<string, { avgRating: number | null; reviewCount: number }>> {
+  if (restaurantIds.length === 0) return new Map();
+
+  const rows = await prisma.review.groupBy({
+    by: ["restaurantId"],
+    where: { restaurantId: { in: restaurantIds } },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+
+  return new Map(
+    rows.map((row) => [
+      row.restaurantId,
+      { avgRating: row._avg.rating, reviewCount: row._count.rating },
+    ]),
+  );
+}
+
 export async function listRestaurants(
   query: ListRestaurantsQuery,
   locale: Locale,
@@ -180,9 +202,12 @@ export async function listRestaurants(
     prisma.restaurant.count({ where }),
   ]);
 
+  const ratingByRestaurant = await getRatingSummaries(items.map((item) => item.id));
+
   const localizedItems = items.map((item) => ({
     ...withDistance(localizeRestaurant(item, locale), clientCoordinates),
     tags: localizeTags(item.tags, locale),
+    ...(ratingByRestaurant.get(item.id) ?? { avgRating: null, reviewCount: 0 }),
   }));
 
   return { items: localizedItems, total, page: query.page, pageSize: query.pageSize };
