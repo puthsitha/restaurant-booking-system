@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -8,6 +9,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { ChefHatIcon } from "@/components/ui/icons";
 import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
+import { listRestaurants } from "@/lib/restaurants/api";
 import type { RestaurantSummary } from "@/lib/restaurants/types";
 
 const CUISINE_TILES: { labelKey: TranslationKey; icon: string; cuisine?: string }[] = [
@@ -23,8 +25,19 @@ interface HomePageContentProps {
   items: RestaurantSummary[];
 }
 
-export function HomePageContent({ items }: HomePageContentProps) {
-  const { t } = useLanguage();
+export function HomePageContent({ items: initialItems }: HomePageContentProps) {
+  const { t, locale } = useLanguage();
+  const [items, setItems] = useState(initialItems);
+
+  // Server-rendered with the UI shell's default locale (see the page
+  // component) — re-fetch on the client once the real locale is known, and
+  // again on every toggle, so restaurant names/descriptions/tags follow it
+  // too, not just the surrounding chrome strings.
+  useEffect(() => {
+    listRestaurants({ pageSize: 8 }, locale)
+      .then((res) => setItems(res.items))
+      .catch(() => {});
+  }, [locale]);
 
   return (
     <div className="mx-auto max-w-[1280px] px-8 py-14">

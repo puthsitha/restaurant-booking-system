@@ -14,6 +14,7 @@ import { RatingStars } from "@/components/ui/RatingStars";
 import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { listReviews } from "@/lib/reviews/api";
+import { getRestaurantBySlug } from "@/lib/restaurants/api";
 import type { DayOfWeek, RestaurantPublicDetail } from "@/lib/restaurants/types";
 import { theme } from "@/lib/theme";
 
@@ -231,9 +232,22 @@ interface RestaurantDetailContentProps {
   restaurant: RestaurantPublicDetail;
 }
 
-export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentProps) {
-  const { t } = useLanguage();
+export function RestaurantDetailContent({ restaurant: initialRestaurant }: RestaurantDetailContentProps) {
+  const { t, locale } = useLanguage();
+  const [restaurant, setRestaurant] = useState(initialRestaurant);
   const [ratingSummary, setRatingSummary] = useState<{ average: number; total: number } | null>(null);
+
+  // The page is server-rendered with the UI shell's default locale (the
+  // user's stored preference isn't known yet at that point — see the page
+  // component) — re-fetch on the client once the real locale is known, and
+  // again on every toggle, so the restaurant's own bilingual fields
+  // (name/description/address/menu, not just chrome strings) follow it too.
+  useEffect(() => {
+    getRestaurantBySlug(initialRestaurant.slug, locale)
+      .then((res) => setRestaurant(res.restaurant))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, initialRestaurant.slug]);
 
   useEffect(() => {
     listReviews(restaurant.id)
