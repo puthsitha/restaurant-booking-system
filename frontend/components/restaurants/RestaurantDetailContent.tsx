@@ -12,11 +12,13 @@ import { ChevronDownIcon, ZoomInIcon } from "@/components/ui/icons";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
+import { useCustomerAuth } from "@/lib/auth/customerAuth";
 import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { listReviews } from "@/lib/reviews/api";
 import { getRestaurantBySlug } from "@/lib/restaurants/api";
 import type { DayOfWeek, RestaurantPublicDetail } from "@/lib/restaurants/types";
+import { useSavedRestaurants } from "@/lib/savedRestaurants/context";
 import { theme } from "@/lib/theme";
 
 const PRICE_LABEL: Record<string, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$" };
@@ -241,6 +243,8 @@ interface RestaurantDetailContentProps {
 
 export function RestaurantDetailContent({ restaurant: initialRestaurant }: RestaurantDetailContentProps) {
   const { t, locale } = useLanguage();
+  const { status: authStatus } = useCustomerAuth();
+  const { savedIds } = useSavedRestaurants();
   const [restaurant, setRestaurant] = useState(initialRestaurant);
   const [ratingSummary, setRatingSummary] = useState<{ average: number; total: number } | null>(null);
 
@@ -328,13 +332,20 @@ export function RestaurantDetailContent({ restaurant: initialRestaurant }: Resta
                   </span>
                 )}
                 <span className="km text-sm text-muted">{PRICE_LABEL[restaurant.priceRange]}</span>
-                <span className={`km flex items-center gap-1.5 text-sm font-bold ${openNow ? "text-secondary" : "text-muted"}`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${openNow ? "bg-secondary" : "bg-muted"}`} />
+                <span className={`km flex items-center gap-1.5 text-sm font-bold ${openNow ? "text-secondary" : "text-red-600"}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${openNow ? "bg-secondary" : "bg-red-600"}`} />
                   {openNow ? t("restaurantPage.openNow") : t("restaurantPage.closedNow")}
                 </span>
               </div>
             </div>
-            <SaveRestaurantButton restaurantId={restaurant.id} className="shrink-0 border border-border" />
+            {authStatus === "authenticated" && (
+              <div className="flex shrink-0 flex-col items-center gap-1">
+                <SaveRestaurantButton restaurantId={restaurant.id} className="border border-border" />
+                <span className="km text-[11px] font-semibold text-muted">
+                  {savedIds.has(restaurant.id) ? t("restaurantPage.saved") : t("restaurantPage.save")}
+                </span>
+              </div>
+            )}
           </div>
 
           {restaurant.description && (
