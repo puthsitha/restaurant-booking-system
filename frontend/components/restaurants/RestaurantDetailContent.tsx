@@ -7,6 +7,7 @@ import type { PanInfo } from "framer-motion";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { ReviewsSection } from "@/components/restaurants/ReviewsSection";
 import { SaveRestaurantButton } from "@/components/restaurants/SaveRestaurantButton";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ChevronDownIcon, ZoomInIcon } from "@/components/ui/icons";
 import { Lightbox } from "@/components/ui/Lightbox";
@@ -365,6 +366,14 @@ export function RestaurantDetailContent({
 
   return (
     <main className="mx-auto max-w-[1280px] px-8 py-6">
+      <Breadcrumb
+        className="mb-3.5"
+        items={[
+          { label: t("common.home"), href: "/" },
+          { label: t("searchPage.breadcrumbTitle"), href: "/search" },
+          { label: restaurant.name },
+        ]}
+      />
       <HeroGallery images={heroImages} restaurantId={restaurant.id} />
 
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_364px]">

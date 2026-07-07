@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { FormField, TextField } from "@/components/ui/FormField";
@@ -42,6 +43,10 @@ export default function ProfilePage() {
   if (status !== "authenticated" || !user || !token) {
     return (
       <main className="mx-auto max-w-[900px] px-8 py-12">
+        <Breadcrumb
+          className="mb-4"
+          items={[{ label: t("common.home"), href: "/" }, { label: t("common.profile") }]}
+        />
         <EmptyState
           icon={ChefHatIcon}
           title={t("profilePage.signInTitle")}
@@ -53,6 +58,10 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto max-w-[900px] px-8 py-12">
+      <Breadcrumb
+        className="mb-4"
+        items={[{ label: t("common.home"), href: "/" }, { label: t("common.profile") }]}
+      />
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <ProfileHeader name={user.name} avatarUrl={user.avatarUrl} contact={user.phone ?? user.email ?? "—"} />
       </motion.div>

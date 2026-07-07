@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SearchOffIcon } from "@/components/ui/icons";
@@ -127,6 +128,13 @@ function SearchPageContent() {
 
   return (
     <main className="mx-auto max-w-[1280px] px-8 py-12">
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: t("common.home"), href: "/" },
+          { label: t("searchPage.breadcrumbTitle") },
+        ]}
+      />
       <h1 className="disp text-2xl font-extrabold text-ink">
         {t("searchPage.title")}
       </h1>
