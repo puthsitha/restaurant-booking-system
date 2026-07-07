@@ -1,14 +1,21 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import type { PanInfo } from "framer-motion";
+
 import { BookingWidget } from "@/components/booking/BookingWidget";
-import { GalleryViewer } from "@/components/restaurants/GalleryViewer";
 import { ReviewsSection } from "@/components/restaurants/ReviewsSection";
 import { SaveRestaurantButton } from "@/components/restaurants/SaveRestaurantButton";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { ZoomableImage } from "@/components/ui/ZoomableImage";
+import { ChevronDownIcon, ZoomInIcon } from "@/components/ui/icons";
+import { Lightbox } from "@/components/ui/Lightbox";
+import { RatingStars } from "@/components/ui/RatingStars";
 import { useLanguage } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
+import { listReviews } from "@/lib/reviews/api";
 import type { DayOfWeek, RestaurantPublicDetail } from "@/lib/restaurants/types";
+import { theme } from "@/lib/theme";
 
 const PRICE_LABEL: Record<string, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$" };
 
@@ -31,14 +38,206 @@ const DAY_LABEL_KEY: Record<DayOfWeek, TranslationKey> = {
   SUNDAY: "restaurantPage.days.sunday",
 };
 
+function khr(usd: number): string {
+  return `៛${Math.round(usd * theme.currency.usdToKhrRate).toLocaleString()}`;
+}
+
+// Whether the restaurant is open right now, from its weekly operating hours
+// — handles overnight ranges (close time past midnight) as a wraparound.
+function isOpenNow(hoursByDay: Map<DayOfWeek, RestaurantPublicDetail["operatingHours"][number]>): boolean {
+  const now = new Date();
+  const today = DAY_ORDER[(now.getDay() + 6) % 7];
+  const hour = hoursByDay.get(today);
+  if (!hour || hour.isClosed) return false;
+  const current = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  if (hour.closeTime < hour.openTime) {
+    return current >= hour.openTime || current < hour.closeTime;
+  }
+  return current >= hour.openTime && current < hour.closeTime;
+}
+
+interface HeroImage {
+  id: string;
+  url: string;
+  alt: string;
+}
+
+const SWIPE_THRESHOLD = 80;
+
+// Cover photo + first three gallery shots laid out as a mosaic (one large
+// cell, three smaller ones, the last with a "+N" overlay for the rest),
+// sharing a single Lightbox so any cell opens into a swipeable/arrow-key
+// carousel across every photo on file.
+function HeroGallery({ images, restaurantId }: { images: HeroImage[]; restaurantId: string }) {
+  const { t } = useLanguage();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const hasMultiple = images.length > 1;
+  const activeIndex = openIndex ?? 0;
+  const current = openIndex !== null ? images[openIndex] : null;
+
+  function goTo(index: number): void {
+    setOpenIndex(((index % images.length) + images.length) % images.length);
+  }
+
+  useEffect(() => {
+    if (openIndex === null || !hasMultiple) return;
+    const index = openIndex;
+    function handleKeyDown(e: KeyboardEvent): void {
+      if (e.key === "ArrowLeft") goTo(index - 1);
+      if (e.key === "ArrowRight") goTo(index + 1);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openIndex, hasMultiple]);
+
+  function handleDragEnd(_event: unknown, info: PanInfo): void {
+    if (info.offset.x > SWIPE_THRESHOLD) goTo(activeIndex - 1);
+    else if (info.offset.x < -SWIPE_THRESHOLD) goTo(activeIndex + 1);
+  }
+
+  if (images.length === 0) {
+    return (
+      <FadeIn className="relative flex h-64 w-full items-center justify-center overflow-hidden rounded-2xl bg-bg text-5xl">
+        🍽️
+        <SaveRestaurantButton restaurantId={restaurantId} className="absolute right-4 top-4" />
+      </FadeIn>
+    );
+  }
+
+  if (images.length === 1) {
+    return (
+      <FadeIn className="relative h-64 w-full overflow-hidden rounded-2xl bg-bg">
+        <button type="button" onClick={() => setOpenIndex(0)} className="group block h-full w-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={images[0].url} alt={images[0].alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
+        </button>
+      </FadeIn>
+    );
+  }
+
+  // Main photo (2fr, spans both rows) plus up to four side cells (1fr each,
+  // two rows) — mirrors design/TableSite.reference.html's `scDetail` hero
+  // mosaic exactly, so auto-placement fills col2/col3 row1 then row2 in
+  // document order. When there are more photos than fit, the last side cell
+  // gets a dark "+N" overlay instead of a plain thumbnail.
+  const sideImages = images.slice(1, 5);
+  const extraCount = images.length - 5;
+
+  return (
+    <>
+      <FadeIn className="grid h-[290px] grid-cols-[2fr_1fr_1fr] grid-rows-2 gap-2.5 overflow-hidden rounded-2xl">
+        <button
+          type="button"
+          onClick={() => setOpenIndex(0)}
+          className="group relative row-span-2 block h-full w-full overflow-hidden bg-bg"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={images[0].url} alt={images[0].alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
+          <span className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition group-hover:bg-ink/20 group-hover:opacity-100">
+            <ZoomInIcon className="h-6 w-6 text-white drop-shadow" />
+          </span>
+        </button>
+        {sideImages.map((image, index) => {
+          const isLast = index === sideImages.length - 1 && sideImages.length === 4;
+          return (
+            <button
+              key={image.id}
+              type="button"
+              onClick={() => setOpenIndex(index + 1)}
+              className="group relative block h-full w-full overflow-hidden bg-bg"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={image.url} alt={image.alt} className="h-full w-full object-cover transition group-hover:opacity-90" />
+              {isLast && extraCount > 0 ? (
+                <span className="km absolute inset-0 flex items-center justify-center bg-ink/55 text-sm font-bold text-white">
+                  {t("restaurantPage.morePhotos", { count: extraCount })}
+                </span>
+              ) : (
+                <span className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition group-hover:bg-ink/20 group-hover:opacity-100">
+                  <ZoomInIcon className="h-6 w-6 text-white drop-shadow" />
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </FadeIn>
+
+      <Lightbox open={current !== null} onClose={() => setOpenIndex(null)}>
+        {current && (
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative">
+              <motion.img
+                key={current.id}
+                src={current.url}
+                alt={current.alt}
+                className="max-h-[80vh] max-w-[90vw] touch-pan-y rounded-lg object-contain"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.15 }}
+                drag={hasMultiple ? "x" : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.6}
+                onDragEnd={handleDragEnd}
+              />
+              {hasMultiple && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => goTo(activeIndex - 1)}
+                    aria-label={t("restaurantPage.galleryPrevious")}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20 sm:left-4"
+                  >
+                    <ChevronDownIcon className="h-5 w-5 rotate-90" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goTo(activeIndex + 1)}
+                    aria-label={t("restaurantPage.galleryNext")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20 sm:right-4"
+                  >
+                    <ChevronDownIcon className="h-5 w-5 -rotate-90" />
+                  </button>
+                </>
+              )}
+            </div>
+            {hasMultiple && (
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                {t("restaurantPage.galleryCounter", { current: activeIndex + 1, total: images.length })}
+              </span>
+            )}
+          </div>
+        )}
+      </Lightbox>
+    </>
+  );
+}
+
 interface RestaurantDetailContentProps {
   restaurant: RestaurantPublicDetail;
 }
 
 export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentProps) {
   const { t } = useLanguage();
+  const [ratingSummary, setRatingSummary] = useState<{ average: number; total: number } | null>(null);
+
+  useEffect(() => {
+    listReviews(restaurant.id)
+      .then((res) => setRatingSummary({ average: res.average, total: res.total }))
+      .catch(() => setRatingSummary(null));
+  }, [restaurant.id]);
+
+  const heroImages: HeroImage[] = [
+    ...(restaurant.coverImageUrl ? [{ id: "cover", url: restaurant.coverImageUrl, alt: restaurant.name }] : []),
+    ...restaurant.galleryImages.map((image) => ({
+      id: image.id,
+      url: image.url,
+      alt: image.caption ?? restaurant.name,
+    })),
+  ];
 
   const hoursByDay = new Map(restaurant.operatingHours.map((h) => [h.dayOfWeek, h]));
+  const openNow = isOpenNow(hoursByDay);
   const quickInfo = [
     restaurant.dressCode ? { label: t("restaurantPage.dressCode"), value: restaurant.dressCode } : null,
     restaurant.depositRequired
@@ -47,6 +246,7 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
           value: t("restaurantPage.depositAmount", {
             amount: `$${Number(restaurant.depositAmount).toFixed(2)}`,
           }),
+          accent: true,
         }
       : { label: t("restaurantPage.deposit"), value: t("restaurantPage.depositNotRequired") },
     {
@@ -56,49 +256,51 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
     restaurant.parkingAvailable
       ? { label: t("restaurantPage.parking"), value: t("restaurantPage.parkingAvailable") }
       : null,
-  ].filter((x): x is { label: string; value: string } => x !== null);
+  ].filter((x): x is { label: string; value: string; accent?: boolean } => x !== null);
 
   return (
-    <main className="mx-auto max-w-[1120px] px-8 py-12">
-      <FadeIn className="relative h-64 w-full overflow-hidden rounded-2xl bg-bg">
-        {restaurant.coverImageUrl ? (
-          <ZoomableImage
-            src={restaurant.coverImageUrl}
-            alt={restaurant.name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-5xl">🍽️</div>
-        )}
-        <SaveRestaurantButton restaurantId={restaurant.id} className="absolute right-4 top-4" />
-      </FadeIn>
+    <main className="mx-auto max-w-[1280px] px-8 py-6">
+      <HeroGallery images={heroImages} restaurantId={restaurant.id} />
 
-      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_340px]">
+      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_364px]">
         <FadeIn delay={0.05}>
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0 flex-1">
+              {restaurant.tags.length > 0 && (
+                <div className="mb-2.5 flex flex-wrap gap-1.5">
+                  {restaurant.tags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="km rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-bold text-secondary"
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
               <h1 className="disp text-3xl font-extrabold text-ink">{restaurant.name}</h1>
-              <p className="mt-1 text-sm text-muted">
+              <p className="km mt-1.5 text-sm text-muted">
                 {restaurant.cuisineType} · {restaurant.address}, {restaurant.city}
               </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-bg px-3 py-1.5 text-sm font-bold text-ink">
-              {PRICE_LABEL[restaurant.priceRange]}
-            </span>
-          </div>
-
-          {restaurant.tags.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {restaurant.tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="rounded-full bg-bg px-3 py-1 text-xs font-medium text-ink"
-                >
-                  {tag.name}
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                {ratingSummary && ratingSummary.total > 0 && (
+                  <span className="flex items-center gap-1.5 text-sm font-bold text-accent">
+                    <RatingStars rating={ratingSummary.average} size="sm" />
+                    {ratingSummary.average.toFixed(1)}
+                    <span className="font-semibold text-muted">
+                      ({t("reviewsSection.reviewsCount", { count: ratingSummary.total })})
+                    </span>
+                  </span>
+                )}
+                <span className="km text-sm text-muted">{PRICE_LABEL[restaurant.priceRange]}</span>
+                <span className={`km flex items-center gap-1.5 text-sm font-bold ${openNow ? "text-secondary" : "text-muted"}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${openNow ? "bg-secondary" : "bg-muted"}`} />
+                  {openNow ? t("restaurantPage.openNow") : t("restaurantPage.closedNow")}
                 </span>
-              ))}
+              </div>
             </div>
-          )}
+            <SaveRestaurantButton restaurantId={restaurant.id} className="shrink-0 border border-border" />
+          </div>
 
           {restaurant.description && (
             <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink">
@@ -109,34 +311,17 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
           {quickInfo.length > 0 && (
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {quickInfo.map((info) => (
-                <div key={info.label} className="rounded-xl border border-border bg-surface p-3">
+                <div key={info.label} className="rounded-xl border border-border bg-surface p-3.5">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
                     {info.label}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-ink">{info.value}</p>
+                  <p className={`km mt-1 text-sm font-bold ${info.accent ? "text-accent" : "text-ink"}`}>
+                    {info.value}
+                  </p>
                 </div>
               ))}
             </div>
           )}
-
-          <section className="mt-10">
-            <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.hours")}</h2>
-            <div className="mt-3 max-w-sm space-y-1.5 text-sm">
-              {DAY_ORDER.map((day) => {
-                const hour = hoursByDay.get(day);
-                return (
-                  <div key={day} className="flex justify-between">
-                    <span className="text-muted">{t(DAY_LABEL_KEY[day])}</span>
-                    <span className="text-ink">
-                      {!hour || hour.isClosed
-                        ? t("restaurantPage.closed")
-                        : `${hour.openTime} – ${hour.closeTime}`}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
 
           {restaurant.menus.length > 0 && (
             <section className="mt-10">
@@ -145,35 +330,42 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
                 .filter((menu) => menu.isActive)
                 .map((menu) => (
                   <div key={menu.id} className="mt-5">
-                    <h3 className="font-bold text-ink">{menu.name}</h3>
-                    <div className="mt-2 divide-y divide-border">
+                    <h3 className="km font-bold text-ink">{menu.name}</h3>
+                    {menu.description && <p className="km mt-0.5 text-sm text-muted">{menu.description}</p>}
+                    <div className="mt-3 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                       {menu.items
                         .filter((item) => item.isAvailable)
                         .map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-start justify-between gap-4 py-3"
+                            className="flex gap-3.5 rounded-2xl border border-border bg-surface p-3"
                           >
-                            <div className="flex items-start gap-3">
-                              {item.imageUrl && (
-                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg">
-                                  <ZoomableImage
-                                    src={item.imageUrl}
-                                    alt={item.name}
-                                    className="h-14 w-14 object-cover"
-                                  />
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-semibold text-ink">{item.name}</p>
-                                {item.description && (
-                                  <p className="mt-0.5 text-sm text-muted">{item.description}</p>
-                                )}
+                            {item.imageUrl ? (
+                              <div className="h-[74px] w-[74px] shrink-0 overflow-hidden rounded-xl">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.name}
+                                  className="h-full w-full object-cover"
+                                />
                               </div>
+                            ) : (
+                              <div className="h-[74px] w-[74px] shrink-0 rounded-xl bg-bg" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="km font-bold text-ink">{item.name}</p>
+                              {item.description && (
+                                <p className="km mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">
+                                  {item.description}
+                                </p>
+                              )}
+                              <p className="mt-1.5 text-sm font-extrabold text-accent">
+                                ${Number(item.price).toFixed(2)}{" "}
+                                <span className="km font-semibold text-muted">
+                                  · {khr(Number(item.price))}
+                                </span>
+                              </p>
                             </div>
-                            <span className="shrink-0 font-semibold text-ink">
-                              ${Number(item.price).toFixed(2)}
-                            </span>
                           </div>
                         ))}
                     </div>
@@ -223,20 +415,30 @@ export function RestaurantDetailContent({ restaurant }: RestaurantDetailContentP
             </section>
           )}
 
-          {restaurant.galleryImages.length > 0 && (
-            <section className="mt-10">
-              <h2 className="disp text-lg font-bold text-ink">{t("restaurantPage.gallery")}</h2>
-              <div className="mt-3">
-                <GalleryViewer images={restaurant.galleryImages} fallbackAlt={restaurant.name} />
-              </div>
-            </section>
-          )}
-
           <ReviewsSection restaurantId={restaurant.id} />
         </FadeIn>
 
-        <div className="lg:sticky lg:top-24 lg:self-start">
+        <div className="lg:sticky lg:top-24 lg:self-start lg:space-y-4">
           <BookingWidget restaurant={restaurant} />
+
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="disp text-sm font-bold text-ink">{t("restaurantPage.hours")}</h2>
+            <div className="mt-3 space-y-1.5 text-sm">
+              {DAY_ORDER.map((day) => {
+                const hour = hoursByDay.get(day);
+                return (
+                  <div key={day} className="flex justify-between">
+                    <span className="km text-muted">{t(DAY_LABEL_KEY[day])}</span>
+                    <span className="km text-ink">
+                      {!hour || hour.isClosed
+                        ? t("restaurantPage.closed")
+                        : `${hour.openTime} – ${hour.closeTime}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </main>
