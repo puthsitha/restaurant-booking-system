@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyPlateIcon } from "@/components/ui/icons";
 import { ListSkeleton } from "@/components/ui/skeletons";
-import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "@/lib/auth/adminAuth";
 import { useLanguage } from "@/lib/i18n/context";
@@ -28,8 +28,6 @@ export default function AdminCitiesPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<City | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   function reload(): void {
     setLoadError(null);
@@ -60,16 +58,12 @@ export default function AdminCitiesPage() {
 
   async function handleDelete(): Promise<void> {
     if (!token || !pendingDelete) return;
-    setDeleteError(null);
-    setIsDeleting(true);
+    setFormError(null);
     try {
       await deleteCity(pendingDelete.id, token);
-      setPendingDelete(null);
       reload();
     } catch (err) {
-      setDeleteError(err instanceof ApiError ? err.message : t("adminCities.deleteError"));
-    } finally {
-      setIsDeleting(false);
+      setFormError(err instanceof ApiError ? err.message : t("adminCities.deleteError"));
     }
   }
 
@@ -153,31 +147,13 @@ export default function AdminCitiesPage() {
         </div>
       )}
 
-      <Modal
+      <ConfirmDeleteModal
         open={pendingDelete !== null}
-        onClose={() => setPendingDelete(null)}
         title={t("adminCities.deleteConfirm")}
-      >
-        <p className="text-sm text-ink">{t("adminCities.deleteModalBody")}</p>
-        {deleteError && <p className="mt-2 text-sm font-semibold text-red-600">{deleteError}</p>}
-        <div className="mt-5 flex gap-3">
-          <button
-            type="button"
-            onClick={() => setPendingDelete(null)}
-            className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-ink"
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-          >
-            {isDeleting ? t("adminCities.deleting") : t("common.delete")}
-          </button>
-        </div>
-      </Modal>
+        body={t("adminCities.deleteModalBody")}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </main>
   );
 }
