@@ -39,7 +39,16 @@ describe("GET /api/saved-restaurants", () => {
 
   it("lists the signed-in user's saved restaurants", async () => {
     vi.mocked(prisma.savedRestaurant.findMany).mockResolvedValueOnce([
-      { id: "sr_1", createdAt: new Date(), restaurant: { id: "r_1", name: "Malis" } },
+      {
+        id: "sr_1",
+        createdAt: new Date(),
+        restaurant: {
+          id: "r_1",
+          name: "Malis",
+          cuisine: { name: "Khmer", nameKm: null },
+          city: { name: "Phnom Penh", nameKm: null },
+        },
+      },
     ]);
 
     const res = await request(app)

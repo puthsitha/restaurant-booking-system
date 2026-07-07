@@ -56,6 +56,22 @@ vi.mock("../lib/prisma", () => {
     update: vi.fn(),
     delete: vi.fn(),
   };
+  const cuisine = {
+    // findUnique defaults to "exists" so create/update restaurant tests
+    // don't need to stub the cuisineId/cityId existence check individually.
+    findUnique: vi.fn().mockResolvedValue({ id: "cuisine_1", name: "Vietnamese" }),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  };
+  const city = {
+    findUnique: vi.fn().mockResolvedValue({ id: "city_1", name: "Phnom Penh" }),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  };
   const user = {
     findUnique: vi.fn(),
     // Used by the `authenticate` middleware to check the token subject is
@@ -78,6 +94,8 @@ vi.mock("../lib/prisma", () => {
     galleryImage,
     specialClosure,
     tag,
+    cuisine,
+    city,
     user,
     review,
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(client)),
@@ -108,9 +126,11 @@ const baseRestaurant = {
   nameKm: null,
   description: null,
   descriptionKm: null,
-  cuisineType: "Vietnamese",
+  cuisineId: "cuisine_1",
+  cuisine: { name: "Vietnamese", nameKm: null },
   address: "123 St",
-  city: "Phnom Penh",
+  cityId: "city_1",
+  city: { name: "Phnom Penh", nameKm: null },
   state: null,
   country: "Cambodia",
   postalCode: null,
@@ -170,9 +190,9 @@ describe("POST /api/restaurants", () => {
       .send({
         name: "Pho Corner",
         slug: "pho-corner",
-        cuisineType: "Vietnamese",
+        cuisineId: "cuisine_1",
         address: "123 St",
-        city: "Phnom Penh",
+        cityId: "city_1",
       });
 
     expect(res.status).toBe(403);
@@ -193,9 +213,9 @@ describe("POST /api/restaurants", () => {
       .send({
         name: "Pho Corner",
         slug: "pho-corner",
-        cuisineType: "Vietnamese",
+        cuisineId: "cuisine_1",
         address: "123 St",
-        city: "Phnom Penh",
+        cityId: "city_1",
       });
 
     expect(res.status).toBe(409);
@@ -216,9 +236,9 @@ describe("POST /api/restaurants", () => {
       .send({
         name: "Pho Corner",
         slug: "pho-corner",
-        cuisineType: "Vietnamese",
+        cuisineId: "cuisine_1",
         address: "123 St",
-        city: "Phnom Penh",
+        cityId: "city_1",
       });
 
     expect(res.status).toBe(201);
@@ -268,7 +288,6 @@ describe("GET /api/restaurants", () => {
 
   it("lists active restaurants with pagination", async () => {
     vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
-    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
 
     const res = await request(app).get("/api/restaurants?city=Phnom%20Penh");
 
@@ -283,7 +302,6 @@ describe("GET /api/restaurants", () => {
     vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
       { ...baseRestaurant, name: "Pho Corner", nameKm: "ផូកន័រ", description: "Great pho", descriptionKm: "ផ្សេងទៀត" },
     ]);
-    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
 
     const res = await request(app).get("/api/restaurants");
 
@@ -296,7 +314,6 @@ describe("GET /api/restaurants", () => {
     vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
       { ...baseRestaurant, latitude: "13.3671", longitude: "103.8448" }, // Siem Reap
     ]);
-    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
 
     const res = await request(app)
       .get("/api/restaurants")
@@ -310,7 +327,6 @@ describe("GET /api/restaurants", () => {
 
   it("returns a null distanceKm when the restaurant has no coordinates on file", async () => {
     vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
-    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
 
     const res = await request(app).get("/api/restaurants");
 
@@ -322,7 +338,6 @@ describe("GET /api/restaurants", () => {
     vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
       { ...baseRestaurant, name: "Pho Corner", nameKm: "ផូកន័រ", description: "Great pho", descriptionKm: "ម្ហូបផូឆ្ងាញ់" },
     ]);
-    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
 
     const res = await request(app).get("/api/restaurants").set("Accept-Language", "km");
 
@@ -333,7 +348,6 @@ describe("GET /api/restaurants", () => {
 
   it("falls back to the English name/description when Khmer isn't set", async () => {
     vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
-    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
 
     const res = await request(app).get("/api/restaurants").set("Accept-Language", "km");
 
@@ -981,5 +995,131 @@ describe("Tags", () => {
       .send({ nameKm: "អាហារបួស" });
     expect(res.status).toBe(200);
     expect(res.body.tag.nameKm).toBe("អាហារបួស");
+  });
+});
+
+describe("Cuisines", () => {
+  it("lists cuisines publicly", async () => {
+    vi.mocked(prisma.cuisine.findMany).mockResolvedValueOnce([{ id: "cuisine_1", name: "Khmer" }]);
+    const res = await request(app).get("/api/cuisines");
+    expect(res.status).toBe(200);
+    expect(res.body.cuisines).toHaveLength(1);
+  });
+
+  it("returns the Khmer cuisine name when Accept-Language is km", async () => {
+    vi.mocked(prisma.cuisine.findMany).mockResolvedValueOnce([
+      { id: "cuisine_1", name: "Khmer", nameKm: "ខ្មែរ" },
+    ]);
+    const res = await request(app).get("/api/cuisines").set("Accept-Language", "km");
+    expect(res.status).toBe(200);
+    expect(res.body.cuisines[0].name).toBe("ខ្មែរ");
+  });
+
+  it("rejects a non-admin creating a cuisine", async () => {
+    const res = await request(app)
+      .post("/api/cuisines")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ name: "Khmer" });
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects a duplicate cuisine name", async () => {
+    vi.mocked(prisma.cuisine.findUnique).mockResolvedValueOnce({ id: "cuisine_1", name: "Khmer" });
+    const res = await request(app)
+      .post("/api/cuisines")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "Khmer" });
+    expect(res.status).toBe(409);
+  });
+
+  it("lets an admin create a cuisine", async () => {
+    vi.mocked(prisma.cuisine.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.cuisine.create).mockResolvedValueOnce({ id: "cuisine_1", name: "Khmer" });
+    const res = await request(app)
+      .post("/api/cuisines")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "Khmer" });
+    expect(res.status).toBe(201);
+  });
+
+  it("404s when updating a cuisine that doesn't exist", async () => {
+    vi.mocked(prisma.cuisine.findUnique).mockResolvedValueOnce(null);
+    const res = await request(app)
+      .patch("/api/cuisines/cuisine_missing")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ nameKm: "ខ្មែរ" });
+    expect(res.status).toBe(404);
+  });
+
+  it("rejects deleting a cuisine still assigned to a restaurant", async () => {
+    vi.mocked(prisma.cuisine.findUnique).mockResolvedValueOnce({ id: "cuisine_1", name: "Khmer" });
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(2);
+    const res = await request(app)
+      .delete("/api/cuisines/cuisine_1")
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.status).toBe(409);
+  });
+
+  it("lets an admin delete an unused cuisine", async () => {
+    vi.mocked(prisma.cuisine.findUnique).mockResolvedValueOnce({ id: "cuisine_1", name: "Khmer" });
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(0);
+    const res = await request(app)
+      .delete("/api/cuisines/cuisine_1")
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.status).toBe(204);
+  });
+});
+
+describe("Cities", () => {
+  it("lists cities publicly", async () => {
+    vi.mocked(prisma.city.findMany).mockResolvedValueOnce([{ id: "city_1", name: "Phnom Penh" }]);
+    const res = await request(app).get("/api/cities");
+    expect(res.status).toBe(200);
+    expect(res.body.cities).toHaveLength(1);
+  });
+
+  it("rejects a non-admin creating a city", async () => {
+    const res = await request(app)
+      .post("/api/cities")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ name: "Phnom Penh" });
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects a duplicate city name", async () => {
+    vi.mocked(prisma.city.findUnique).mockResolvedValueOnce({ id: "city_1", name: "Phnom Penh" });
+    const res = await request(app)
+      .post("/api/cities")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "Phnom Penh" });
+    expect(res.status).toBe(409);
+  });
+
+  it("lets an admin create a city", async () => {
+    vi.mocked(prisma.city.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.city.create).mockResolvedValueOnce({ id: "city_1", name: "Phnom Penh" });
+    const res = await request(app)
+      .post("/api/cities")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "Phnom Penh" });
+    expect(res.status).toBe(201);
+  });
+
+  it("rejects deleting a city still assigned to a restaurant", async () => {
+    vi.mocked(prisma.city.findUnique).mockResolvedValueOnce({ id: "city_1", name: "Phnom Penh" });
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(1);
+    const res = await request(app)
+      .delete("/api/cities/city_1")
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.status).toBe(409);
+  });
+
+  it("lets an admin delete an unused city", async () => {
+    vi.mocked(prisma.city.findUnique).mockResolvedValueOnce({ id: "city_1", name: "Phnom Penh" });
+    vi.mocked(prisma.restaurant.count).mockResolvedValueOnce(0);
+    const res = await request(app)
+      .delete("/api/cities/city_1")
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.status).toBe(204);
   });
 });

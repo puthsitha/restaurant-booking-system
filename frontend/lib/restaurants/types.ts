@@ -18,6 +18,26 @@ export interface Tag {
   nameKm?: string | null;
 }
 
+// Admin-managed cuisine taxonomy — owners pick one per restaurant from a
+// dropdown, and the home page's browse-by-cuisine tiles render this list.
+export interface Cuisine {
+  id: string;
+  name: string;
+  nameKm?: string | null;
+  description?: string | null;
+  descriptionKm?: string | null;
+  imageUrl?: string | null;
+}
+
+// Admin-managed city list, same role as Cuisine (owner dropdown only — no
+// customer-facing browse section).
+export interface City {
+  id: string;
+  name: string;
+  nameKm?: string | null;
+  imageUrl?: string | null;
+}
+
 export interface OperatingHours {
   id: string;
   restaurantId: string;
@@ -96,10 +116,15 @@ export interface RestaurantCore {
   nameKm?: string | null;
   description: string | null;
   descriptionKm?: string | null;
-  cuisineType: string;
+  cuisineId: string;
+  // Localized cuisine/city display name — present on read (detail/
+  // management) responses; absent on the raw create/update result, which
+  // only carries the id the form needs to preselect its dropdown.
+  cuisineType?: string;
   address: string;
   addressKm?: string | null;
-  city: string;
+  cityId: string;
+  city?: string;
   state: string | null;
   country: string;
   postalCode: string | null;

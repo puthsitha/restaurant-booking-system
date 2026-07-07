@@ -54,6 +54,41 @@ async function assertSlugAvailable(slug: string, excludeId?: string): Promise<vo
   }
 }
 
+async function assertCuisineExists(cuisineId: string): Promise<void> {
+  const cuisine = await prisma.cuisine.findUnique({ where: { id: cuisineId } });
+  if (!cuisine) {
+    throw new HttpError(400, "Selected cuisine does not exist");
+  }
+}
+
+async function assertCityExists(cityId: string): Promise<void> {
+  const city = await prisma.city.findUnique({ where: { id: cityId } });
+  if (!city) {
+    throw new HttpError(400, "Selected city does not exist");
+  }
+}
+
+interface LocalizableName {
+  name: string;
+  nameKm?: string | null;
+}
+
+// Restaurant.cuisine/city are managed relations, not free text — flatten each
+// to the single localized display string (`cuisineType`/`city`) that every
+// existing reader (search filters, RestaurantCard, admin/owner lists)
+// expects, the same shape the old free-text columns had.
+function flattenCuisineCity<T extends { cuisine: LocalizableName; city: LocalizableName }>(
+  restaurant: T,
+  locale: Locale,
+): Omit<T, "cuisine" | "city"> & { cuisineType: string; city: string } {
+  const { cuisine, city, ...rest } = restaurant;
+  return {
+    ...rest,
+    cuisineType: locale === "km" ? cuisine.nameKm || cuisine.name : cuisine.name,
+    city: locale === "km" ? city.nameKm || city.name : city.name,
+  };
+}
+
 const operatingHourSelect = {
   dayOfWeek: true,
   openTime: true,
@@ -68,10 +103,10 @@ const publicListSelect = {
   nameKm: true,
   description: true,
   descriptionKm: true,
-  cuisineType: true,
+  cuisine: { select: { name: true, nameKm: true } },
   address: true,
   addressKm: true,
-  city: true,
+  city: { select: { name: true, nameKm: true } },
   state: true,
   country: true,
   coverImageUrl: true,
@@ -103,6 +138,8 @@ const ownerListSelect = {
 } satisfies Prisma.RestaurantSelect;
 
 const publicDetailInclude = {
+  cuisine: true,
+  city: true,
   operatingHours: true,
   menus: { include: { items: true }, orderBy: { sortOrder: "asc" as const } },
   galleryImages: { orderBy: { sortOrder: "asc" as const } },
@@ -137,6 +174,7 @@ export async function createRestaurant(
   }
 
   await assertSlugAvailable(input.slug);
+  await Promise.all([assertCuisineExists(input.cuisineId), assertCityExists(input.cityId)]);
 
   // New restaurants start PENDING — an admin has to approve them (with a
   // reason) before they're ACTIVE and visible to diners.
@@ -219,9 +257,9 @@ export async function listRestaurants(
 ) {
   const where: Prisma.RestaurantWhereInput = {
     status: "ACTIVE",
-    ...(query.city ? { city: { equals: query.city, mode: "insensitive" } } : {}),
+    ...(query.city ? { city: { name: { equals: query.city, mode: "insensitive" } } } : {}),
     ...(query.cuisineType
-      ? { cuisineType: { equals: query.cuisineType, mode: "insensitive" } }
+      ? { cuisine: { name: { equals: query.cuisineType, mode: "insensitive" } } }
       : {}),
     ...(query.priceRange ? { priceRange: query.priceRange } : {}),
     ...(query.search ? { name: { contains: query.search, mode: "insensitive" } } : {}),
@@ -246,7 +284,7 @@ export async function listRestaurants(
   const now = new Date();
 
   const enrichedItems = items.map(({ operatingHours, ...item }) => ({
-    ...withDistance(localizeRestaurant(item, locale), clientCoordinates),
+    ...withDistance(flattenCuisineCity(localizeRestaurant(item, locale), locale), clientCoordinates),
     tags: localizeTags(item.tags, locale),
     ...(ratingByRestaurant.get(item.id) ?? { avgRating: null, reviewCount: 0 }),
     isOpenNow: isRestaurantOpenNow(operatingHours ?? [], now),
@@ -274,9 +312,9 @@ export async function listRestaurants(
 export async function listAllRestaurantsForAdmin(query: AdminListRestaurantsQuery) {
   const where: Prisma.RestaurantWhereInput = {
     ...(query.status ? { status: query.status } : {}),
-    ...(query.city ? { city: { equals: query.city, mode: "insensitive" } } : {}),
+    ...(query.city ? { city: { name: { equals: query.city, mode: "insensitive" } } } : {}),
     ...(query.cuisineType
-      ? { cuisineType: { equals: query.cuisineType, mode: "insensitive" } }
+      ? { cuisine: { name: { equals: query.cuisineType, mode: "insensitive" } } }
       : {}),
     ...(query.priceRange ? { priceRange: query.priceRange } : {}),
     ...(query.search ? { name: { contains: query.search, mode: "insensitive" } } : {}),
@@ -296,7 +334,12 @@ export async function listAllRestaurantsForAdmin(query: AdminListRestaurantsQuer
     prisma.restaurant.count({ where }),
   ]);
 
-  return { items, total, page: query.page, pageSize: query.pageSize };
+  return {
+    items: items.map((item) => flattenCuisineCity(item, "en")),
+    total,
+    page: query.page,
+    pageSize: query.pageSize,
+  };
 }
 
 export async function listMyRestaurants(ownerId: string, query: ListMyRestaurantsQuery) {
@@ -317,7 +360,12 @@ export async function listMyRestaurants(ownerId: string, query: ListMyRestaurant
     prisma.restaurant.count({ where }),
   ]);
 
-  return { items, total, page: query.page, pageSize: query.pageSize };
+  return {
+    items: items.map((item) => flattenCuisineCity(item, "en")),
+    total,
+    page: query.page,
+    pageSize: query.pageSize,
+  };
 }
 
 export async function getPublicRestaurantBySlug(slug: string, locale: Locale) {
@@ -329,7 +377,7 @@ export async function getPublicRestaurantBySlug(slug: string, locale: Locale) {
     throw new HttpError(404, "Restaurant not found");
   }
   return {
-    ...localizeRestaurant(restaurant, locale),
+    ...flattenCuisineCity(localizeRestaurant(restaurant, locale), locale),
     tags: localizeTags(restaurant.tags, locale),
     menus: localizeMenus(restaurant.menus, locale),
   };
@@ -349,7 +397,10 @@ export async function getManagementRestaurant(
   if (restaurant.ownerId !== requester.id && requester.role !== "ADMIN") {
     throw new HttpError(404, "Restaurant not found");
   }
-  return restaurant;
+  // Management screens show English regardless of locale (same as before
+  // cuisine/city became relations) — cuisineId/cityId ride along unflattened
+  // so the owner's edit form can preselect the right dropdown option.
+  return flattenCuisineCity(restaurant, "en");
 }
 
 export async function updateRestaurant(
@@ -361,6 +412,10 @@ export async function updateRestaurant(
   if (input.slug && input.slug !== restaurant.slug) {
     await assertSlugAvailable(input.slug, id);
   }
+  await Promise.all([
+    input.cuisineId ? assertCuisineExists(input.cuisineId) : Promise.resolve(),
+    input.cityId ? assertCityExists(input.cityId) : Promise.resolve(),
+  ]);
   return prisma.restaurant.update({ where: { id }, data: input });
 }
 
