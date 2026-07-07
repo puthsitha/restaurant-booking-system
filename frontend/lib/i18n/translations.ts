@@ -133,15 +133,17 @@ const en = {
     useDifferentNumber: "Use a different number"
   },
   authSplit: {
-    backToHome: "Back to home",
-    roleDiner: "Diner",
-    roleOwner: "Owner",
-    roleAdmin: "Admin",
     welcomeTitle: "Welcome to TableSite",
-    welcomeSubtitle: "One platform for every seat — diners, restaurant owners, and platform admins.",
-    featurePhone: "Sign in with your +855 phone number",
-    featureKhqr: "Pay deposits via KHQR",
-    featureTables: "Manage tables and bookings",
+    welcomeSubtitleOwner: "Sign in to manage your restaurant, tables, and bookings.",
+    welcomeSubtitleAdmin: "Sign in to review requests and moderate the platform.",
+    ownerFeaturePhone: "Sign in with your +855 phone number",
+    ownerFeatureKhqr: "Accept deposits via KHQR",
+    ownerFeatureTables: "Manage tables and bookings",
+    adminFeatureRequests: "Review restaurant registration requests",
+    adminFeatureModerate: "Moderate restaurants, users, and bookings",
+    adminFeatureSettings: "Manage platform tags and settings",
+    footerOwner: "🇰🇭 KHQR · ABA · Wing · Bakong · ACLEDA",
+    footerAdmin: "🇰🇭 TableSite platform administration",
     demoAccount: "Demo account: {email}"
   },
   home: {
@@ -977,15 +979,17 @@ const km = {
     useDifferentNumber: "ប្រើលេខផ្សេង"
   },
   authSplit: {
-    backToHome: "ត្រឡប់ទៅគេហទំព័រ",
-    roleDiner: "អ្នកញ៉ាំ",
-    roleOwner: "ម្ចាស់ហាង",
-    roleAdmin: "អ្នកគ្រប់គ្រង",
     welcomeTitle: "សូមស្វាគមន៍មកកាន់ TableSite",
-    welcomeSubtitle: "កម្មវិធីមួយសម្រាប់គ្រប់តួនាទី — អ្នកញ៉ាំ ម្ចាស់ហាង និងអ្នកគ្រប់គ្រងវេទិកា។",
-    featurePhone: "ចូលដោយលេខទូរស័ព្ទ +855",
-    featureKhqr: "បង់ប្រាក់កក់តាម KHQR",
-    featureTables: "គ្រប់គ្រងតុ និងការកក់",
+    welcomeSubtitleOwner: "ចូលដើម្បីគ្រប់គ្រងភោជនីយដ្ឋាន តុ និងការកក់របស់អ្នក។",
+    welcomeSubtitleAdmin: "ចូលដើម្បីត្រួតពិនិត្យសំណើ និងគ្រប់គ្រងវេទិកា។",
+    ownerFeaturePhone: "ចូលដោយលេខទូរស័ព្ទ +855",
+    ownerFeatureKhqr: "ទទួលប្រាក់កក់តាម KHQR",
+    ownerFeatureTables: "គ្រប់គ្រងតុ និងការកក់",
+    adminFeatureRequests: "ត្រួតពិនិត្យសំណើចុះឈ្មោះភោជនីយដ្ឋាន",
+    adminFeatureModerate: "ត្រួតពិនិត្យភោជនីយដ្ឋាន អ្នកប្រើប្រាស់ និងការកក់",
+    adminFeatureSettings: "គ្រប់គ្រងស្លាក និងការកំណត់វេទិកា",
+    footerOwner: "🇰🇭 KHQR · ABA · Wing · Bakong · ACLEDA",
+    footerAdmin: "🇰🇭 ការគ្រប់គ្រងវេទិកា TableSite",
     demoAccount: "គណនីសាកល្បង៖ {email}"
   },
   home: {
