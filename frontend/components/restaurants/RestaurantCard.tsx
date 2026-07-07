@@ -52,7 +52,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
               {PRICE_SYMBOL[restaurant.priceRange]}
             </span>
           </div>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 line-clamp-2 text-sm text-muted">
             {restaurant.cuisineType} · {restaurant.city}
           </p>
           {restaurant.tags.length > 0 && (

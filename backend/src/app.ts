@@ -9,6 +9,8 @@ import { openapiSpec } from "./docs/openapi";
 import { env } from "./env";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { authRouter } from "./routes/auth";
+import { citiesRouter } from "./routes/cities";
+import { cuisinesRouter } from "./routes/cuisines";
 import { healthRouter } from "./routes/health";
 import { paymentMethodsRouter } from "./routes/paymentMethods";
 import { platformSettingsRouter } from "./routes/platformSettings";
@@ -81,6 +83,8 @@ export function createApp(): Express {
   app.use(requestsRouter);
   app.use(usersRouter);
   app.use(tagsRouter);
+  app.use(cuisinesRouter);
+  app.use(citiesRouter);
   app.use(savedRestaurantsRouter);
   app.use(paymentMethodsRouter);
   app.use(reviewsRouter);

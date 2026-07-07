@@ -1,14 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { Select } from "@/components/ui/Select";
 import { ApiError } from "@/lib/api";
 import { useOwnerAuth } from "@/lib/auth/ownerAuth";
 import { useLanguage } from "@/lib/i18n/context";
-import { createRestaurant } from "@/lib/restaurants/api";
+import { createRestaurant, listCities, listCuisines } from "@/lib/restaurants/api";
 import { slugify } from "@/lib/restaurants/slugify";
+import type { City, Cuisine } from "@/lib/restaurants/types";
 
 export default function NewRestaurantPage() {
   const { token } = useOwnerAuth();
@@ -18,11 +20,18 @@ export default function NewRestaurantPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [cuisineType, setCuisineType] = useState("");
+  const [cuisines, setCuisines] = useState<Cuisine[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [cuisineId, setCuisineId] = useState("");
+  const [cityId, setCityId] = useState("");
   const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    listCuisines().then((res) => setCuisines(res.cuisines)).catch(() => setCuisines([]));
+    listCities().then((res) => setCities(res.cities)).catch(() => setCities([]));
+  }, []);
 
   function handleNameChange(value: string): void {
     setName(value);
@@ -36,7 +45,7 @@ export default function NewRestaurantPage() {
     setIsSubmitting(true);
     try {
       const { restaurant } = await createRestaurant(
-        { name, slug, cuisineType, address, city },
+        { name, slug, cuisineId, address, cityId },
         token,
       );
       router.replace(`/owner/restaurants/${restaurant.id}`);
@@ -78,18 +87,13 @@ export default function NewRestaurantPage() {
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
           />
         </div>
-        <div>
-          <label className="mb-2 block text-xs font-bold text-label">
-            {t("ownerRestaurantNew.cuisineType")}
-          </label>
-          <input
-            required
-            value={cuisineType}
-            onChange={(e) => setCuisineType(e.target.value)}
-            placeholder={t("ownerRestaurantNew.cuisinePlaceholder")}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
-          />
-        </div>
+        <Select
+          label={t("ownerRestaurantNew.cuisineType")}
+          value={cuisineId}
+          onChange={setCuisineId}
+          placeholder={t("ownerRestaurantNew.cuisinePlaceholder")}
+          options={cuisines.map((cuisine) => ({ value: cuisine.id, label: cuisine.name }))}
+        />
         <div>
           <label className="mb-2 block text-xs font-bold text-label">{t("ownerRestaurantNew.address")}</label>
           <input
@@ -100,20 +104,17 @@ export default function NewRestaurantPage() {
             className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
           />
         </div>
-        <div>
-          <label className="mb-2 block text-xs font-bold text-label">{t("ownerRestaurantNew.city")}</label>
-          <input
-            required
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder={t("ownerRestaurantNew.cityPlaceholder")}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm text-ink outline-none"
-          />
-        </div>
+        <Select
+          label={t("ownerRestaurantNew.city")}
+          value={cityId}
+          onChange={setCityId}
+          placeholder={t("ownerRestaurantNew.cityPlaceholder")}
+          options={cities.map((city) => ({ value: city.id, label: city.name }))}
+        />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !cuisineId || !cityId}
           className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
           {isSubmitting ? t("common.creating") : t("ownerRestaurantNew.createRestaurant")}

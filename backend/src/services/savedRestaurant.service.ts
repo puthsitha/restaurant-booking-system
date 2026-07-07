@@ -11,8 +11,8 @@ const savedRestaurantSelect = {
       id: true,
       slug: true,
       name: true,
-      cuisineType: true,
-      city: true,
+      cuisine: { select: { name: true, nameKm: true } },
+      city: { select: { name: true, nameKm: true } },
       coverImageUrl: true,
       priceRange: true,
     },
@@ -20,10 +20,17 @@ const savedRestaurantSelect = {
 } satisfies Prisma.SavedRestaurantSelect;
 
 export async function listSavedRestaurants(userId: string) {
-  return prisma.savedRestaurant.findMany({
+  const saved = await prisma.savedRestaurant.findMany({
     where: { userId },
     select: savedRestaurantSelect,
     orderBy: { createdAt: "desc" },
+  });
+  return saved.map(({ restaurant, ...rest }) => {
+    const { cuisine, city, ...restaurantFields } = restaurant;
+    return {
+      ...rest,
+      restaurant: { ...restaurantFields, cuisineType: cuisine.name, city: city.name },
+    };
   });
 }
 

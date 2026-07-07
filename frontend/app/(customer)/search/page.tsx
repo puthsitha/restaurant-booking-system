@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
@@ -15,10 +15,9 @@ import { RestaurantGridSkeleton } from "@/components/ui/skeletons";
 import { Switch } from "@/components/ui/Switch";
 import { useLanguage } from "@/lib/i18n/context";
 import { staggerContainer, fadeUp } from "@/lib/motion";
-import { listRestaurants } from "@/lib/restaurants/api";
-import { CUISINE_TILES } from "@/lib/restaurants/cuisineTiles";
+import { listCuisines, listRestaurants } from "@/lib/restaurants/api";
 import { PRICE_SYMBOL } from "@/lib/restaurants/priceLabels";
-import type { ListRestaurantsResponse, PriceRange } from "@/lib/restaurants/types";
+import type { Cuisine, ListRestaurantsResponse, PriceRange } from "@/lib/restaurants/types";
 import { useClientLocation } from "@/lib/useClientLocation";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
@@ -27,7 +26,6 @@ const RATING_OPTIONS = [4.5, 4, 3.5];
 const MIN_DISTANCE_KM = 1;
 const MAX_DISTANCE_KM = 20;
 const DEFAULT_DISTANCE_KM = 8;
-const ALL_CUISINES = "ALL";
 
 type ViewMode = "list" | "map";
 
@@ -45,14 +43,8 @@ function SearchPageContent() {
   const clientLocation = useClientLocation();
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
-  const [cuisineKey, setCuisineKey] = useState<string>(() => {
-    const param = searchParams.get("cuisineType");
-    if (!param) return ALL_CUISINES;
-    const match = CUISINE_TILES.find(
-      (tile) => tile.cuisine?.toLowerCase() === param.toLowerCase(),
-    );
-    return match?.labelKey ?? ALL_CUISINES;
-  });
+  const [cuisineType, setCuisineType] = useState(searchParams.get("cuisineType") ?? "");
+  const [cuisines, setCuisines] = useState<Cuisine[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange | "">(
     (searchParams.get("priceRange") as PriceRange | null) ?? "",
   );
@@ -72,10 +64,14 @@ function SearchPageContent() {
   // keystroke — the name filter runs 350ms after the user pauses.
   const debouncedSearch = useDebouncedValue(search, 350);
 
-  const cuisineType = useMemo(
-    () => CUISINE_TILES.find((tile) => tile.labelKey === cuisineKey)?.cuisine,
-    [cuisineKey],
-  );
+  // Fetched without a locale so `cuisine.name` stays the canonical English
+  // value the search filter matches on — the Khmer label (when shown) comes
+  // from `nameKm` client-side instead of a locale-swapped `name`.
+  useEffect(() => {
+    listCuisines()
+      .then((res) => setCuisines(res.cuisines))
+      .catch(() => setCuisines([]));
+  }, []);
 
   const [result, setResult] = useState<ListRestaurantsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,7 +89,7 @@ function SearchPageContent() {
     listRestaurants(
       {
         search: debouncedSearch || undefined,
-        cuisineType,
+        cuisineType: cuisineType || undefined,
         priceRange: priceRange || undefined,
         availableNow: availableNow || undefined,
         maxDistanceKm,
@@ -131,7 +127,7 @@ function SearchPageContent() {
 
   function clearFilters(): void {
     setSearch("");
-    setCuisineKey(ALL_CUISINES);
+    setCuisineType("");
     setPriceRange("");
     setAvailableNow(false);
     setMaxDistanceKm(DEFAULT_DISTANCE_KM);
@@ -213,32 +209,32 @@ function SearchPageContent() {
               <button
                 type="button"
                 onClick={() => {
-                  setCuisineKey(ALL_CUISINES);
+                  setCuisineType("");
                   setPage(1);
                 }}
                 className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
-                  cuisineKey === ALL_CUISINES
+                  cuisineType === ""
                     ? "border-accent bg-accent text-white"
                     : "border-border text-ink hover:bg-bg"
                 }`}
               >
                 {t("searchPage.any")}
               </button>
-              {CUISINE_TILES.map((tile) => (
+              {cuisines.map((cuisine) => (
                 <button
-                  key={tile.labelKey}
+                  key={cuisine.id}
                   type="button"
                   onClick={() => {
-                    setCuisineKey(tile.labelKey);
+                    setCuisineType(cuisine.name);
                     setPage(1);
                   }}
                   className={`km rounded-lg border px-3 py-2 text-sm font-bold transition ${
-                    cuisineKey === tile.labelKey
+                    cuisineType.toLowerCase() === cuisine.name.toLowerCase()
                       ? "border-accent bg-accent text-white"
                       : "border-border text-ink hover:bg-bg"
                   }`}
                 >
-                  {t(tile.labelKey)}
+                  {locale === "km" ? cuisine.nameKm || cuisine.name : cuisine.name}
                 </button>
               ))}
             </div>

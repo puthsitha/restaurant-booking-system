@@ -141,10 +141,12 @@ model Restaurant {
   nameKm        String?
   description   String?
   descriptionKm String?
-  cuisineType   String
+  cuisineId     String
+  cuisine       Cuisine          @relation(fields: [cuisineId], references: [id])
   address       String
   addressKm     String?
-  city          String
+  cityId        String
+  city          City             @relation(fields: [cityId], references: [id])
   state         String?
   country       String           @default("Cambodia")
   postalCode    String?
@@ -190,8 +192,8 @@ model Restaurant {
   payoutMethods   PayoutMethod[]
   tags            Tag[]             @relation("RestaurantTags")
 
-  @@index([city])
-  @@index([cuisineType])
+  @@index([cityId])
+  @@index([cuisineId])
 }
 
 model Tag {
@@ -199,6 +201,33 @@ model Tag {
   name        String       @unique
   nameKm      String?
   restaurants Restaurant[] @relation("RestaurantTags")
+}
+
+// Admin-managed cuisine taxonomy — owners pick one per restaurant from a
+// dropdown instead of free-typing it, and the home page's "Browse by
+// cuisine" tiles are rendered directly from this list.
+model Cuisine {
+  id            String       @id @default(cuid())
+  name          String       @unique
+  nameKm        String?
+  description   String?
+  descriptionKm String?
+  imageUrl      String?
+  restaurants   Restaurant[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+// Admin-managed city list — same role as Cuisine, but city has no
+// customer-facing browse section (admin management + owner dropdown only).
+model City {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  nameKm      String?
+  imageUrl    String?
+  restaurants Restaurant[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model OperatingHours {

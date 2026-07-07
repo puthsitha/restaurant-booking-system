@@ -1,6 +1,8 @@
 import { apiFetch } from "@/lib/api";
 import type {
   AdminListRestaurantsParams,
+  City,
+  Cuisine,
   DayOfWeek,
   GalleryImage,
   ListMyRestaurantsParams,
@@ -29,10 +31,10 @@ export interface RestaurantProfileInput {
   slug: string;
   description?: string;
   descriptionKm?: string;
-  cuisineType: string;
+  cuisineId: string;
   address: string;
   addressKm?: string;
-  city: string;
+  cityId: string;
   state?: string;
   country?: string;
   postalCode?: string;
@@ -371,4 +373,62 @@ export function updateTag(
 
 export function deleteTag(id: string, token: string): Promise<void> {
   return apiFetch(`/api/tags/${id}`, { method: "DELETE", token });
+}
+
+// =========================== Cuisines =============================
+
+export interface CuisineInput {
+  name: string;
+  nameKm?: string;
+  description?: string;
+  descriptionKm?: string;
+  imageUrl?: string;
+}
+
+export function listCuisines(locale?: "en" | "km"): Promise<{ cuisines: Cuisine[] }> {
+  return apiFetch("/api/cuisines", { locale });
+}
+
+export function createCuisine(input: CuisineInput, token: string): Promise<{ cuisine: Cuisine }> {
+  return apiFetch("/api/cuisines", { method: "POST", body: input, token });
+}
+
+export function updateCuisine(
+  id: string,
+  input: Partial<CuisineInput>,
+  token: string,
+): Promise<{ cuisine: Cuisine }> {
+  return apiFetch(`/api/cuisines/${id}`, { method: "PATCH", body: input, token });
+}
+
+export function deleteCuisine(id: string, token: string): Promise<void> {
+  return apiFetch(`/api/cuisines/${id}`, { method: "DELETE", token });
+}
+
+// ============================= Cities ==============================
+
+export interface CityInput {
+  name: string;
+  nameKm?: string;
+  imageUrl?: string;
+}
+
+export function listCities(locale?: "en" | "km"): Promise<{ cities: City[] }> {
+  return apiFetch("/api/cities", { locale });
+}
+
+export function createCity(input: CityInput, token: string): Promise<{ city: City }> {
+  return apiFetch("/api/cities", { method: "POST", body: input, token });
+}
+
+export function updateCity(
+  id: string,
+  input: Partial<CityInput>,
+  token: string,
+): Promise<{ city: City }> {
+  return apiFetch(`/api/cities/${id}`, { method: "PATCH", body: input, token });
+}
+
+export function deleteCity(id: string, token: string): Promise<void> {
+  return apiFetch(`/api/cities/${id}`, { method: "DELETE", token });
 }

@@ -8,9 +8,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ChefHatIcon } from "@/components/ui/icons";
 import { useLanguage } from "@/lib/i18n/context";
-import { listRestaurants } from "@/lib/restaurants/api";
-import { CUISINE_TILES } from "@/lib/restaurants/cuisineTiles";
-import type { RestaurantSummary } from "@/lib/restaurants/types";
+import { listCuisines, listRestaurants } from "@/lib/restaurants/api";
+import type { Cuisine, RestaurantSummary } from "@/lib/restaurants/types";
 
 interface HomePageContentProps {
   items: RestaurantSummary[];
@@ -19,6 +18,7 @@ interface HomePageContentProps {
 export function HomePageContent({ items: initialItems }: HomePageContentProps) {
   const { t, locale } = useLanguage();
   const [items, setItems] = useState(initialItems);
+  const [cuisines, setCuisines] = useState<Cuisine[]>([]);
 
   // Server-rendered with the UI shell's default locale (see the page
   // component) — re-fetch on the client once the real locale is known, and
@@ -30,20 +30,36 @@ export function HomePageContent({ items: initialItems }: HomePageContentProps) {
       .catch(() => {});
   }, [locale]);
 
+  // Fetched without a locale so `cuisine.name` stays the canonical English
+  // value the search filter matches on — the Khmer label (when shown) comes
+  // from `nameKm` client-side instead of a locale-swapped `name`.
+  useEffect(() => {
+    listCuisines()
+      .then((res) => setCuisines(res.cuisines))
+      .catch(() => setCuisines([]));
+  }, []);
+
   return (
     <div className="mx-auto max-w-[1280px] px-8 py-14">
       {/* Cuisine tiles */}
       <FadeIn delay={0.05}>
         <h2 className="disp text-xl font-bold text-ink">{t("home.browseByCuisine")}</h2>
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {CUISINE_TILES.map((tile) => (
+          {cuisines.map((cuisine) => (
             <Link
-              key={tile.labelKey}
-              href={`/search${tile.cuisine ? `?cuisineType=${encodeURIComponent(tile.cuisine)}` : ""}`}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-5 text-center transition hover:-translate-y-1 hover:border-[#E2B8A6] hover:shadow-[0_12px_24px_rgba(194,65,12,.12)]"
+              key={cuisine.id}
+              href={`/search?cuisineType=${encodeURIComponent(cuisine.name)}`}
+              className="km flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-5 text-center transition hover:-translate-y-1 hover:border-[#E2B8A6] hover:shadow-[0_12px_24px_rgba(194,65,12,.12)]"
             >
-              <span className="text-2xl">{tile.icon}</span>
-              <span className="text-sm font-bold text-ink">{t(tile.labelKey)}</span>
+              {cuisine.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={cuisine.imageUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <span className="text-2xl">🍽️</span>
+              )}
+              <span className="text-sm font-bold text-ink">
+                {locale === "km" ? cuisine.nameKm || cuisine.name : cuisine.name}
+              </span>
             </Link>
           ))}
         </div>

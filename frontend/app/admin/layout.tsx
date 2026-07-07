@@ -11,9 +11,11 @@ import {
   ChefHatIcon,
   DashboardIcon,
   InboxIcon,
+  PinIcon,
   SettingsIcon,
   TagIcon,
   UsersIcon,
+  UtensilsIcon,
 } from "@/components/ui/icons";
 import { AdminAuthProvider, useAdminAuth } from "@/lib/auth/adminAuth";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
@@ -134,6 +136,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       badge: pending?.requestCount,
     },
     { href: "/admin/tags", label: t("admin.navTags"), icon: TagIcon },
+    { href: "/admin/cuisines", label: t("admin.navCuisines"), icon: UtensilsIcon },
+    { href: "/admin/cities", label: t("admin.navCities"), icon: PinIcon },
     { href: "/admin/settings", label: t("admin.navSettings"), icon: SettingsIcon },
   ];
 

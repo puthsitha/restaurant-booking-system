@@ -8,8 +8,8 @@ import { Select } from "@/components/ui/Select";
 import { UnsavedChangesBar } from "@/components/ui/UnsavedChangesBar";
 import { ApiError } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n/context";
-import { updateRestaurant } from "@/lib/restaurants/api";
-import type { PriceRange } from "@/lib/restaurants/types";
+import { listCities, listCuisines, updateRestaurant } from "@/lib/restaurants/api";
+import type { City, Cuisine, PriceRange } from "@/lib/restaurants/types";
 
 import type { DirtyTabHandle, ManageTabProps } from "./types";
 
@@ -22,10 +22,10 @@ interface ProfileDraft {
   nameKm: string;
   description: string;
   descriptionKm: string;
-  cuisineType: string;
+  cuisineId: string;
   address: string;
   addressKm: string;
-  city: string;
+  cityId: string;
   phone: string;
   website: string;
   coverImageUrl: string;
@@ -43,10 +43,10 @@ function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileD
     nameKm: restaurant.nameKm ?? "",
     description: restaurant.description ?? "",
     descriptionKm: restaurant.descriptionKm ?? "",
-    cuisineType: restaurant.cuisineType,
+    cuisineId: restaurant.cuisineId,
     address: restaurant.address,
     addressKm: restaurant.addressKm ?? "",
-    city: restaurant.city,
+    cityId: restaurant.cityId,
     phone: restaurant.phone ?? "",
     website: restaurant.website ?? "",
     coverImageUrl: restaurant.coverImageUrl ?? "",
@@ -69,6 +69,13 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
+  const [cuisines, setCuisines] = useState<Cuisine[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+
+  useEffect(() => {
+    listCuisines().then((res) => setCuisines(res.cuisines)).catch(() => setCuisines([]));
+    listCities().then((res) => setCities(res.cities)).catch(() => setCities([]));
+  }, []);
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(baseline.current);
 
@@ -92,10 +99,10 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           slug: restaurant.slug,
           description: draft.description || undefined,
           descriptionKm: draft.descriptionKm || undefined,
-          cuisineType: draft.cuisineType,
+          cuisineId: draft.cuisineId,
           address: draft.address,
           addressKm: draft.addressKm || undefined,
-          city: draft.city,
+          cityId: draft.cityId,
           phone: draft.phone || undefined,
           website: draft.website || undefined,
           coverImageUrl: draft.coverImageUrl || undefined,
@@ -179,24 +186,18 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className={LABEL_CLASS}>{t("ownerManage.profile.cuisineType")}</label>
-          <input
-            value={draft.cuisineType}
-            onChange={(e) => set("cuisineType", e.target.value)}
-            placeholder={t("ownerManage.profile.cuisineTypePlaceholder")}
-            className={FIELD_CLASS}
-          />
-        </div>
-        <div>
-          <label className={LABEL_CLASS}>{t("ownerManage.profile.city")}</label>
-          <input
-            value={draft.city}
-            onChange={(e) => set("city", e.target.value)}
-            placeholder={t("ownerManage.profile.cityPlaceholder")}
-            className={FIELD_CLASS}
-          />
-        </div>
+        <Select
+          label={t("ownerManage.profile.cuisineType")}
+          value={draft.cuisineId}
+          onChange={(value) => set("cuisineId", value)}
+          options={cuisines.map((cuisine) => ({ value: cuisine.id, label: cuisine.name }))}
+        />
+        <Select
+          label={t("ownerManage.profile.city")}
+          value={draft.cityId}
+          onChange={(value) => set("cityId", value)}
+          options={cities.map((city) => ({ value: city.id, label: city.name }))}
+        />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
