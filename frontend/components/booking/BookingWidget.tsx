@@ -40,6 +40,19 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Minutes since midnight, local time — used to drop today's slots that fall
+// before "now + the restaurant's minimum booking notice" so the picker never
+// offers a time the backend would reject anyway (see assertAvailableOrThrow).
+function nowMinutes(): number {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+function slotMinutes(slot: string): number {
+  const [h, m] = slot.split(":").map(Number);
+  return h * 60 + m;
+}
+
 function addDaysIso(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -110,10 +123,16 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
   }, [date, hoursByDay]);
 
   const isClosedDate = closureDates.has(date);
-  const timeSlots = useMemo(() => {
+  const isToday = date === todayIso();
+  const allDaySlots = useMemo(() => {
     if (!selectedDayHours || selectedDayHours.isClosed || isClosedDate) return [];
     return generateTimeSlots(selectedDayHours.openTime, selectedDayHours.closeTime);
   }, [selectedDayHours, isClosedDate]);
+  const timeSlots = useMemo(() => {
+    if (!isToday) return allDaySlots;
+    const earliest = nowMinutes() + restaurant.minBookingNotice;
+    return allDaySlots.filter((slot) => slotMinutes(slot) >= earliest);
+  }, [allDaySlots, isToday, restaurant.minBookingNotice]);
 
   useEffect(() => {
     if (timeSlots.length > 0 && !timeSlots.includes(time)) {
@@ -253,7 +272,11 @@ export function BookingWidget({ restaurant }: BookingWidgetProps) {
         <label className="mb-1.5 block text-xs font-bold text-label">{t("bookingWidget.time")}</label>
         {timeSlots.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-3 py-2.5 text-sm text-muted">
-            {isClosedDate ? t("bookingWidget.closedOnDate") : t("bookingWidget.closedOnDay")}
+            {allDaySlots.length > 0
+              ? t("bookingWidget.noMoreTimesToday")
+              : isClosedDate
+                ? t("bookingWidget.closedOnDate")
+                : t("bookingWidget.closedOnDay")}
           </p>
         ) : (
           <div className="flex flex-wrap gap-1.5">

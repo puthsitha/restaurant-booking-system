@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyPlateIcon } from "@/components/ui/icons";
@@ -26,6 +27,7 @@ export default function AdminCitiesPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<City | null>(null);
 
   function reload(): void {
     setLoadError(null);
@@ -54,12 +56,11 @@ export default function AdminCitiesPage() {
     }
   }
 
-  async function handleDelete(city: City): Promise<void> {
-    if (!token) return;
-    if (!confirm(t("adminCities.deleteConfirm"))) return;
+  async function handleDelete(): Promise<void> {
+    if (!token || !pendingDelete) return;
     setFormError(null);
     try {
-      await deleteCity(city.id, token);
+      await deleteCity(pendingDelete.id, token);
       reload();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : t("adminCities.deleteError"));
@@ -135,7 +136,7 @@ export default function AdminCitiesPage() {
               {city.name}
               {city.nameKm && <span className="km text-muted">({city.nameKm})</span>}
               <button
-                onClick={() => handleDelete(city)}
+                onClick={() => setPendingDelete(city)}
                 className="font-bold text-red-600"
                 aria-label={t("adminCities.deleteAria", { name: city.name })}
               >
@@ -145,6 +146,14 @@ export default function AdminCitiesPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDeleteModal
+        open={pendingDelete !== null}
+        title={t("adminCities.deleteConfirm")}
+        body={t("adminCities.deleteModalBody")}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </main>
   );
 }

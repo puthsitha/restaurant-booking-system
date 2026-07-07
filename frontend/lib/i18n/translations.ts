@@ -335,6 +335,7 @@ const en = {
     time: "Time",
     closedOnDate: "Closed on this date",
     closedOnDay: "Closed on this day",
+    noMoreTimesToday: "No more available times today — try tomorrow",
     seating: "Seating",
     seatingIndoor: "Indoor",
     seatingGarden: "Garden",
@@ -575,7 +576,10 @@ const en = {
     },
     menu: {
       addMenuError: "Couldn't add menu",
+      updateMenuError: "Couldn't save menu",
       deleteMenuError: "Couldn't delete menu",
+      editMenu: "Edit menu",
+      editItem: "Edit",
       newMenuName: "New menu name",
       newMenuPlaceholder: "Lunch Menu",
       newMenuNameKm: "Menu name (Khmer, optional)",
@@ -847,7 +851,9 @@ const en = {
     emptyTitle: "No cuisines yet",
     emptyMessage: "Add a few cuisines so owners have something to pick from when listing a restaurant.",
     deleteAria: "Delete {name}",
-    deleteConfirm: "Delete this cuisine?"
+    deleteConfirm: "Delete this cuisine?",
+    deleteModalBody: "This can't be undone.",
+    deleting: "Deleting…"
   },
   adminCities: {
     loadError: "Couldn't load cities.",
@@ -866,7 +872,9 @@ const en = {
     emptyTitle: "No cities yet",
     emptyMessage: "Add a few cities so owners have something to pick from when listing a restaurant.",
     deleteAria: "Delete {name}",
-    deleteConfirm: "Delete this city?"
+    deleteConfirm: "Delete this city?",
+    deleteModalBody: "This can't be undone.",
+    deleting: "Deleting…"
   },
   adminSettings: {
     loadError: "Couldn't load platform settings.",
@@ -1270,6 +1278,7 @@ const km = {
     time: "ម៉ោង",
     closedOnDate: "បិទនៅថ្ងៃនេះ",
     closedOnDay: "បិទនៅថ្ងៃនេះ",
+    noMoreTimesToday: "គ្មានម៉ោងទំនេរទៀតទេថ្ងៃនេះ — សូមសាកល្បងថ្ងៃស្អែក",
     seating: "កន្លែងអង្គុយ",
     seatingIndoor: "ក្នុងអាគារ",
     seatingGarden: "សួនច្បារ",
@@ -1510,7 +1519,10 @@ const km = {
     },
     menu: {
       addMenuError: "មិនអាចបន្ថែមម៉ឺនុយបានទេ",
+      updateMenuError: "មិនអាចរក្សាទុកម៉ឺនុយបានទេ",
       deleteMenuError: "មិនអាចលុបម៉ឺនុយបានទេ",
+      editMenu: "កែសម្រួលម៉ឺនុយ",
+      editItem: "កែសម្រួល",
       newMenuName: "ឈ្មោះម៉ឺនុយថ្មី",
       newMenuPlaceholder: "ម៉ឺនុយអាហារថ្ងៃត្រង់",
       newMenuNameKm: "ឈ្មោះម៉ឺនុយ (ខ្មែរ មិនចាំបាច់)",
@@ -1781,7 +1793,9 @@ const km = {
     emptyTitle: "មិនទាន់មានប្រភេទម្ហូបនៅឡើយទេ",
     emptyMessage: "បន្ថែមប្រភេទម្ហូបខ្លះដើម្បីឱ្យម្ចាស់ភោជនីយដ្ឋានមានជម្រើសនៅពេលចុះបញ្ជីភោជនីយដ្ឋាន។",
     deleteAria: "លុប {name}",
-    deleteConfirm: "លុបប្រភេទម្ហូបនេះ?"
+    deleteConfirm: "លុបប្រភេទម្ហូបនេះ?",
+    deleteModalBody: "សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+    deleting: "កំពុងលុប…"
   },
   adminCities: {
     loadError: "មិនអាចផ្ទុកទីក្រុងបានទេ។",
@@ -1800,7 +1814,9 @@ const km = {
     emptyTitle: "មិនទាន់មានទីក្រុងនៅឡើយទេ",
     emptyMessage: "បន្ថែមទីក្រុងខ្លះដើម្បីឱ្យម្ចាស់ភោជនីយដ្ឋានមានជម្រើសនៅពេលចុះបញ្ជីភោជនីយដ្ឋាន។",
     deleteAria: "លុប {name}",
-    deleteConfirm: "លុបទីក្រុងនេះ?"
+    deleteConfirm: "លុបទីក្រុងនេះ?",
+    deleteModalBody: "សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+    deleting: "កំពុងលុប…"
   },
   adminSettings: {
     loadError: "មិនអាចផ្ទុកការកំណត់វេទិកាបានទេ។",
