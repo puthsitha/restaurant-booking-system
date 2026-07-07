@@ -55,7 +55,7 @@ export interface RestaurantProfileInput {
   dressCode?: string;
 }
 
-function toQueryString(params: Record<string, string | number | undefined>): string {
+function toQueryString(params: Record<string, string | number | boolean | undefined>): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== "") search.set(key, String(value));
@@ -70,7 +70,7 @@ export function listRestaurants(
   location?: { lat: number; lng: number },
 ): Promise<ListRestaurantsResponse> {
   return apiFetch<ListRestaurantsResponse>(
-    `/api/restaurants${toQueryString(params as Record<string, string | number | undefined>)}`,
+    `/api/restaurants${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
     { locale, location },
   );
 }
@@ -87,7 +87,7 @@ export function listMyRestaurants(
   token: string,
 ): Promise<ListRestaurantsResponse> {
   return apiFetch<ListRestaurantsResponse>(
-    `/api/restaurants/mine${toQueryString(params as Record<string, string | number | undefined>)}`,
+    `/api/restaurants/mine${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
     { token },
   );
 }
@@ -98,7 +98,7 @@ export function listAllRestaurantsAdmin(
   token: string,
 ): Promise<ListRestaurantsResponse> {
   return apiFetch<ListRestaurantsResponse>(
-    `/api/restaurants/all${toQueryString(params as Record<string, string | number | undefined>)}`,
+    `/api/restaurants/all${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
     { token },
   );
 }

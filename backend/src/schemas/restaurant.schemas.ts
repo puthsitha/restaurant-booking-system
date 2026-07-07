@@ -75,6 +75,16 @@ export const listRestaurantsQuerySchema = z.object({
   tag: z.string().trim().min(1).optional(),
   priceRange: priceRangeEnum.optional(),
   search: z.string().trim().min(1).optional(),
+  // "Open right now" (by the restaurant's weekly hours), a maximum distance
+  // from the client's coordinates, and a minimum average rating — all
+  // applied in-memory after the DB query since they depend on derived data
+  // (operating hours / haversine distance / review aggregate), not columns.
+  availableNow: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === "true")),
+  maxDistanceKm: z.coerce.number().min(0).max(1000).optional(),
+  minRating: z.coerce.number().min(0).max(5).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });

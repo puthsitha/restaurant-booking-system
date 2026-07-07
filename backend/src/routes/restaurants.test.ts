@@ -340,6 +340,92 @@ describe("GET /api/restaurants", () => {
     expect(res.status).toBe(200);
     expect(res.body.items[0].name).toBe(baseRestaurant.name);
   });
+
+  it("excludes restaurants below minRating", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
+      { ...baseRestaurant, id: "rest_1" },
+      { ...baseRestaurant, id: "rest_2" },
+    ]);
+    vi.mocked(prisma.review.groupBy).mockResolvedValueOnce([
+      { restaurantId: "rest_1", _avg: { rating: 4.8 }, _count: { rating: 5 } },
+      { restaurantId: "rest_2", _avg: { rating: 3.0 }, _count: { rating: 2 } },
+    ] as never);
+
+    const res = await request(app).get("/api/restaurants?minRating=4");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].id).toBe("rest_1");
+    expect(res.body.total).toBe(1);
+  });
+
+  it("excludes restaurants without any reviews when minRating is set", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
+    vi.mocked(prisma.review.groupBy).mockResolvedValueOnce([]);
+
+    const res = await request(app).get("/api/restaurants?minRating=3");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(0);
+  });
+
+  it("excludes restaurants farther than maxDistanceKm", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
+      { ...baseRestaurant, id: "rest_near", latitude: "11.56", longitude: "104.93" }, // Phnom Penh
+      { ...baseRestaurant, id: "rest_far", latitude: "13.3671", longitude: "103.8448" }, // Siem Reap
+    ]);
+
+    const res = await request(app)
+      .get("/api/restaurants?maxDistanceKm=10")
+      .set("X-Client-Lat", "11.5564")
+      .set("X-Client-Lng", "104.9282"); // Phnom Penh
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].id).toBe("rest_near");
+  });
+
+  it("excludes restaurants with no coordinates on file when maxDistanceKm is set", async () => {
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([baseRestaurant]);
+
+    const res = await request(app).get("/api/restaurants?maxDistanceKm=5");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(0);
+  });
+
+  it("filters to restaurants open right now when availableNow=true", async () => {
+    const nowInCambodia = new Date(Date.now() + 7 * 60 * 60 * 1000);
+    const today = [
+      "SUNDAY",
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+    ][nowInCambodia.getUTCDay()];
+
+    vi.mocked(prisma.restaurant.findMany).mockResolvedValueOnce([
+      {
+        ...baseRestaurant,
+        id: "rest_open",
+        operatingHours: [{ dayOfWeek: today, openTime: "00:00", closeTime: "23:59", isClosed: false }],
+      },
+      {
+        ...baseRestaurant,
+        id: "rest_closed",
+        operatingHours: [{ dayOfWeek: today, openTime: "00:00", closeTime: "23:59", isClosed: true }],
+      },
+    ] as never);
+
+    const res = await request(app).get("/api/restaurants?availableNow=true");
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].id).toBe("rest_open");
+    expect(res.body.items[0].isOpenNow).toBeUndefined();
+  });
 });
 
 describe("GET /api/restaurants/slug/:slug", () => {

@@ -212,6 +212,9 @@ export interface ListRestaurantsParams {
   tag?: string;
   priceRange?: PriceRange;
   search?: string;
+  availableNow?: boolean;
+  maxDistanceKm?: number;
+  minRating?: number;
   page?: number;
   pageSize?: number;
 }

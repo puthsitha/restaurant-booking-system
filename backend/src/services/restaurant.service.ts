@@ -1,4 +1,4 @@
-import type { Prisma, Restaurant } from "@prisma/client";
+import type { DayOfWeek, Prisma, Restaurant } from "@prisma/client";
 
 import { prisma } from "../lib/prisma";
 import { HttpError } from "../lib/httpError";
@@ -53,6 +53,13 @@ async function assertSlugAvailable(slug: string, excludeId?: string): Promise<vo
     throw new HttpError(409, "That URL slug is already taken");
   }
 }
+
+const operatingHourSelect = {
+  dayOfWeek: true,
+  openTime: true,
+  closeTime: true,
+  isClosed: true,
+} satisfies Prisma.OperatingHoursSelect;
 
 const publicListSelect = {
   id: true,
@@ -173,6 +180,38 @@ async function getRatingSummaries(
   );
 }
 
+const CAMBODIA_UTC_OFFSET_MINUTES = 7 * 60;
+const DAY_ORDER: DayOfWeek[] = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+];
+
+// Whether a restaurant is open right now, in Cambodia's timezone (UTC+7, no
+// DST) regardless of the server's own local timezone — computed by shifting
+// the UTC clock forward and reading it back with UTC getters. Ignores
+// special closures (same simplification the frontend's own isOpenNow makes)
+// since this only gates a coarse "available now" search filter.
+function isRestaurantOpenNow(
+  hours: { dayOfWeek: DayOfWeek; openTime: string; closeTime: string; isClosed: boolean }[],
+  now: Date,
+): boolean {
+  const cambodiaNow = new Date(now.getTime() + CAMBODIA_UTC_OFFSET_MINUTES * 60 * 1000);
+  const today = DAY_ORDER[(cambodiaNow.getUTCDay() + 6) % 7];
+  const hour = hours.find((h) => h.dayOfWeek === today);
+  if (!hour || hour.isClosed) return false;
+
+  const current = `${String(cambodiaNow.getUTCHours()).padStart(2, "0")}:${String(cambodiaNow.getUTCMinutes()).padStart(2, "0")}`;
+  if (hour.closeTime < hour.openTime) {
+    return current >= hour.openTime || current < hour.closeTime;
+  }
+  return current >= hour.openTime && current < hour.closeTime;
+}
+
 export async function listRestaurants(
   query: ListRestaurantsQuery,
   locale: Locale,
@@ -191,26 +230,45 @@ export async function listRestaurants(
       : {}),
   };
 
-  const [items, total] = await Promise.all([
-    prisma.restaurant.findMany({
-      where,
-      select: publicListSelect,
-      orderBy: [{ isPopular: "desc" }, { createdAt: "desc" }],
-      skip: (query.page - 1) * query.pageSize,
-      take: query.pageSize,
-    }),
-    prisma.restaurant.count({ where }),
-  ]);
+  // availableNow/maxDistanceKm/minRating are derived from operating hours,
+  // haversine distance, and the review aggregate — none of which are plain
+  // columns Postgres can filter on here — so we fetch every ACTIVE match for
+  // the DB-native filters above, enrich each one, then filter and paginate
+  // that in-memory. Fine at this app's scale; revisit if the catalog grows
+  // large enough for this to matter.
+  const items = await prisma.restaurant.findMany({
+    where,
+    select: { ...publicListSelect, operatingHours: { select: operatingHourSelect } },
+    orderBy: [{ isPopular: "desc" }, { createdAt: "desc" }],
+  });
 
   const ratingByRestaurant = await getRatingSummaries(items.map((item) => item.id));
+  const now = new Date();
 
-  const localizedItems = items.map((item) => ({
+  const enrichedItems = items.map(({ operatingHours, ...item }) => ({
     ...withDistance(localizeRestaurant(item, locale), clientCoordinates),
     tags: localizeTags(item.tags, locale),
     ...(ratingByRestaurant.get(item.id) ?? { avgRating: null, reviewCount: 0 }),
+    isOpenNow: isRestaurantOpenNow(operatingHours ?? [], now),
   }));
 
-  return { items: localizedItems, total, page: query.page, pageSize: query.pageSize };
+  const filteredItems = enrichedItems.filter((item) => {
+    if (query.availableNow && !item.isOpenNow) return false;
+    if (query.maxDistanceKm != null && (item.distanceKm == null || item.distanceKm > query.maxDistanceKm)) {
+      return false;
+    }
+    if (query.minRating != null && (item.avgRating == null || item.avgRating < query.minRating)) {
+      return false;
+    }
+    return true;
+  });
+
+  const total = filteredItems.length;
+  const pageItems = filteredItems
+    .slice((query.page - 1) * query.pageSize, query.page * query.pageSize)
+    .map(({ isOpenNow, ...item }) => item);
+
+  return { items: pageItems, total, page: query.page, pageSize: query.pageSize };
 }
 
 export async function listAllRestaurantsForAdmin(query: AdminListRestaurantsQuery) {

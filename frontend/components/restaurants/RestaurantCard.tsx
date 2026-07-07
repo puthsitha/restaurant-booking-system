@@ -6,9 +6,8 @@ import Link from "next/link";
 import { FavoriteButton } from "@/components/restaurants/FavoriteButton";
 import { PinIcon, StarIcon } from "@/components/ui/icons";
 import { useLanguage } from "@/lib/i18n/context";
+import { PRICE_SYMBOL } from "@/lib/restaurants/priceLabels";
 import type { RestaurantSummary } from "@/lib/restaurants/types";
-
-const PRICE_LABEL: Record<string, string> = { LOW: "$", MEDIUM: "$$", HIGH: "$$$" };
 
 export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }) {
   const { t } = useLanguage();
@@ -50,7 +49,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
           <div className="flex items-start justify-between gap-2">
             <h3 className="disp font-bold text-ink">{restaurant.name}</h3>
             <span className="shrink-0 text-sm font-semibold text-muted">
-              {PRICE_LABEL[restaurant.priceRange]}
+              {PRICE_SYMBOL[restaurant.priceRange]}
             </span>
           </div>
           <p className="mt-1 text-sm text-muted">

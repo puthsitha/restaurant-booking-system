@@ -283,6 +283,20 @@ export function MenuIcon({ className }: IconProps) {
   );
 }
 
+export function MapIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M9 4v14M15 6v14" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 export function CheckIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
