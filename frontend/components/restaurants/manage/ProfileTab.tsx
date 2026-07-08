@@ -35,6 +35,7 @@ interface ProfileDraft {
   latitude: string;
   longitude: string;
   isPopular: boolean;
+  dressCode: string;
 }
 
 function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileDraft {
@@ -56,6 +57,7 @@ function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileD
     latitude: restaurant.latitude ?? "",
     longitude: restaurant.longitude ?? "",
     isPopular: restaurant.isPopular,
+    dressCode: restaurant.dressCode ?? "",
   };
 }
 
@@ -112,6 +114,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           latitude: draft.latitude ? Number(draft.latitude) : undefined,
           longitude: draft.longitude ? Number(draft.longitude) : undefined,
           isPopular: draft.isPopular,
+          dressCode: draft.dressCode || undefined,
         },
         token,
       );
@@ -248,6 +251,15 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           value={draft.coverImageUrl}
           onChange={(e) => set("coverImageUrl", e.target.value)}
           placeholder={t("ownerManage.profile.coverImageUrlPlaceholder")}
+          className={FIELD_CLASS}
+        />
+      </div>
+      <div>
+        <label className={LABEL_CLASS}>{t("ownerManage.profile.dressCode")}</label>
+        <input
+          value={draft.dressCode}
+          onChange={(e) => set("dressCode", e.target.value)}
+          placeholder={t("ownerManage.profile.dressCodePlaceholder")}
           className={FIELD_CLASS}
         />
       </div>
