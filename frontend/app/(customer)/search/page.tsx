@@ -49,7 +49,7 @@ function SearchPageContent() {
     (searchParams.get("priceRange") as PriceRange | null) ?? "",
   );
   const [availableNow, setAvailableNow] = useState(searchParams.get("availableNow") === "true");
-  const [maxDistanceKm, setMaxDistanceKm] = useState(() => {
+  const [distanceInputKm, setDistanceInputKm] = useState(() => {
     const param = Number(searchParams.get("maxDistanceKm"));
     return Number.isFinite(param) && param > 0 ? param : DEFAULT_DISTANCE_KM;
   });
@@ -63,6 +63,9 @@ function SearchPageContent() {
   // Debounce the free-text field so typing doesn't fire a request per
   // keystroke — the name filter runs 350ms after the user pauses.
   const debouncedSearch = useDebouncedValue(search, 350);
+  // Same idea for the distance slider — dragging updates the label
+  // immediately, but the search only runs 350ms after the user stops.
+  const maxDistanceKm = useDebouncedValue(distanceInputKm, 350);
 
   // Fetched without a locale so `cuisine.name` stays the canonical English
   // value the search filter matches on — the Khmer label (when shown) comes
@@ -77,11 +80,11 @@ function SearchPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // A new debounced text filter should restart pagination at page 1, same
-  // as the other filter handlers already do.
+  // A new debounced text filter (or distance) should restart pagination at
+  // page 1, same as the other filter handlers already do.
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, maxDistanceKm]);
 
   const runSearch = useCallback(() => {
     setIsLoading(true);
@@ -130,7 +133,7 @@ function SearchPageContent() {
     setCuisineType("");
     setPriceRange("");
     setAvailableNow(false);
-    setMaxDistanceKm(DEFAULT_DISTANCE_KM);
+    setDistanceInputKm(DEFAULT_DISTANCE_KM);
     setMinRating(undefined);
     setPage(1);
   }
@@ -289,15 +292,12 @@ function SearchPageContent() {
               type="range"
               min={MIN_DISTANCE_KM}
               max={MAX_DISTANCE_KM}
-              value={maxDistanceKm}
-              onChange={(e) => {
-                setMaxDistanceKm(Number(e.target.value));
-                setPage(1);
-              }}
+              value={distanceInputKm}
+              onChange={(e) => setDistanceInputKm(Number(e.target.value))}
               className="w-full accent-accent"
             />
             <p className="km mt-1 text-xs text-muted">
-              {t("searchPage.withinKm", { km: maxDistanceKm })}
+              {t("searchPage.withinKm", { km: distanceInputKm })}
             </p>
           </div>
 
