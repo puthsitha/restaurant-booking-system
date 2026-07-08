@@ -155,7 +155,7 @@ function SearchPageContent() {
       <div className="mt-6 flex flex-col gap-8 lg:flex-row">
         <form
           onSubmit={handleSubmit}
-          className="sticky top-20 h-fit w-full shrink-0 space-y-5 rounded-2xl border border-border bg-surface p-5 lg:w-72"
+          className="w-full shrink-0 space-y-5 rounded-2xl border border-border bg-surface p-5 lg:sticky lg:top-20 lg:h-fit lg:w-72"
         >
           <div className="flex items-center justify-between">
             <h2 className="disp text-base font-extrabold text-ink">
