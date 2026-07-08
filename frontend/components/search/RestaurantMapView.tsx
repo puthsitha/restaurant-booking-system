@@ -71,7 +71,7 @@ export function RestaurantMapView({ restaurants }: RestaurantMapViewProps) {
   return (
     <div className="flex flex-col gap-5 lg:flex-row">
       <div
-        className="relative h-[420px] flex-1 overflow-hidden rounded-2xl border border-border bg-bg sm:h-[520px]"
+        className="relative h-[420px] overflow-hidden rounded-2xl border border-border bg-bg sm:h-[520px] lg:flex-1"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(120,120,120,.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(120,120,120,.12) 1px, transparent 1px)",
