@@ -43,7 +43,9 @@ export function HomePageContent({ items: initialItems }: HomePageContentProps) {
     <div className="mx-auto max-w-[1280px] px-8 py-14">
       {/* Cuisine tiles */}
       <FadeIn delay={0.05}>
-        <h2 className="disp text-xl font-bold text-ink">{t("home.browseByCuisine")}</h2>
+        <h2 className="disp text-xl font-bold text-ink">
+          {t("home.browseByCuisine")}
+        </h2>
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {cuisines.map((cuisine) => (
             <Link
@@ -53,12 +55,18 @@ export function HomePageContent({ items: initialItems }: HomePageContentProps) {
             >
               {cuisine.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={cuisine.imageUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                <img
+                  src={cuisine.imageUrl}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover"
+                />
               ) : (
                 <span className="text-2xl">🍽️</span>
               )}
               <span className="text-sm font-bold text-ink">
-                {locale === "km" ? cuisine.nameKm || cuisine.name : cuisine.name}
+                {locale === "km"
+                  ? cuisine.nameKm || cuisine.name
+                  : cuisine.name}
               </span>
             </Link>
           ))}
@@ -69,8 +77,12 @@ export function HomePageContent({ items: initialItems }: HomePageContentProps) {
       <FadeIn delay={0.1} className="mt-14">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="disp text-xl font-bold text-ink">{t("home.popularRestaurants")}</h2>
-            <p className="km mt-1 text-sm text-muted">{t("home.popularRestaurantsSubtitle")}</p>
+            <h2 className="disp text-xl font-bold text-ink">
+              {t("home.popularRestaurants")}
+            </h2>
+            <p className="km mt-1 text-sm text-muted">
+              {t("home.popularRestaurantsSubtitle")}
+            </p>
           </div>
           <Link
             href="/search"
@@ -97,7 +109,7 @@ export function HomePageContent({ items: initialItems }: HomePageContentProps) {
       </FadeIn>
 
       {/* Owner CTA */}
-      <FadeIn delay={0.15} className="mt-14">
+      {/* <FadeIn delay={0.15} className="mt-14">
         <div
           className="flex flex-col items-start justify-between gap-4 rounded-2xl px-8 py-8 text-white sm:flex-row sm:items-center"
           style={{ background: "linear-gradient(120deg, #1F6F54, #15503C)" }}
@@ -113,7 +125,7 @@ export function HomePageContent({ items: initialItems }: HomePageContentProps) {
             {t("home.ownerCtaButton")}
           </Link>
         </div>
-      </FadeIn>
+      </FadeIn> */}
     </div>
   );
 }
