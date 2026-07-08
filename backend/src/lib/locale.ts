@@ -18,15 +18,17 @@ interface LocalizableRestaurant {
   descriptionKm?: string | null;
   address?: string;
   addressKm?: string | null;
+  dressCode?: string | null;
+  dressCodeKm?: string | null;
 }
 
-// Swaps `name`/`description`/`address` for their Khmer counterparts when
-// present, falling back to English so callers never see an empty field just
-// because a restaurant hasn't been translated yet. The `*Km` source fields
-// are left in the result (owner/admin management screens need them to edit
-// the Khmer text) — only the `name`/`description`/`address` keys themselves
-// change value, so public callers that just want the display text see the
-// same shape regardless of locale.
+// Swaps `name`/`description`/`address`/`dressCode` for their Khmer
+// counterparts when present, falling back to English so callers never see an
+// empty field just because a restaurant hasn't been translated yet. The
+// `*Km` source fields are left in the result (owner/admin management screens
+// need them to edit the Khmer text) — only the `name`/`description`/
+// `address`/`dressCode` keys themselves change value, so public callers that
+// just want the display text see the same shape regardless of locale.
 export function localizeRestaurant<T extends LocalizableRestaurant>(entity: T, locale: Locale): T {
   if (locale === "km") {
     return {
@@ -34,6 +36,7 @@ export function localizeRestaurant<T extends LocalizableRestaurant>(entity: T, l
       name: entity.nameKm || entity.name,
       description: entity.descriptionKm || entity.description,
       ...(entity.address !== undefined ? { address: entity.addressKm || entity.address } : {}),
+      ...(entity.dressCode !== undefined ? { dressCode: entity.dressCodeKm || entity.dressCode } : {}),
     };
   }
   return entity;

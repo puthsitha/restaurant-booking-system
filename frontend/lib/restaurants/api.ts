@@ -55,6 +55,7 @@ export interface RestaurantProfileInput {
   minCapacity?: number;
   parkingAvailable?: boolean;
   dressCode?: string;
+  dressCodeKm?: string;
 }
 
 function toQueryString(params: Record<string, string | number | boolean | undefined>): string {

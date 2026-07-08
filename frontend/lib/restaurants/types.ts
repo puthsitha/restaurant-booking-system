@@ -149,6 +149,7 @@ export interface RestaurantCore {
   minCapacity: number;
   parkingAvailable: boolean;
   dressCode: string | null;
+  dressCodeKm?: string | null;
   ownerId: string;
   createdAt: string;
   updatedAt: string;

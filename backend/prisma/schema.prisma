@@ -173,6 +173,7 @@ model Restaurant {
   minCapacity       Int     @default(1)
   parkingAvailable  Boolean @default(false)
   dressCode         String?
+  dressCodeKm       String?
 
   ownerId String
   owner   User   @relation("OwnerRestaurants", fields: [ownerId], references: [id])

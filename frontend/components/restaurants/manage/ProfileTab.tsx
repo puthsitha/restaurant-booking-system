@@ -36,6 +36,7 @@ interface ProfileDraft {
   longitude: string;
   isPopular: boolean;
   dressCode: string;
+  dressCodeKm: string;
 }
 
 function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileDraft {
@@ -58,6 +59,7 @@ function draftFromRestaurant(restaurant: ManageTabProps["restaurant"]): ProfileD
     longitude: restaurant.longitude ?? "",
     isPopular: restaurant.isPopular,
     dressCode: restaurant.dressCode ?? "",
+    dressCodeKm: restaurant.dressCodeKm ?? "",
   };
 }
 
@@ -115,6 +117,7 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           longitude: draft.longitude ? Number(draft.longitude) : undefined,
           isPopular: draft.isPopular,
           dressCode: draft.dressCode || undefined,
+          dressCodeKm: draft.dressCodeKm || undefined,
         },
         token,
       );
@@ -254,14 +257,25 @@ export const ProfileTab = forwardRef<DirtyTabHandle, ManageTabProps>(function Pr
           className={FIELD_CLASS}
         />
       </div>
-      <div>
-        <label className={LABEL_CLASS}>{t("ownerManage.profile.dressCode")}</label>
-        <input
-          value={draft.dressCode}
-          onChange={(e) => set("dressCode", e.target.value)}
-          placeholder={t("ownerManage.profile.dressCodePlaceholder")}
-          className={FIELD_CLASS}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.dressCode")}</label>
+          <input
+            value={draft.dressCode}
+            onChange={(e) => set("dressCode", e.target.value)}
+            placeholder={t("ownerManage.profile.dressCodePlaceholder")}
+            className={FIELD_CLASS}
+          />
+        </div>
+        <div>
+          <label className={LABEL_CLASS}>{t("ownerManage.profile.dressCodeKm")}</label>
+          <input
+            value={draft.dressCodeKm}
+            onChange={(e) => set("dressCodeKm", e.target.value)}
+            placeholder={t("ownerManage.profile.dressCodeKmPlaceholder")}
+            className={`km ${FIELD_CLASS}`}
+          />
+        </div>
       </div>
       <Select
         label={t("ownerManage.profile.priceRange")}
