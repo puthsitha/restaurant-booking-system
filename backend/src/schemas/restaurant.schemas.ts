@@ -54,6 +54,7 @@ export const createRestaurantSchema = z.object({
   minCapacity: z.number().int().min(1).default(1),
   parkingAvailable: z.boolean().default(false),
   dressCode: z.string().trim().max(120).optional(),
+  dressCodeKm: z.string().trim().max(120).optional(),
 });
 export type CreateRestaurantInput = z.infer<typeof createRestaurantSchema>;
 
