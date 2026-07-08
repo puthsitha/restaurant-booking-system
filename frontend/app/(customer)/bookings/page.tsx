@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { CalendarIcon } from "@/components/ui/icons";
+import { CalendarIcon, ChairIcon, ClockIcon, UsersIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
 import { QrCodeViewer } from "@/components/ui/QrCodeViewer";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
@@ -87,7 +87,7 @@ export default function MyBookingsPage() {
 
   if (authStatus === "loading") {
     return (
-      <main className="mx-auto max-w-[720px] px-8 py-12">
+      <main className="mx-auto max-w-[920px] px-8 py-12">
         <ListSkeleton rows={3} />
       </main>
     );
@@ -95,7 +95,7 @@ export default function MyBookingsPage() {
 
   if (authStatus !== "authenticated") {
     return (
-      <main className="mx-auto max-w-[720px] px-8 py-12">
+      <main className="mx-auto max-w-[920px] px-8 py-12">
         <Breadcrumb
           className="mb-4"
           items={[{ label: t("common.home"), href: "/" }, { label: t("bookingsPage.title") }]}
@@ -110,7 +110,7 @@ export default function MyBookingsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[720px] px-8 py-12">
+    <main className="mx-auto max-w-[920px] px-8 py-12">
       <Breadcrumb
         className="mb-4"
         items={[{ label: t("common.home"), href: "/" }, { label: t("bookingsPage.title") }]}
@@ -149,53 +149,104 @@ export default function MyBookingsPage() {
           initial="hidden"
           animate="show"
         >
-          {visible.map((r) => (
-            <motion.div
-              key={r.id}
-              variants={fadeUp}
-              className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-surface p-5"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-bold text-ink">{r.restaurant.name}</p>
-                    <p className="mt-1 text-sm text-muted">
-                      {formatReservationDate(r.date)} {t("bookingsPage.at")} {formatTimeLabel(r.time, locale, t)} ·{" "}
-                      {t("bookingsPage.guestsCount", { count: r.partySize })}
+          {visible.map((r) => {
+            const showQr = tab === "upcoming" && !PAST_STATUSES.includes(r.status);
+            return (
+              <motion.div
+                key={r.id}
+                variants={fadeUp}
+                className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface sm:flex-row"
+              >
+                <div className="h-40 w-full shrink-0 sm:h-auto sm:w-48">
+                  {r.restaurant.coverImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={r.restaurant.coverImageUrl}
+                      alt={r.restaurant.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-bg text-3xl">🍽️</div>
+                  )}
+                </div>
+
+                <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-5 sm:flex-row">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-ink">{r.restaurant.name}</p>
+                      <StatusBadge tone={STATUS_TONE[r.status]}>
+                        {t(RESERVATION_STATUS_LABEL_KEY[r.status])}
+                      </StatusBadge>
+                    </div>
+                    <p className="mt-1 truncate text-sm text-muted">
+                      {r.restaurant.cuisine.name} · {r.restaurant.address}
                     </p>
-                    <p className="mt-1 text-xs text-muted">
-                      {t("bookingsPage.confirmation", { code: r.confirmationCode })}
-                    </p>
+                    {!showQr && (
+                      <p className="mt-1 text-xs text-muted">
+                        {t("bookingsPage.confirmation", { code: r.confirmationCode })}
+                      </p>
+                    )}
+
+                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+                      <div>
+                        <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                          <CalendarIcon className="h-3.5 w-3.5" /> {t("bookingsPage.dateLabel")}
+                        </p>
+                        <p className="mt-0.5 text-sm font-bold text-ink">{formatReservationDate(r.date)}</p>
+                      </div>
+                      <div>
+                        <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                          <ClockIcon className="h-3.5 w-3.5" /> {t("bookingsPage.timeLabel")}
+                        </p>
+                        <p className="mt-0.5 text-sm font-bold text-ink">{formatTimeLabel(r.time, locale, t)}</p>
+                      </div>
+                      <div>
+                        <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                          <UsersIcon className="h-3.5 w-3.5" /> {t("bookingsPage.partyLabel")}
+                        </p>
+                        <p className="mt-0.5 text-sm font-bold text-ink">
+                          {t("bookingsPage.guestsCount", { count: r.partySize })}
+                        </p>
+                      </div>
+                      {r.table && (
+                        <div>
+                          <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                            <ChairIcon className="h-3.5 w-3.5" /> {t("bookingsPage.tableLabel")}
+                          </p>
+                          <p className="mt-0.5 text-sm font-bold text-ink">{r.table.tableNumber}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {CANCELLABLE.includes(r.status) && (
+                      <button
+                        type="button"
+                        onClick={() => setToCancel(r)}
+                        className="mt-4 rounded-lg border border-border px-4 py-2 text-xs font-bold text-ink transition hover:bg-bg"
+                      >
+                        {t("bookingsPage.cancelBooking")}
+                      </button>
+                    )}
                   </div>
-                  <StatusBadge tone={STATUS_TONE[r.status]} className="shrink-0">
-                    {t(RESERVATION_STATUS_LABEL_KEY[r.status])}
-                  </StatusBadge>
+
+                  {showQr && (
+                    <div className="flex shrink-0 flex-col items-center justify-center gap-1 border-t border-dashed border-border pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+                      <QrCodeViewer
+                        value={r.confirmationCode}
+                        size={88}
+                        label={t("bookingsPage.checkInCode")}
+                        downloadName={`check-in-${r.confirmationCode}`}
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-muted">
+                        {t("bookingsPage.showOnArrival")}
+                      </span>
+                      <span className="text-sm font-extrabold text-accent">{r.confirmationCode}</span>
+                    </div>
+                  )}
                 </div>
-                {CANCELLABLE.includes(r.status) && (
-                  <button
-                    type="button"
-                    onClick={() => setToCancel(r)}
-                    className="mt-3 rounded-lg border border-border px-4 py-2 text-xs font-bold text-ink transition hover:bg-bg"
-                  >
-                    {t("bookingsPage.cancelBooking")}
-                  </button>
-                )}
-              </div>
-              {tab === "upcoming" && !PAST_STATUSES.includes(r.status) && (
-                <div className="flex shrink-0 flex-col items-center gap-1 border-l border-dashed border-border pl-4">
-                  <QrCodeViewer
-                    value={r.confirmationCode}
-                    size={72}
-                    label={t("bookingsPage.checkInCode")}
-                    downloadName={`check-in-${r.confirmationCode}`}
-                  />
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-muted">
-                    {t("bookingsPage.checkIn")}
-                  </span>
-                </div>
-              )}
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </motion.div>
       )}
 

@@ -31,6 +31,8 @@ export interface ReservationRestaurant {
   name: string;
   slug: string;
   coverImageUrl: string | null;
+  address: string;
+  cuisine: { name: string };
 }
 
 export interface Reservation {

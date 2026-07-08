@@ -28,7 +28,16 @@ const DAY_OF_WEEK_BY_UTC_INDEX: DayOfWeek[] = [
 ];
 
 const reservationListInclude = {
-  restaurant: { select: { id: true, name: true, slug: true, coverImageUrl: true } },
+  restaurant: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      coverImageUrl: true,
+      address: true,
+      cuisine: { select: { name: true } },
+    },
+  },
   user: { select: { id: true, name: true, phone: true, email: true } },
   table: true,
 } satisfies Prisma.ReservationInclude;
